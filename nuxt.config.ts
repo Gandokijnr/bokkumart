@@ -43,10 +43,6 @@ export default defineNuxtConfig({
             cacheableResponse: {
               statuses: [0, 200],
             },
-            images: {
-              decoding: 'async',
-              fetchpriority: 'low',
-            },
           },
         },
         {
