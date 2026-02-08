@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted, nextTick } from 'vue'
 import { useAdminStore, type AdminOrder, type AdminOrderStatus } from '~/stores/admin'
 import { useUserStore } from '~/stores/user'
+import { useInfiniteScroll } from '~/composables/useInfiniteScroll'
 
 // Page meta
 useHead({
@@ -120,6 +121,10 @@ const pulseCards = computed(() => [
   }
 ])
 
+// Refs for infinite scroll
+const ordersContainer = ref<HTMLElement | null>(null)
+const isLoadingMore = ref(false)
+
 // Lifecycle
 onMounted(async () => {
   await adminStore.initialize()
@@ -128,7 +133,31 @@ onMounted(async () => {
   statsInterval = setInterval(() => {
     adminStore.fetchDashboardStats()
   }, 30000)
+  
+  // Setup infinite scroll after DOM is ready
+  await nextTick()
+  setupInfiniteScroll()
 })
+
+// Infinite scroll setup
+function setupInfiniteScroll() {
+  if (!ordersContainer.value) return
+  
+  const { isLoading, hasMore, loadMore, updateHasMore } = useInfiniteScroll(
+    ordersContainer,
+    async () => {
+      if (activeTab.value === 'pulse') return
+      isLoadingMore.value = true
+      try {
+        const hasMoreOrders = await adminStore.fetchMoreOrders()
+        updateHasMore(hasMoreOrders)
+      } finally {
+        isLoadingMore.value = false
+      }
+    },
+    { threshold: 300, rootMargin: '300px' }
+  )
+}
 
 onUnmounted(() => {
   adminStore.cleanup()
@@ -543,7 +572,11 @@ async function saveNote(orderId: string) {
       </div>
 
       <!-- ORDER TABS (Verification, Processing, Delivery, Completed) -->
-      <div v-else class="space-y-4">
+      <div
+        v-else
+        ref="ordersContainer"
+        class="space-y-4 max-h-[calc(100vh-200px)] overflow-y-auto pr-2"
+      >
         <div
           v-for="order in filteredOrders"
           :key="order.id"
@@ -696,6 +729,22 @@ async function saveNote(orderId: string) {
               </div>
             </div>
           </div>
+        </div>
+
+        <!-- Loading indicator -->
+        <div v-if="isLoadingMore || adminStore.loading" class="flex items-center justify-center py-6">
+          <div class="flex items-center gap-2 text-gray-500">
+            <svg class="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            <span class="text-sm">Loading more orders...</span>
+          </div>
+        </div>
+
+        <!-- End of list indicator -->
+        <div v-else-if="!adminStore.pagination.hasMore && filteredOrders.length > 0" class="text-center py-6">
+          <span class="text-sm text-gray-500">No more orders</span>
         </div>
 
         <!-- Empty State -->

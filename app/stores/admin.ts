@@ -102,6 +102,12 @@ interface AdminState {
   statsLoading: boolean
   optimisticUpdates: Map<string, Partial<AdminOrder>>
   realtimeSubscription: any
+  pagination: {
+    limit: number
+    offset: number
+    hasMore: boolean
+    totalCount: number | null
+  }
 }
 
 export const useAdminStore = defineStore('admin', {
@@ -115,7 +121,13 @@ export const useAdminStore = defineStore('admin', {
     loading: false,
     statsLoading: false,
     optimisticUpdates: new Map(),
-    realtimeSubscription: null
+    realtimeSubscription: null,
+    pagination: {
+      limit: 20,
+      offset: 0,
+      hasMore: true,
+      totalCount: null
+    }
   }),
 
   getters: {
@@ -157,7 +169,7 @@ export const useAdminStore = defineStore('admin', {
     async initialize() {
       await this.fetchAvailableStores()
       await this.fetchDashboardStats()
-      await this.fetchOrders()
+      await this.fetchOrders(true)
       this.setupRealtimeSubscription()
     },
     
@@ -234,9 +246,15 @@ export const useAdminStore = defineStore('admin', {
       }
     },
     
-    async fetchOrders() {
+    async fetchOrders(reset = false) {
       const supabase = useSupabaseClient<Database>()
       this.loading = true
+      
+      if (reset) {
+        this.pagination.offset = 0
+        this.pagination.hasMore = true
+        this.orders = []
+      }
       
       try {
         let query = supabase
@@ -244,27 +262,49 @@ export const useAdminStore = defineStore('admin', {
           .select(`
             *,
             store:stores!store_id(id, name)
-          `)
+          `, { count: 'exact' })
           .order('created_at', { ascending: false })
-          .limit(200)
+          .range(this.pagination.offset, this.pagination.offset + this.pagination.limit - 1)
         
         if (this.currentStoreId) {
           query = query.eq('store_id', this.currentStoreId)
         }
         
-        const { data, error } = await query
+        const { data, error, count } = await query
         
         if (error) {
           console.error('Supabase error details:', error)
           throw error
         }
-        this.orders = (data || []) as unknown as AdminOrder[]
+        
+        const newOrders = (data || []) as unknown as AdminOrder[]
+        
+        if (reset) {
+          this.orders = newOrders
+        } else {
+          // Avoid duplicates
+          const existingIds = new Set(this.orders.map(o => o.id))
+          const uniqueNewOrders = newOrders.filter(o => !existingIds.has(o.id))
+          this.orders.push(...uniqueNewOrders)
+        }
+        
+        this.pagination.totalCount = count
+        this.pagination.hasMore = newOrders.length === this.pagination.limit
+        
         console.log('Loaded', this.orders.length, 'orders. Statuses:', this.orders.map(o => o.status).reduce((acc, s) => { acc[s] = (acc[s] || 0) + 1; return acc }, {} as Record<string, number>))
       } catch (err) {
         console.error('Error fetching orders:', err)
       } finally {
         this.loading = false
       }
+    },
+    
+    async fetchMoreOrders(): Promise<boolean> {
+      if (!this.pagination.hasMore || this.loading) return false
+      
+      this.pagination.offset += this.pagination.limit
+      await this.fetchOrders()
+      return this.pagination.hasMore
     },
     
     async fetchAvailableStores() {
@@ -310,7 +350,7 @@ export const useAdminStore = defineStore('admin', {
     
     setCurrentStore(storeId: string | null) {
       this.currentStoreId = storeId
-      this.fetchOrders()
+      this.fetchOrders(true)
       this.fetchDashboardStats()
     },
 

@@ -92,14 +92,30 @@ export const useProducts = () => {
       // Get all product IDs from inventory
       const productIds = inventoryData.map(item => item.product_id)
 
-      // Fetch products
-      const { data: productsData, error: productsError } = await supabase
-        .from('products')
-        .select('*')
-        .in('id', productIds)
-        .eq('is_active', true) as { data: any[] | null; error: any }
+      // Fetch products in chunks to avoid URL length limits
+      const chunkSize = 50
+      const chunks = []
+      for (let i = 0; i < productIds.length; i += chunkSize) {
+        chunks.push(productIds.slice(i, i + chunkSize))
+      }
 
-      if (productsError) throw productsError
+      // Fetch all chunks in parallel
+      const productsResults = await Promise.all(
+        chunks.map(chunk =>
+          supabase
+            .from('products')
+            .select('*')
+            .in('id', chunk)
+            .eq('is_active', true)
+        )
+      )
+
+      // Combine results and check for errors
+      let productsData: any[] = []
+      for (const result of productsResults) {
+        if (result.error) throw result.error
+        productsData.push(...(result.data || []))
+      }
 
       // Get category IDs
       const categoryIds = [...new Set(productsData?.map(p => p.category_id).filter(Boolean) || [])]
@@ -311,15 +327,31 @@ export const useProducts = () => {
       // Get product IDs
       const productIds = productsData.map(p => p.id)
 
-      // Fetch inventory for these products at selected store
-      const { data: inventoryData, error: inventoryError } = await supabase
-        .from('store_inventory')
-        .select('*')
-        .eq('store_id', storeId)
-        .eq('is_visible', true)
-        .in('product_id', productIds)
+      // Fetch inventory in chunks to avoid URL length limits
+      const chunkSize = 50
+      const chunks = []
+      for (let i = 0; i < productIds.length; i += chunkSize) {
+        chunks.push(productIds.slice(i, i + chunkSize))
+      }
 
-      if (inventoryError) throw inventoryError
+      // Fetch all chunks in parallel
+      const inventoryResults = await Promise.all(
+        chunks.map(chunk =>
+          supabase
+            .from('store_inventory')
+            .select('*')
+            .eq('store_id', storeId)
+            .eq('is_visible', true)
+            .in('product_id', chunk)
+        )
+      )
+
+      // Combine results and check for errors
+      let inventoryData: any[] = []
+      for (const result of inventoryResults) {
+        if (result.error) throw result.error
+        inventoryData.push(...(result.data || []))
+      }
 
       // Create inventory lookup map
       const inventoryMap: Record<string, any> = {}
