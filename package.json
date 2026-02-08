@@ -1,0 +1,25 @@
+{
+  "name": "store",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "build": "nuxt build",
+    "dev": "nuxt dev",
+    "generate": "nuxt generate",
+    "preview": "nuxt preview",
+    "postinstall": "nuxt prepare"
+  },
+  "dependencies": {
+    "@nuxtjs/supabase": "^2.0.3",
+    "@tailwindcss/vite": "^4.1.18",
+    "@vite-pwa/nuxt": "^1.1.1",
+    "nuxt": "^4.3.0",
+    "pinia": "^3.0.4",
+    "tailwindcss": "^4.1.18",
+    "vue": "^3.5.27",
+    "vue-router": "^4.6.4"
+  },
+  "devDependencies": {
+    "@iconify-json/heroicons": "^1.2.3"
+  }
+}
