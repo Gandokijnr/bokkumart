@@ -552,6 +552,91 @@ export interface Database {
           is_active?: boolean
         }
       }
+      carts: {
+        Row: {
+          id: string
+          user_id: string
+          store_id: string | null
+          store_name: string | null
+          delivery_method: 'pickup' | 'delivery' | null
+          delivery_address: Json | null
+          contact_phone: string | null
+          delivery_zone: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          store_id?: string | null
+          store_name?: string | null
+          delivery_method?: 'pickup' | 'delivery' | null
+          delivery_address?: Json | null
+          contact_phone?: string | null
+          delivery_zone?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          store_id?: string | null
+          store_name?: string | null
+          delivery_method?: 'pickup' | 'delivery' | null
+          delivery_address?: Json | null
+          contact_phone?: string | null
+          delivery_zone?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+      }
+      cart_items: {
+        Row: {
+          id: string
+          cart_id: string
+          product_id: string
+          store_id: string
+          name: string
+          price: number
+          quantity: number
+          max_quantity: number
+          digital_buffer: number
+          image_url: string | null
+          options: Json | null
+          added_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          cart_id: string
+          product_id: string
+          store_id: string
+          name: string
+          price: number
+          quantity: number
+          max_quantity: number
+          digital_buffer?: number
+          image_url?: string | null
+          options?: Json | null
+          added_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          cart_id?: string
+          product_id?: string
+          store_id?: string
+          name?: string
+          price?: number
+          quantity?: number
+          max_quantity?: number
+          digital_buffer?: number
+          image_url?: string | null
+          options?: Json | null
+          added_at?: string
+          updated_at?: string
+        }
+      }
     }
     Views: {
       user_profile_summary: {

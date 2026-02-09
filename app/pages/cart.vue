@@ -3,102 +3,116 @@
     <AppHeader />
 
     <main class="mx-auto max-w-7xl px-4 py-4 pb-32 sm:px-6 lg:py-8 lg:pb-8">
-      <!-- Page Title -->
-      <div class="mb-4 flex items-center justify-between sm:mb-6">
-        <h1 class="text-xl font-bold text-gray-900 sm:text-2xl lg:text-3xl">
-          Shopping Cart
-          <span v-if="cartStore.cartCount > 0" class="ml-2 text-base font-medium text-gray-500 sm:text-lg">
-            ({{ cartStore.cartCount }} {{ cartStore.cartCount === 1 ? 'item' : 'items' }})
-          </span>
-        </h1>
-        <button
-          v-if="cartStore.items.length > 0"
-          @click="showClearConfirm = true"
-          class="text-xs font-medium text-red-500 hover:text-red-700 sm:text-sm"
-        >
-          Clear Cart
-        </button>
-      </div>
 
-      <!-- Empty Cart State -->
-      <EmptyCartState
-        v-if="cartStore.items.length === 0"
-        :categories="categories"
-        :get-category-icon="getCategoryIcon"
-      />
+      <!-- Client-Only Cart Content -->
+      <ClientOnly>
+        <template #fallback>
+          <!-- SSR-safe loading state -->
+          <div class="flex min-h-[400px] items-center justify-center">
+            <div class="text-center">
+              <div class="mb-4 h-12 w-12 animate-spin rounded-full border-4 border-red-200 border-t-red-600 mx-auto"></div>
+              <p class="text-gray-500">Loading your cart...</p>
+            </div>
+          </div>
+        </template>
 
-      <!-- Cart Content -->
-      <div v-else class="grid gap-6 lg:grid-cols-3">
-        <!-- Left Column: Items -->
-        <div class="order-2 space-y-4 lg:order-1 lg:col-span-2">
-          <!-- Store Context Header -->
-          <StoreHeader
-            :store-name="cartStore.currentStoreName"
-            :time-remaining="reservationTimeRemaining"
-          />
+        <!-- Page Title with Count -->
+        <div class="mb-4 flex items-center justify-between sm:mb-6">
+          <h1 class="text-xl font-bold text-gray-900 sm:text-2xl lg:text-3xl">
+            <span v-if="cartStore.cartCount > 0" class="ml-2 text-base font-medium text-gray-500 sm:text-lg">
+              ({{ cartStore.cartCount }} {{ cartStore.cartCount === 1 ? 'item' : 'items' }})
+            </span>
+          </h1>
+          <button
+            v-if="cartStore.items.length > 0"
+            @click="showClearConfirm = true"
+            class="text-xs font-medium text-red-500 hover:text-red-700 sm:text-sm"
+          >
+            Clear Cart
+          </button>
+        </div>
 
-          <!-- Cart Items List -->
-          <div class="space-y-3 sm:space-y-4">
-            <CartItem
-              v-for="item in cartStore.items"
-              :key="item.id"
-              :item="item"
-              @update-quantity="handleUpdateQuantity"
-              @remove="removeItem"
+        <!-- Empty Cart State -->
+        <EmptyCartState
+          v-if="cartStore.items.length === 0"
+          :categories="categories"
+          :get-category-icon="getCategoryIcon"
+        />
+
+        <!-- Cart Content -->
+        <div v-else class="grid gap-6 lg:grid-cols-3">
+          <!-- Left Column: Items -->
+          <div class="order-2 space-y-4 lg:order-1 lg:col-span-2">
+            <!-- Store Context Header -->
+            <StoreHeader
+              :store-name="cartStore.currentStoreName"
+              :time-remaining="reservationTimeRemaining"
+            />
+
+            <!-- Cart Items List -->
+            <div class="space-y-3 sm:space-y-4">
+              <CartItem
+                v-for="item in cartStore.items"
+                :key="item.id"
+                :item="item"
+                @update-quantity="handleUpdateQuantity"
+                @remove="removeItem"
+              />
+            </div>
+
+            <!-- Continue Shopping Link -->
+            <button
+              @click="navigateTo('/#categories')"
+              class="flex items-center gap-2 text-sm font-medium text-red-600 transition-colors hover:text-red-700 sm:text-base"
+            >
+              <svg class="h-4 w-4 rotate-180 sm:h-5 sm:w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+              </svg>
+              Continue Shopping
+            </button>
+
+            <!-- Cross-Sell Section -->
+            <CrossSellProducts
+              :products="crossSellProducts"
+              @add="addCrossSellItem"
             />
           </div>
 
-          <!-- Continue Shopping Link -->
-          <button
-            @click="navigateTo('/#categories')"
-            class="flex items-center gap-2 text-sm font-medium text-red-600 transition-colors hover:text-red-700 sm:text-base"
-          >
-            <svg class="h-4 w-4 rotate-180 sm:h-5 sm:w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-            </svg>
-            Continue Shopping
-          </button>
-
-          <!-- Cross-Sell Section -->
-          <CrossSellProducts
-            :products="crossSellProducts"
-            @add="addCrossSellItem"
-          />
+          <!-- Right Column: Order Summary -->
+          <div class="order-1 lg:order-2">
+            <CartSummary
+              :item-count="cartStore.cartCount"
+              :subtotal="cartStore.cartSubtotal"
+              :delivery-fee="cartStore.deliveryFee"
+              :service-fee="serviceFee"
+              :total="totalWithService"
+              :delivery-calculated="deliveryCalculated"
+              :delivery-details="cartStore.deliveryDetails"
+              :store-name="cartStore.currentStoreName || 'HomeAffairs Store'"
+              v-model:order-note="orderNote"
+              :has-out-of-stock-items="hasOutOfStockItems"
+              @calculate-delivery="calculateDelivery"
+              @checkout="proceedToCheckout"
+            />
+          </div>
         </div>
 
-        <!-- Right Column: Order Summary -->
-        <div class="order-1 lg:order-2">
-          <CartSummary
-            :item-count="cartStore.cartCount"
-            :subtotal="cartStore.cartSubtotal"
-            :delivery-fee="cartStore.deliveryFee"
-            :service-fee="serviceFee"
-            :total="totalWithService"
-            :delivery-calculated="deliveryCalculated"
-            :delivery-details="cartStore.deliveryDetails"
-            :store-name="cartStore.currentStoreName || 'HomeAffairs Store'"
-            v-model:order-note="orderNote"
-            :has-out-of-stock-items="hasOutOfStockItems"
-            @calculate-delivery="calculateDelivery"
-          />
-        </div>
-      </div>
+        <!-- Mobile Sticky Checkout Bar -->
+        <MobileCheckoutBar
+          :show="cartStore.items.length > 0"
+          :total="totalWithService"
+          :disabled="hasOutOfStockItems"
+          @checkout="proceedToCheckout"
+        />
+
+        <!-- Clear Cart Confirmation Modal -->
+        <ClearCartModal
+          :show="showClearConfirm"
+          @cancel="showClearConfirm = false"
+          @confirm="clearCart"
+        />
+      </ClientOnly>
     </main>
-
-    <!-- Mobile Sticky Checkout Bar -->
-    <MobileCheckoutBar
-      :show="cartStore.items.length > 0"
-      :total="totalWithService"
-      :disabled="hasOutOfStockItems"
-      @checkout="proceedToCheckout"
-    />
-
-    <!-- Clear Cart Confirmation Modal -->
-    <ClearCartModal
-      :show="showClearConfirm"
-      @cancel="showClearConfirm = false"
-      @confirm="clearCart"
-    />
   </div>
 </template>
 
@@ -266,7 +280,7 @@ onUnmounted(() => {
 })
 </script>
 
-<!-- <style scoped>
+<style scoped>
 /* Vue page transition classes - required by definePageMeta */
 .slide-left-enter-active,
 .slide-left-leave-active {
@@ -282,4 +296,4 @@ onUnmounted(() => {
   opacity: 0;
   transform: translateX(-30px);
 }
-</style> -->
+</style>

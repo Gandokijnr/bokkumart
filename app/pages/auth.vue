@@ -162,6 +162,7 @@
 
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
+import { useCartStore } from '~/stores/useCartStore'
 
 // Types
 type NotificationType = {
@@ -342,6 +343,10 @@ const verifyPhoneOtp = async () => {
     if (error) throw error
 
     showNotification('Success!', 'You are now signed in.', 'green')
+    
+    // Load user's cart from database
+    const cartStore = useCartStore()
+    await cartStore.loadFromDatabase(supabase)
     
     // Redirect to intended destination or home
     const destination = redirectPath.value

@@ -1,4 +1,6 @@
 import { defineStore } from 'pinia'
+import type { Database } from '../types/database.types'
+import type { SupabaseClient } from '@supabase/supabase-js'
 
 export interface CartItem {
   id: string
@@ -41,54 +43,20 @@ export interface CartState {
   selectedAddress: string | null
   reservedItems: ReservedItem[]
   reservationExpiry: number | null
-}
-
-const STORAGE_KEY = 'homeaffairs_cart'
-
-function loadFromStorage(): Partial<CartState> | null {
-  if (typeof window === 'undefined') return null
-  try {
-    const data = localStorage.getItem(STORAGE_KEY)
-    if (!data) return null
-    const parsed = JSON.parse(data)
-    if (parsed.reservationExpiry && parsed.reservationExpiry < Date.now()) {
-      parsed.reservedItems = []
-      parsed.reservationExpiry = null
-    }
-    return parsed
-  } catch {
-    return null
-  }
-}
-
-function saveToStorage(state: CartState) {
-  if (typeof window === 'undefined') return
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify({
-      items: state.items,
-      currentStoreId: state.currentStoreId,
-      currentStoreName: state.currentStoreName,
-      deliveryDetails: state.deliveryDetails,
-      selectedAddress: state.selectedAddress
-    }))
-  } catch (err) {
-    console.error('Failed to save cart:', err)
-  }
+  isLoading: boolean
 }
 
 export const useCartStore = defineStore('cart', {
-  state: (): CartState => {
-    const saved = loadFromStorage()
-    return {
-      items: saved?.items || [],
-      currentStoreId: saved?.currentStoreId || null,
-      currentStoreName: saved?.currentStoreName || '',
-      deliveryDetails: saved?.deliveryDetails || null,
-      selectedAddress: saved?.selectedAddress || null,
-      reservedItems: [],
-      reservationExpiry: null
-    }
-  },
+  state: (): CartState => ({
+    items: [],
+    currentStoreId: null,
+    currentStoreName: '',
+    deliveryDetails: null,
+    selectedAddress: null,
+    reservedItems: [],
+    reservationExpiry: null,
+    isLoading: false
+  }),
 
   getters: {
     cartCount: (state): number => {
@@ -149,6 +117,172 @@ export const useCartStore = defineStore('cart', {
   },
 
   actions: {
+    /**
+     * Load cart from database (call on login/app start)
+     */
+    async loadFromDatabase(supabase: SupabaseClient<Database>): Promise<boolean> {
+      this.isLoading = true
+      try {
+        const { data: user } = await supabase.auth.getUser()
+        if (!user.user) {
+          this.isLoading = false
+          return false
+        }
+
+        // Get user's cart with items
+        const { data: cart, error } = await supabase
+          .from('carts')
+          .select(`
+            id,
+            store_id,
+            store_name,
+            delivery_method,
+            delivery_address,
+            contact_phone,
+            delivery_zone,
+            cart_items (
+              product_id,
+              store_id,
+              name,
+              price,
+              quantity,
+              max_quantity,
+              digital_buffer,
+              image_url,
+              options
+            )
+          `)
+          .eq('user_id', user.user.id)
+          .maybeSingle() as { data: {
+            id: string
+            store_id: string
+            store_name: string | null
+            delivery_method: string | null
+            delivery_address: any
+            contact_phone: string | null
+            delivery_zone: string | null
+            cart_items: {
+              product_id: string
+              store_id: string
+              name: string
+              price: number
+              quantity: number
+              max_quantity: number
+              digital_buffer: number
+              image_url: string | null
+              options: any
+            }[] | null
+          } | null, error: any }
+
+        if (error) {
+          console.error('Error loading cart:', error)
+          this.isLoading = false
+          return false
+        }
+
+        if (cart) {
+          this.items = (cart.cart_items || []).map(item => ({
+            id: item.product_id,
+            product_id: item.product_id,
+            name: item.name,
+            price: item.price,
+            quantity: item.quantity,
+            store_id: item.store_id,
+            store_name: cart.store_name || '',
+            image_url: item.image_url || undefined,
+            max_quantity: item.max_quantity,
+            digital_buffer: item.digital_buffer,
+            options: item.options || undefined
+          }))
+          this.currentStoreId = cart.store_id
+          this.currentStoreName = cart.store_name || ''
+
+          if (cart.delivery_method) {
+            this.deliveryDetails = {
+              method: cart.delivery_method as 'pickup' | 'delivery',
+              address: cart.delivery_address || undefined,
+              contactPhone: cart.contact_phone || '',
+              deliveryZone: cart.delivery_zone || undefined
+            }
+          }
+        }
+
+        this.isLoading = false
+        return true
+      } catch (err) {
+        console.error('Error loading cart from database:', err)
+        this.isLoading = false
+        return false
+      }
+    },
+
+    /**
+     * Save cart to database (call after any cart modification)
+     */
+    async saveToDatabase(supabase: SupabaseClient<Database>): Promise<boolean> {
+      const { data: user } = await supabase.auth.getUser()
+      if (!user.user) return false
+
+      if (this.items.length === 0) {
+        // Delete cart from DB if empty
+        await supabase.from('carts').delete().eq('user_id', user.user.id)
+        return true
+      }
+
+      try {
+        // Prepare cart data
+        const cartData: Database['public']['Tables']['carts']['Insert'] = {
+          user_id: user.user.id,
+          store_id: this.currentStoreId,
+          store_name: this.currentStoreName || null,
+          delivery_method: this.deliveryDetails?.method ?? null,
+          delivery_address: this.deliveryDetails?.address ?? null,
+          contact_phone: this.deliveryDetails?.contactPhone ?? null,
+          delivery_zone: this.deliveryDetails?.deliveryZone ?? null,
+          updated_at: new Date().toISOString()
+        }
+
+        // Upsert cart
+        const { data: cart } = await (supabase
+          .from('carts') as any)
+          .upsert(cartData, { onConflict: 'user_id' })
+          .select('id')
+          .single() as { data: { id: string } | null }
+
+        if (!cart) return false
+
+        const cartId = cart.id
+
+        // Delete old items and insert new ones
+        await supabase.from('cart_items').delete().eq('cart_id', cartId)
+        
+        const itemsToInsert = this.items.map(item => ({
+          cart_id: cartId,
+          product_id: item.product_id,
+          store_id: item.store_id,
+          name: item.name,
+          price: item.price,
+          quantity: item.quantity,
+          max_quantity: item.max_quantity,
+          digital_buffer: item.digital_buffer,
+          image_url: item.image_url,
+          options: item.options
+        }))
+
+        const { error } = await (supabase.from('cart_items').insert(itemsToInsert as any))
+
+        if (error) {
+          console.error('Error saving cart items:', error)
+          return false
+        }
+
+        return true
+      } catch (err) {
+        console.error('Error saving cart to database:', err)
+        return false
+      }
+    },
+
     /**
      * Add item to cart with real-time stock validation
      * Includes store branch locking and quantity limits
@@ -230,7 +364,6 @@ export const useCartStore = defineStore('cart', {
         })
       }
 
-      saveToStorage(this.$state)
       return { success: true }
     },
 
@@ -264,7 +397,6 @@ export const useCartStore = defineStore('cart', {
         this.items.push({ ...item, quantity })
       }
 
-      saveToStorage(this.$state)
       return { success: true }
     },
 
@@ -287,7 +419,6 @@ export const useCartStore = defineStore('cart', {
       }
 
       item.quantity = quantity
-      saveToStorage(this.$state)
       return { success: true }
     },
 
@@ -301,8 +432,6 @@ export const useCartStore = defineStore('cart', {
         this.clearCart()
         return
       }
-
-      saveToStorage(this.$state)
     },
 
     clearCart() {
@@ -311,12 +440,10 @@ export const useCartStore = defineStore('cart', {
       this.currentStoreName = ''
       this.deliveryDetails = null
       this.clearReservation()
-      saveToStorage(this.$state)
     },
 
     setDeliveryDetails(details: DeliveryDetails) {
       this.deliveryDetails = details
-      saveToStorage(this.$state)
     },
 
     async createReservation(supabase: any): Promise<boolean> {
@@ -387,7 +514,6 @@ export const useCartStore = defineStore('cart', {
       this.clearCart()
       this.currentStoreId = newStoreId
       this.currentStoreName = newStoreName
-      saveToStorage(this.$state)
     },
 
     getCheckoutData() {

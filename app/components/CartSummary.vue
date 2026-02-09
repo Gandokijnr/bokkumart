@@ -102,6 +102,16 @@
         10min Reservation
       </span>
     </div>
+
+    <!-- Checkout Button (Desktop Only) -->
+    <button
+      @click="$emit('checkout')"
+      :disabled="hasOutOfStockItems"
+      class="mt-5 hidden w-full rounded-xl bg-red-600 py-3 text-sm font-bold text-white shadow-lg transition-all hover:bg-red-700 hover:shadow-xl disabled:cursor-not-allowed disabled:opacity-50 lg:block"
+    >
+      Proceed to Checkout
+      <span class="ml-2">→</span>
+    </button>
   </div>
 </template>
 
@@ -129,6 +139,7 @@ const props = defineProps<{
 const emit = defineEmits<{
   calculateDelivery: []
   'update:orderNote': [value: string]
+  checkout: []
 }>()
 
 function formatPrice(price: number): string {
