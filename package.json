@@ -11,7 +11,6 @@
   },
   "dependencies": {
     "@nuxtjs/supabase": "^2.0.3",
-    "@supabase/supabase-js": "^2.95.3",
     "@tailwindcss/vite": "^4.1.18",
     "@vite-pwa/nuxt": "^1.1.1",
     "nuxt": "^4.3.0",

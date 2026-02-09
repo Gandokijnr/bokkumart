@@ -27,61 +27,124 @@
 
       <!-- Auth Card -->
       <FormCard class="shadow-xl border-0">
-        <div class="space-y-4">
-          <!-- Email Sent Success State -->
-          <div v-if="emailSent" class="text-center space-y-4">
-            <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto">
-              <svg class="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-              </svg>
+        <FormTabs v-model="activeTab" :items="tabs">
+          <template #default="{ item }">
+            <!-- Phone Tab -->
+            <div v-if="item?.value === 'phone'" class="space-y-4">
+              <!-- Phone Input Step -->
+              <div v-if="!showOtpInput" class="space-y-4">
+                <FormInput
+                  v-model="phoneNumber"
+                  type="tel"
+                  label="Phone Number"
+                  help="Enter your Nigerian phone number"
+                  placeholder="80 1234 5678"
+                  size="lg"
+                >
+                  <template #leading>
+                    <span class="text-gray-500 text-sm whitespace-nowrap">🇳🇬 +234</span>
+                  </template>
+                </FormInput>
+
+                <FormButton
+                  block
+                  size="lg"
+                  :loading="loading"
+                  :disabled="!isValidPhone"
+                  @click="sendPhoneOtp"
+                >
+                  Send Code
+                </FormButton>
+
+                <p class="text-xs text-gray-500 text-center">
+                  We'll send a 6-digit verification code to your phone
+                </p>
+              </div>
+
+              <!-- OTP Verification Step -->
+              <div v-else class="space-y-4">
+                <div class="text-center">
+                  <p class="text-sm text-gray-600">
+                    Enter the 6-digit code sent to
+                    <span class="font-semibold text-gray-900">{{ formattedPhone }}</span>
+                  </p>
+                </div>
+
+                <div class="space-y-1.5">
+                  <div class="flex justify-center gap-2">
+                    <input
+                      v-for="(digit, index) in otpDigits"
+                      :key="index"
+                      :ref="el => setOtpRef(el, index)"
+                      v-model="otpDigits[index]"
+                      type="text"
+                      maxlength="1"
+                      inputmode="numeric"
+                      class="w-12 h-14 text-center text-2xl font-bold rounded-xl border-2 border-gray-200 bg-white transition-all outline-none focus:border-red-500 focus:ring-2 focus:ring-red-200"
+                      :class="{ 'border-red-500 ring-2 ring-red-200': otpDigits[index] }"
+                      @input="handleOtpInput(index, $event)"
+                      @keydown.backspace="handleOtpBackspace(index, $event)"
+                      @paste="handleOtpPaste($event)"
+                    />
+                  </div>
+                </div>
+
+                <FormButton
+                  block
+                  size="lg"
+                  :loading="loading"
+                  :disabled="!isOtpComplete"
+                  @click="verifyPhoneOtp"
+                >
+                  Verify & Sign In
+                </FormButton>
+
+                <div class="text-center">
+                  <FormButton
+                    variant="ghost"
+                    color="neutral"
+                    size="sm"
+                    @click="resetPhoneFlow"
+                  >
+                    Change phone number
+                  </FormButton>
+                </div>
+              </div>
             </div>
-            <h3 class="text-lg font-semibold text-gray-900">Check your email</h3>
-            <p class="text-sm text-gray-600">
-              We sent a magic link to <span class="font-medium text-gray-900">{{ email }}</span>.<br>
-              Click the link in your email to sign in.
-            </p>
-            <FormButton
-              variant="ghost"
-              color="neutral"
-              size="sm"
-              @click="resetForm"
-            >
-              Use a different email
-            </FormButton>
-          </div>
 
-          <!-- Email Input Form -->
-          <div v-else class="space-y-4">
-            <FormInput
-              v-model="email"
-              type="email"
-              label="Email Address"
-              help="We'll send you a magic link to sign in"
-              placeholder="you@example.com"
-              size="lg"
-            >
-              <template #leading>
-                <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                </svg>
-              </template>
-            </FormInput>
+            <!-- Email Tab -->
+            <div v-if="item?.value === 'email'" class="space-y-4">
+              <FormInput
+                v-model="email"
+                type="email"
+                label="Email Address"
+                help="We'll send you a magic link"
+                placeholder="you@example.com"
+                size="lg"
+              >
+                <template #leading>
+                  <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                  </svg>
+                </template>
+              </FormInput>
 
-            <FormButton
-              block
-              size="lg"
-              :loading="loading"
-              :disabled="!isValidEmail"
-              @click="sendMagicLink"
-            >
-              Send Login Link
-            </FormButton>
+              <FormButton
+                block
+                size="lg"
+                :loading="loading"
+                :disabled="!isValidEmail"
+                @click="sendMagicLink"
+              >
+                Send Magic Link
+              </FormButton>
 
-            <p class="text-xs text-gray-500 text-center">
-              Click the link in your email to sign in instantly. No password needed.
-            </p>
-          </div>
-        </div>
+              <p class="text-xs text-gray-500 text-center">
+                Click the link in your email to sign in instantly
+              </p>
+            </div>
+          </template>
+        </FormTabs>
       </FormCard>
 
       <!-- Success Notification -->
@@ -98,7 +161,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 import { useCartStore } from '~/stores/useCartStore'
 
 // Types
@@ -118,9 +181,12 @@ const redirectPath = computed(() => {
 const unauthorizedReason = computed(() => route.query.reason as string)
 
 // State
+const activeTab = ref('phone')
 const loading = ref(false)
+const phoneNumber = ref('')
 const email = ref('')
-const emailSent = ref(false)
+const showOtpInput = ref(false)
+const otpDigits = ref(['', '', '', '', '', ''])
 const notification = ref<NotificationType>({
   show: false,
   title: '',
@@ -132,10 +198,94 @@ const notification = ref<NotificationType>({
 const supabase = useSupabaseClient()
 const config = useRuntimeConfig()
 
+// Tabs configuration
+const tabs = [
+  { label: 'Sign in with Phone', value: 'phone', icon: 'phone' },
+  { label: 'Sign in with Email', value: 'email', icon: 'envelope' }
+]
+
+// Phone validation for Nigerian numbers
+const isValidPhone = computed(() => {
+  const cleaned = phoneNumber.value.replace(/\D/g, '')
+  // Nigerian numbers: +234 followed by 10 digits, or 0 followed by 10 digits
+  return /^([0]\d{10}|234\d{10})$/.test(cleaned)
+})
+
+const formattedPhone = computed(() => {
+  const cleaned = phoneNumber.value.replace(/\D/g, '')
+  if (cleaned.startsWith('0')) {
+    return '+234 ' + cleaned.slice(1).replace(/(\d{3})(\d{4})(\d{3})/, '$1 $2 $3')
+  }
+  if (cleaned.startsWith('234')) {
+    return '+' + cleaned.replace(/(\d{3})(\d{3})(\d{4})(\d{3})/, '$1 $2 $3 $4')
+  }
+  return phoneNumber.value
+})
+
+// Format phone to international format for Supabase
+const getInternationalPhone = () => {
+  const cleaned = phoneNumber.value.replace(/\D/g, '')
+  if (cleaned.startsWith('0')) {
+    return '+234' + cleaned.slice(1)
+  }
+  if (cleaned.startsWith('234')) {
+    return '+' + cleaned
+  }
+  return cleaned.startsWith('+') ? cleaned : '+' + cleaned
+}
+
 // Email validation
 const isValidEmail = computed(() => {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.value)
 })
+
+// OTP validation
+const isOtpComplete = computed(() => {
+  return otpDigits.value.every(digit => digit.length === 1)
+})
+
+// OTP input refs
+const otpRefs = ref<(HTMLInputElement | null)[]>([])
+const setOtpRef = (el: any, index: number) => {
+  otpRefs.value[index] = el
+}
+
+// OTP input handling
+const handleOtpInput = (index: number, event: Event) => {
+  const input = event.target as HTMLInputElement
+  const value = input.value
+
+  // Only allow numbers
+  if (!/^\d*$/.test(value)) {
+    otpDigits.value[index] = ''
+    return
+  }
+
+  otpDigits.value[index] = value
+
+  // Auto-focus next input
+  if (value && index < 5) {
+    otpRefs.value[index + 1]?.focus()
+  }
+}
+
+const handleOtpBackspace = (index: number, event: KeyboardEvent) => {
+  if (!otpDigits.value[index] && index > 0) {
+    otpDigits.value[index - 1] = ''
+    otpRefs.value[index - 1]?.focus()
+  }
+}
+
+const handleOtpPaste = (event: ClipboardEvent) => {
+  event.preventDefault()
+  const pasted = event.clipboardData?.getData('text').replace(/\D/g, '').slice(0, 6)
+  if (pasted) {
+    pasted.split('').forEach((char, i) => {
+      if (i < 6) otpDigits.value[i] = char
+    })
+    otpRefs.value[Math.min(pasted.length, 5)]?.focus()
+  }
+}
 
 // Show notification helper
 const showNotification = (title: string, description: string, color: 'green' | 'red' | 'blue' = 'green') => {
@@ -150,7 +300,72 @@ const showNotification = (title: string, description: string, color: 'green' | '
   }, 5000)
 }
 
-// Send magic link
+// Phone OTP flow
+const sendPhoneOtp = async () => {
+  loading.value = true
+  try {
+    const { error } = await supabase.auth.signInWithOtp({
+      phone: getInternationalPhone(),
+      options: {
+        data: {
+          phone: getInternationalPhone()
+        }
+      }
+    })
+
+    if (error) throw error
+
+    showOtpInput.value = true
+    showNotification('Code Sent!', 'Check your phone for the 6-digit verification code.', 'green')
+
+    // Focus first OTP input
+    setTimeout(() => {
+      otpRefs.value[0]?.focus()
+    }, 100)
+  } catch (error: any) {
+    showNotification('Error', error.message || 'Failed to send code. Please try again.', 'red')
+  } finally {
+    loading.value = false
+  }
+}
+
+const verifyPhoneOtp = async () => {
+  loading.value = true
+  const otp = otpDigits.value.join('')
+
+  try {
+    const { error } = await supabase.auth.verifyOtp({
+      phone: getInternationalPhone(),
+      token: otp,
+      type: 'sms'
+    })
+
+    if (error) throw error
+
+    showNotification('Success!', 'You are now signed in.', 'green')
+    
+    // Load user's cart from database
+    const cartStore = useCartStore()
+    await cartStore.loadFromDatabase(supabase)
+    
+    // Redirect to intended destination or home
+    const destination = redirectPath.value
+    console.log('[Auth] Redirecting to:', destination)
+    navigateTo(destination)
+  } catch (error: any) {
+    showNotification('Invalid Code', error.message || 'The code you entered is incorrect.', 'red')
+  } finally {
+    loading.value = false
+  }
+}
+
+const resetPhoneFlow = () => {
+  showOtpInput.value = false
+  otpDigits.value = ['', '', '', '', '', '']
+  phoneNumber.value = ''
+}
+
+// Magic link flow
 const sendMagicLink = async () => {
   loading.value = true
   try {
@@ -163,18 +378,13 @@ const sendMagicLink = async () => {
 
     if (error) throw error
 
-    emailSent.value = true
     showNotification('Magic Link Sent!', 'Check your email for the sign-in link.', 'green')
+    email.value = ''
   } catch (error: any) {
     showNotification('Error', error.message || 'Failed to send magic link. Please try again.', 'red')
   } finally {
     loading.value = false
   }
-}
-
-const resetForm = () => {
-  emailSent.value = false
-  email.value = ''
 }
 </script>
 
