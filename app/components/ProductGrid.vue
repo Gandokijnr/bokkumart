@@ -130,45 +130,15 @@
       </div>
 
       <!-- Pagination -->
-      <div v-if="totalPages > 1" class="mt-8 flex items-center justify-center gap-2">
-        <button
-          :disabled="currentPage === 1"
-          class="flex h-10 w-10 items-center justify-center rounded-lg border border-gray-300 bg-white text-gray-700 transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
-          @click="currentPage--"
-        >
-          <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
-          </svg>
-        </button>
-
-        <button
-          v-for="page in displayedPages"
-          :key="page"
-          :class="[
-            'h-10 w-10 rounded-lg text-sm font-medium transition-colors',
-            page === currentPage
-              ? 'bg-red-600 text-white'
-              : 'border border-gray-300 bg-white text-gray-700 hover:bg-gray-50'
-          ]"
-          @click="currentPage = page"
-        >
-          {{ page }}
-        </button>
-
-        <button
-          :disabled="currentPage === totalPages"
-          class="flex h-10 w-10 items-center justify-center rounded-lg border border-gray-300 bg-white text-gray-700 transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
-          @click="currentPage++"
-        >
-          <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-          </svg>
-        </button>
-      </div>
-
-      <p v-if="products.length > 0" class="mt-4 text-center text-sm text-gray-500">
-        Showing {{ (currentPage - 1) * itemsPerPage + 1 }} - {{ Math.min(currentPage * itemsPerPage, products.length) }} of {{ products.length }} products
-      </p>
+      <Pagination
+        v-if="products.length > 0"
+        v-model:current-page="currentPage"
+        :total-pages="totalPages"
+        :total-items="products.length"
+        :items-per-page="itemsPerPage"
+        item-label="products"
+        class="mt-8"
+      />
     </div>
 
     <!-- Toast Notification -->
@@ -266,22 +236,6 @@ const paginatedProducts = computed(() => {
 })
 
 const totalPages = computed(() => Math.ceil(products.value.length / itemsPerPage))
-
-const displayedPages = computed(() => {
-  const pages: number[] = []
-  const maxVisible = 5
-  let start = Math.max(1, currentPage.value - Math.floor(maxVisible / 2))
-  let end = Math.min(totalPages.value, start + maxVisible - 1)
-
-  if (end - start < maxVisible - 1) {
-    start = Math.max(1, end - maxVisible + 1)
-  }
-
-  for (let i = start; i <= end; i++) {
-    pages.push(i)
-  }
-  return pages
-})
 
 // Reset to first page when products change
 watch(() => products.value.length, () => {
