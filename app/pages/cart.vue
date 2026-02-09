@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen bg-gray-50 overflow-x-hidden">
+  <div class="min-h-screen bg-gray-50">
     <AppHeader />
 
     <main class="mx-auto max-w-7xl px-4 py-4 pb-32 sm:px-6 lg:py-8 lg:pb-8">
@@ -62,19 +62,19 @@
       </div>
 
       <!-- Cart Content -->
-      <div v-else class="grid gap-4 sm:gap-6 lg:grid-cols-[1fr,360px] xl:grid-cols-[1fr,400px] lg:items-start">
+      <div v-else class="grid gap-6 lg:grid-cols-3">
         <!-- Left Column: Items -->
-        <div class="space-y-3 order-2 sm:space-y-4 lg:order-1">
+        <div class="order-2 space-y-4 lg:order-1 lg:col-span-2">
           <!-- Store Context Header -->
-          <div class="flex items-center gap-3 overflow-hidden rounded-xl border-2 p-3 sm:gap-4 sm:p-4" style="border-color: #DC262630; background-color: #DC262608;">
+          <div class="flex items-center gap-3 rounded-xl border-2 p-3 sm:gap-4 sm:p-4" style="border-color: #DC262630; background-color: #DC262608;">
             <div class="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl text-white sm:h-12 sm:w-12" style="background-color: #DC2626;">
               <svg class="h-5 w-5 sm:h-6 sm:w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
               </svg>
             </div>
-            <div class="min-w-0 flex-1">
-              <p class="truncate text-sm font-bold text-gray-900 sm:text-base">Shopping from: {{ cartStore.currentStoreName || 'HomeAffairs Store' }}</p>
-              <p class="truncate text-xs text-gray-600 sm:text-sm">All items reserved for 10 minutes</p>
+            <div class="flex-1">
+              <p class="text-sm font-bold text-gray-900 sm:text-base">Shopping from: {{ cartStore.currentStoreName || 'HomeAffairs Store' }}</p>
+              <p class="text-xs text-gray-600 sm:text-sm">All items reserved for 10 minutes</p>
             </div>
             <div v-if="reservationTimeRemaining > 0" class="flex-shrink-0">
               <span
@@ -84,7 +84,7 @@
                 <svg class="mr-1 h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
-                <span class="whitespace-nowrap">{{ formatTime(reservationTimeRemaining) }}</span>
+                <span>{{ formatTime(reservationTimeRemaining) }}</span>
               </span>
             </div>
           </div>
@@ -94,16 +94,16 @@
             <div
               v-for="item in cartStore.items"
               :key="item.id"
-              class="relative overflow-hidden rounded-xl border-2 border-gray-200 bg-white p-3 shadow-sm transition-shadow hover:shadow-md sm:p-4"
+              class="relative rounded-xl border-2 border-gray-200 bg-white p-3 shadow-sm transition-shadow hover:shadow-md sm:p-4"
               :class="{ 'opacity-60': item.quantity > item.max_quantity }"
             >
               <!-- Stock Warning Badge -->
               <div
                 v-if="item.quantity > item.max_quantity"
-                class="absolute -top-2 left-3 z-10 max-w-[calc(100%-24px)] rounded-full px-2 py-1 text-xs font-bold text-white shadow-md sm:left-4 sm:px-3"
+                class="absolute -top-2 left-3 rounded-full px-2 py-1 text-xs font-bold text-white shadow-md sm:left-4 sm:px-3"
                 style="background-color: #dc2626;"
               >
-                <span class="truncate">Only {{ item.max_quantity }} in stock</span>
+                Only {{ item.max_quantity }} in stock
               </div>
 
               <div class="flex gap-3 sm:gap-4">
@@ -113,7 +113,6 @@
                     :src="item.image_url || '/placeholder-product.png'"
                     :alt="item.name"
                     class="h-20 w-20 rounded-lg object-cover sm:h-24 sm:w-24"
-                    loading="lazy"
                   />
                   <div
                     v-if="item.quantity > item.max_quantity"
@@ -124,15 +123,15 @@
                 </div>
 
                 <!-- Product Details -->
-                <div class="flex min-w-0 flex-1 flex-col justify-between pr-10 sm:pr-0">
-                  <div class="min-w-0">
+                <div class="flex flex-1 flex-col justify-between">
+                  <div>
                     <h3 class="line-clamp-2 text-sm font-semibold text-gray-900 sm:text-base">{{ item.name }}</h3>
                     <p class="mt-1 text-xs text-gray-500 sm:text-sm">{{ formatPrice(item.price) }} per unit</p>
                   </div>
 
                   <div class="mt-3 flex items-center justify-between gap-2 sm:mt-4">
-                    <!-- Quantity Controls - Mobile Optimized (48x48px touch targets) -->
-                    <div class="flex flex-shrink-0 items-center rounded-lg border-2 border-gray-200">
+                    <!-- Quantity Controls -->
+                    <div class="flex items-center rounded-lg border-2 border-gray-200">
                       <button
                         @click="updateQuantity(item.id, item.quantity - 1)"
                         class="flex h-10 w-10 items-center justify-center text-gray-600 transition-colors hover:bg-gray-100 active:bg-gray-200 disabled:cursor-not-allowed disabled:opacity-50 sm:h-11 sm:w-11"
@@ -159,7 +158,7 @@
                     </div>
 
                     <!-- Item Total -->
-                    <p class="truncate text-sm font-bold text-gray-900 sm:text-base lg:text-lg">
+                    <p class="text-sm font-bold text-gray-900 sm:text-base lg:text-lg">
                       {{ formatPrice(item.price * item.quantity) }}
                     </p>
                   </div>
@@ -192,42 +191,40 @@
           </button>
 
           <!-- Cross-Sell Section -->
-          <div v-if="crossSellProducts.length > 0" class="mt-6 overflow-hidden rounded-xl border-2 border-gray-200 bg-white p-4 sm:mt-8 sm:p-5">
+          <div v-if="crossSellProducts.length > 0" class="mt-6 rounded-xl border-2 border-gray-200 bg-white p-4 sm:mt-8 sm:p-5">
             <h3 class="mb-3 flex items-center gap-2 text-sm font-bold text-gray-900 sm:mb-4 sm:text-base">
-              <svg class="h-4 w-4 flex-shrink-0 sm:h-5 sm:w-5" style="color: #DC2626;" fill="currentColor" viewBox="0 0 24 24">
+              <svg class="h-4 w-4 sm:h-5 sm:w-5" style="color: #DC2626;" fill="currentColor" viewBox="0 0 24 24">
                 <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
               </svg>
               You might also need
             </h3>
-            <div class="scrollbar-hide -mx-4 overflow-x-auto px-4 sm:-mx-5 sm:px-5">
-              <div class="flex gap-3 pb-2 sm:gap-4">
-                <div
-                  v-for="product in crossSellProducts"
-                  :key="product.id"
-                  class="flex w-32 flex-shrink-0 flex-col rounded-lg border border-gray-200 bg-white p-2.5 transition-shadow hover:shadow-md sm:w-36 sm:p-3"
+            <div class="flex gap-3 overflow-x-auto pb-2 sm:gap-4">
+              <div
+                v-for="product in crossSellProducts"
+                :key="product.id"
+                class="flex w-32 flex-shrink-0 flex-col rounded-lg border border-gray-200 bg-white p-2.5 transition-shadow hover:shadow-md sm:w-36 sm:p-3"
+              >
+                <img
+                  :src="product.image_url || '/placeholder-product.png'"
+                  :alt="product.name"
+                  class="mb-2 h-20 w-full rounded-lg object-cover sm:h-24"
+                />
+                <h4 class="mb-1 line-clamp-2 text-xs font-medium text-gray-900">{{ product.name }}</h4>
+                <p class="mb-2 text-xs font-semibold sm:text-sm" style="color: #DC2626;">{{ formatPrice(product.price) }}</p>
+                <button
+                  @click="addCrossSellItem(product)"
+                  class="mt-auto rounded-lg py-1.5 text-xs font-bold text-white transition-colors sm:py-2"
+                  style="background-color: #DC2626;"
                 >
-                  <img
-                    :src="product.image_url || '/placeholder-product.png'"
-                    :alt="product.name"
-                    class="mb-2 h-20 w-full rounded-lg object-cover sm:h-24"
-                  />
-                  <h4 class="mb-1 line-clamp-2 text-xs font-medium text-gray-900">{{ product.name }}</h4>
-                  <p class="mb-2 text-xs font-semibold sm:text-sm" style="color: #DC2626;">{{ formatPrice(product.price) }}</p>
-                  <button
-                    @click="addCrossSellItem(product)"
-                    class="mt-auto rounded-lg py-1.5 text-xs font-bold text-white transition-colors active:scale-95 sm:py-2"
-                    style="background-color: #DC2626;"
-                  >
-                    Add to Cart
-                  </button>
-                </div>
+                  Add to Cart
+                </button>
               </div>
             </div>
           </div>
         </div>
 
-        <!-- Right Column: Order Summary (Sticky on Desktop) -->
-        <div class="lg:sticky lg:top-4 order-1 lg:order-2">
+        <!-- Right Column: Order Summary -->
+        <div class="order-1 lg:order-2">
           <div class="rounded-xl border-2 border-gray-200 bg-white p-4 shadow-sm sm:p-5">
             <h2 class="mb-4 text-base font-bold text-gray-900 sm:mb-5 sm:text-lg">Order Summary</h2>
 
@@ -278,11 +275,11 @@
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                 </svg>
-                <div class="min-w-0 flex-1">
+                <div>
                   <p class="font-medium text-gray-900">
                     {{ cartStore.deliveryDetails.method === 'pickup' ? 'Store Pickup' : 'Home Delivery' }}
                   </p>
-                  <p class="truncate text-gray-600">
+                  <p class="text-gray-600">
                     {{ cartStore.deliveryDetails.method === 'pickup'
                       ? cartStore.currentStoreName
                       : cartStore.deliveryDetails.address?.area || 'Area not set'
@@ -316,17 +313,6 @@
               </svg>
               <span>Some items are out of stock. Please adjust quantities to proceed.</span>
             </div>
-
-            <!-- Checkout Button -->
-            <button
-              @click="proceedToCheckout"
-              :disabled="hasOutOfStockItems || cartStore.items.length === 0"
-              class="mt-4 w-full rounded-xl py-3 text-sm font-bold shadow-lg transition-all hover:shadow-xl disabled:cursor-not-allowed disabled:opacity-50 sm:mt-5 sm:py-4"
-              style="background-color: #DC2626; color: #fff;"
-            >
-              <span v-if="hasOutOfStockItems">Update Cart to Continue</span>
-              <span v-else>Proceed to Checkout</span>
-            </button>
 
             <!-- Trust Badges -->
             <div class="mt-3 flex flex-wrap items-center justify-center gap-3 text-xs text-gray-500 sm:mt-4 sm:gap-4">
@@ -585,26 +571,6 @@ onUnmounted(() => {
 </script>
 
 <style scoped>
-/* Prevent horizontal overflow globally */
-*,
-*::before,
-*::after {
-  box-sizing: border-box;
-}
-
-html,
-body {
-  overflow-x: hidden;
-  width: 100%;
-  position: relative;
-}
-
-/* Ensure main container doesn't overflow */
-main {
-  overflow-x: hidden;
-  width: 100%;
-}
-
 /* Slide-left transition */
 .slide-left-enter-active,
 .slide-left-leave-active {
@@ -621,25 +587,14 @@ main {
   transform: translateX(-30px);
 }
 
-/* Hide scrollbar utility class */
-.scrollbar-hide {
+/* Hide scrollbar for cross-sell */
+.overflow-x-auto {
   -ms-overflow-style: none;
   scrollbar-width: none;
 }
 
-.scrollbar-hide::-webkit-scrollbar {
+.overflow-x-auto::-webkit-scrollbar {
   display: none;
-}
-
-/* Smooth scrolling for horizontal content */
-.scrollbar-hide {
-  scroll-behavior: smooth;
-  -webkit-overflow-scrolling: touch;
-  scroll-snap-type: x proximity;
-}
-
-.scrollbar-hide > div > * {
-  scroll-snap-align: start;
 }
 
 /* Line clamp utility */
@@ -648,85 +603,5 @@ main {
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
-  word-break: break-word;
-  overflow-wrap: break-word;
-}
-
-/* Improve text rendering */
-* {
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
-
-/* Prevent text overflow */
-h1, h2, h3, h4, h5, h6, p, span {
-  overflow-wrap: break-word;
-  word-wrap: break-word;
-}
-
-/* Prevent text size adjustment on mobile */
-@media screen and (max-width: 640px) {
-  html {
-    -webkit-text-size-adjust: 100%;
-  }
-  
-  /* Ensure no element exceeds viewport width */
-  body {
-    position: relative;
-  }
-  
-  /* Prevent any overflow */
-  .max-w-7xl {
-    max-width: 100vw;
-  }
-  
-  /* Additional overflow prevention */
-  .rounded-xl,
-  .rounded-lg {
-    overflow: hidden;
-  }
-}
-
-/* Button active state for mobile */
-button:active {
-  transform: scale(0.98);
-}
-
-/* Safe area for iOS devices */
-@supports (padding-bottom: env(safe-area-inset-bottom)) {
-  .pb-32 {
-    padding-bottom: calc(8rem + env(safe-area-inset-bottom));
-  }
-}
-
-/* Ensure images don't cause overflow */
-img {
-  max-width: 100%;
-  height: auto;
-  display: block;
-}
-
-/* Prevent grid overflow */
-.grid {
-  overflow: hidden;
-}
-
-/* Touch feedback */
-@media (hover: none) and (pointer: coarse) {
-  button:active {
-    opacity: 0.8;
-  }
-}
-
-/* Truncate utility enhancement */
-.truncate {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-/* Min-width-0 for flex items to allow shrinking */
-.min-w-0 {
-  min-width: 0;
 }
 </style>
