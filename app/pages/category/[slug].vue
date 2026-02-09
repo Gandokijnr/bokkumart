@@ -198,6 +198,7 @@
 import { useCategories } from '../../composables/useCategories'
 import { useProducts, type Product } from '../../composables/useProducts'
 import { useCartStore } from '../../stores/useCartStore'
+import type { Database } from '../../types/database.types'
 
 const route = useRoute()
 const slug = route.params.slug as string
@@ -205,6 +206,7 @@ const slug = route.params.slug as string
 const { getCategoryBySlug } = useCategories()
 const { fetchProductsByCategory, checkStock, formatPrice } = useProducts()
 const cartStore = useCartStore()
+const supabase = useSupabaseClient<Database>()
 
 const category = ref<any>(null)
 const products = ref<Product[]>([])
@@ -316,6 +318,8 @@ const handleAddToCart = async (product: Product, event: MouseEvent) => {
   if (result.success) {
     animateFlyToCart(startX, startY, product.imageUrl)
     showToast(`${product.name} added to cart!`)
+    // Persist cart to database for cross-device sync
+    await cartStore.saveToDatabase(supabase)
   } else {
     showToast(result.error || 'Failed to add item', 'error', 4000)
   }

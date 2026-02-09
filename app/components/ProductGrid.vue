@@ -204,10 +204,12 @@
 import { useProducts, type Product } from '../composables/useProducts'
 import { useCartStore } from '../stores/useCartStore'
 import { useLocationStore } from '../stores/useLocationStore'
+import type { Database } from '../types/database.types'
 
 const { products, pending, error, fetchProducts, subscribeToStockUpdates, unsubscribeFromStockUpdates, checkStock, formatPrice, stockUpdates } = useProducts()
 const cartStore = useCartStore()
 const locationStore = useLocationStore()
+const supabase = useSupabaseClient<Database>()
 
 // Local state
 const addingToCart = ref<Set<string>>(new Set())
@@ -340,6 +342,8 @@ const handleAddToCart = async (product: Product, event: MouseEvent) => {
   if (result.success) {
     animateFlyToCart(startX, startY, product.imageUrl)
     showToast(`${product.name} added to cart!`)
+    // Persist cart to database for cross-device sync
+    await cartStore.saveToDatabase(supabase)
   } else {
     showToast(result.error || 'Failed to add item', 'error', 4000)
   }
