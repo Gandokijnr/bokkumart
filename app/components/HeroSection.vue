@@ -14,7 +14,7 @@
             Live Better.
           </h1>
           <p class="mt-4 text-base leading-relaxed text-red-50 sm:text-lg md:mt-6 md:max-w-xl">
-            Your favorite premium supermarket is now online. Fresh essentials, curated brands, and fast delivery—all at your fingertips.
+            Your favorite premium supermarket is now online. Fresh essentials, curated brands, and fast delivery all at your fingertips.
           </p>
 
           <!-- CTA Buttons -->

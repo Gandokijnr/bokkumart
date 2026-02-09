@@ -45,13 +45,14 @@
       </div>
 
       <!-- Products grid -->
-      <div v-else class="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 lg:grid-cols-6">
-        <article
-          v-for="product in products"
-          :key="product.id"
-          class="group relative rounded-2xl border-2 border-gray-200 bg-white p-3 shadow-sm transition-all hover:border-red-600 hover:shadow-lg"
-          :class="{ 'opacity-60': !product.isAvailable || getStockStatus(product.id).isOutOfStock }"
-        >
+      <div v-else>
+        <div class="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 lg:grid-cols-6">
+          <article
+            v-for="product in paginatedProducts"
+            :key="product.id"
+            class="group relative rounded-2xl border-2 border-gray-200 bg-white p-3 shadow-sm transition-all hover:border-red-600 hover:shadow-lg"
+            :class="{ 'opacity-60': !product.isAvailable || getStockStatus(product.id).isOutOfStock }"
+          >
           <!-- Out of Stock Overlay -->
           <div
             v-if="!product.isAvailable || getStockStatus(product.id).isOutOfStock"
@@ -127,6 +128,47 @@
           </div>
         </article>
       </div>
+
+      <!-- Pagination -->
+      <div v-if="totalPages > 1" class="mt-8 flex items-center justify-center gap-2">
+        <button
+          :disabled="currentPage === 1"
+          class="flex h-10 w-10 items-center justify-center rounded-lg border border-gray-300 bg-white text-gray-700 transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
+          @click="currentPage--"
+        >
+          <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+          </svg>
+        </button>
+
+        <button
+          v-for="page in displayedPages"
+          :key="page"
+          :class="[
+            'h-10 w-10 rounded-lg text-sm font-medium transition-colors',
+            page === currentPage
+              ? 'bg-red-600 text-white'
+              : 'border border-gray-300 bg-white text-gray-700 hover:bg-gray-50'
+          ]"
+          @click="currentPage = page"
+        >
+          {{ page }}
+        </button>
+
+        <button
+          :disabled="currentPage === totalPages"
+          class="flex h-10 w-10 items-center justify-center rounded-lg border border-gray-300 bg-white text-gray-700 transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
+          @click="currentPage++"
+        >
+          <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+          </svg>
+        </button>
+      </div>
+
+      <p v-if="products.length > 0" class="mt-4 text-center text-sm text-gray-500">
+        Showing {{ (currentPage - 1) * itemsPerPage + 1 }} - {{ Math.min(currentPage * itemsPerPage, products.length) }} of {{ products.length }} products
+      </p>
     </div>
 
     <!-- Toast Notification -->
@@ -184,6 +226,7 @@
         </svg>
       </div>
     </div>
+    </div>
   </section>
 </template>
 
@@ -209,6 +252,40 @@ const flyingItem = ref({
   opacity: 1,
   image: '',
   animating: false
+})
+
+// Pagination state
+const currentPage = ref(1)
+const itemsPerPage = 12
+
+// Computed pagination values
+const paginatedProducts = computed(() => {
+  const start = (currentPage.value - 1) * itemsPerPage
+  const end = start + itemsPerPage
+  return products.value.slice(start, end)
+})
+
+const totalPages = computed(() => Math.ceil(products.value.length / itemsPerPage))
+
+const displayedPages = computed(() => {
+  const pages: number[] = []
+  const maxVisible = 5
+  let start = Math.max(1, currentPage.value - Math.floor(maxVisible / 2))
+  let end = Math.min(totalPages.value, start + maxVisible - 1)
+
+  if (end - start < maxVisible - 1) {
+    start = Math.max(1, end - maxVisible + 1)
+  }
+
+  for (let i = start; i <= end; i++) {
+    pages.push(i)
+  }
+  return pages
+})
+
+// Reset to first page when products change
+watch(() => products.value.length, () => {
+  currentPage.value = 1
 })
 
 // Get stock status for a product
