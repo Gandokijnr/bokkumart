@@ -85,6 +85,10 @@ export const useUserAddresses = () => {
   const supabase = useSupabaseClient()
   const user = useSupabaseUser()
 
+  const getUserId = () => {
+    return user.value?.id || (user.value as any)?.sub
+  }
+
   // Reactive state
   const addresses = ref<Address[]>([])
   const primaryAddress = ref<Address | null>(null)
@@ -95,7 +99,8 @@ export const useUserAddresses = () => {
    * Fetch all addresses for the current user
    */
   const fetchAddresses = async () => {
-    if (!user.value?.id) {
+    const userId = getUserId()
+    if (!userId) {
       error.value = 'User not authenticated'
       return
     }
@@ -107,7 +112,7 @@ export const useUserAddresses = () => {
       const { data, error: fetchError } = await supabase
         .from('addresses')
         .select('*')
-        .eq('user_id', user.value.id)
+        .eq('user_id', userId)
         .order('is_primary', { ascending: false })
         .order('created_at', { ascending: false })
 
@@ -127,7 +132,8 @@ export const useUserAddresses = () => {
    * Create a new address
    */
   const createAddress = async (formData: AddressFormData): Promise<{ success: boolean; data?: Address; error?: string }> => {
-    if (!user.value?.id) {
+    const userId = getUserId()
+    if (!userId) {
       return { success: false, error: 'User not authenticated' }
     }
 
@@ -137,7 +143,7 @@ export const useUserAddresses = () => {
       const { data, error: createError } = await (supabase
         .from('addresses') as any)
         .insert({
-          user_id: user.value.id,
+          user_id: userId,
           label: formData.label,
           street_address: formData.street_address,
           area: formData.area,
@@ -170,7 +176,8 @@ export const useUserAddresses = () => {
     addressId: string, 
     formData: Partial<AddressFormData>
   ): Promise<{ success: boolean; error?: string }> => {
-    if (!user.value?.id) {
+    const userId = getUserId()
+    if (!userId) {
       return { success: false, error: 'User not authenticated' }
     }
 
@@ -190,7 +197,7 @@ export const useUserAddresses = () => {
           updated_at: new Date().toISOString()
         })
         .eq('id', addressId)
-        .eq('user_id', user.value.id)
+        .eq('user_id', userId)
 
       if (updateError) throw updateError
 
@@ -210,7 +217,8 @@ export const useUserAddresses = () => {
    * Delete an address
    */
   const deleteAddress = async (addressId: string): Promise<{ success: boolean; error?: string }> => {
-    if (!user.value?.id) {
+    const userId = getUserId()
+    if (!userId) {
       return { success: false, error: 'User not authenticated' }
     }
 
@@ -221,7 +229,7 @@ export const useUserAddresses = () => {
         .from('addresses') as any)
         .delete()
         .eq('id', addressId)
-        .eq('user_id', user.value.id)
+        .eq('user_id', userId)
 
       if (deleteError) throw deleteError
 

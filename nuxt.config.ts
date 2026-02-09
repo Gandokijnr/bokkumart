@@ -73,10 +73,6 @@ export default defineNuxtConfig({
     },
   },
 
-  pinia: {
-    storesDirs: ['./app/stores/**']
-  },
-
   supabase: {
     url: process.env.SUPABASE_URL,
     key: process.env.SUPABASE_KEY,
@@ -92,7 +88,7 @@ export default defineNuxtConfig({
         flowType: 'pkce',
         detectSessionInUrl: true,
         persistSession: true,
-        autoRefreshToken: true
+        autoRefreshToken: true,
       }
     }
   },
@@ -107,7 +103,7 @@ export default defineNuxtConfig({
 
   vite: {
     plugins: [
-      tailwindcss(),
+      tailwindcss() as any,
     ],
   },
 })

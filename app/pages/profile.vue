@@ -34,7 +34,7 @@
             {{ loyaltyTier }} Member
           </span>
           <span v-if="loyaltyProgress.pointsToNextTier > 0" class="text-sm text-red-100">
-            Only ₦{{ formatCurrency(loyaltyProgress.pointsToNextTier) }} away from {{ loyaltyProgress.nextTier }}
+            Only {{ formatCurrency(loyaltyProgress.pointsToNextTier) }} away from {{ loyaltyProgress.nextTier }}
           </span>
         </div>
       </div>
@@ -400,7 +400,6 @@
               <div>
                 <label class="mb-2 block text-sm font-medium text-gray-700">
                   Phone Number
-                  <span v-if="phoneVerified" class="ml-2 text-xs text-green-600">✓ Verified</span>
                 </label>
                 <div class="flex gap-2">
                   <input 
@@ -409,15 +408,6 @@
                     class="flex-1 rounded-xl border-2 border-gray-200 px-4 py-3 focus:border-red-500 focus:outline-none"
                     placeholder="+234 80X XXX XXXX"
                   />
-                  <button 
-                    v-if="!phoneVerified"
-                    type="button"
-                    @click="sendOTP"
-                    :disabled="otpSending"
-                    class="rounded-xl bg-red-400 px-4 py-2 font-medium text-red-900 hover:bg-red-500 disabled:opacity-50"
-                  >
-                    {{ otpSending ? 'Sending...' : 'Verify' }}
-                  </button>
                 </div>
                 <p class="mt-1 text-xs text-gray-500">Required for delivery updates</p>
               </div>
@@ -648,8 +638,6 @@ const supabase = useSupabaseClient<Database>()
 const profile = ref<any>(null)
 const profilePending = ref(false)
 const savingProfile = ref(false)
-const phoneVerified = ref(false)
-const otpSending = ref(false)
 
 const profileForm = ref({
   full_name: '',
@@ -745,13 +733,14 @@ const loyaltyProgress = computed(() => {
 
 // Methods
 const fetchProfile = async () => {
-  if (!user.value?.id) return
+  const userId = user.value?.id || (user.value as any)?.sub
+  if (!userId) return
   
   profilePending.value = true
   const { data, error } = await supabase
     .from('profiles')
     .select('*')
-    .eq('id', user.value.id)
+    .eq('id', userId)
     .single() as { data: any, error: any }
   
   if (data) {
@@ -763,31 +752,49 @@ const fetchProfile = async () => {
 }
 
 const saveProfile = async () => {
-  if (!user.value?.id) return
+  // Ensure session is active
+  const { data: { session } } = await supabase.auth.getSession()
+  const userId = user.value?.id || (user.value as any)?.sub || session?.user?.id || (session?.user as any)?.sub
+  if (!userId) {
+    showToast('You must be logged in to update your profile', 'error')
+    return
+  }
+
+  if (!session) {
+    showToast('Your session has expired. Please sign in again.', 'error')
+    return
+  }
   
   savingProfile.value = true
-  const { error } = await supabase
-    .from('profiles')
-    .update({
+  try {
+    const updateData: Database['public']['Tables']['profiles']['Update'] = {
       full_name: profileForm.value.full_name,
       phone_number: profileForm.value.phone_number,
       updated_at: new Date().toISOString()
-    })
-    .eq('id', user.value.id)
-  
-  if (!error) {
-    showToast('Profile updated successfully!', 'success')
-    await fetchProfile()
-  } else {
-    showToast('Failed to update profile', 'error')
+    }
+    
+    const { error } = await (supabase
+      .from('profiles')
+      .update as any)(updateData)
+      .eq('id', userId)
+    
+    if (error) {
+      console.error('Profile update error:', error)
+      if (error.message.includes('not authenticated') || error.message.includes('JWT')) {
+        showToast('Session expired. Please sign in again.', 'error')
+      } else {
+        showToast(error.message || 'Failed to update profile', 'error')
+      }
+    } else {
+      showToast('Profile updated successfully!', 'success')
+      await fetchProfile()
+    }
+  } catch (err: any) {
+    console.error('Unexpected error updating profile:', err)
+    showToast('An unexpected error occurred', 'error')
+  } finally {
+    savingProfile.value = false
   }
-  savingProfile.value = false
-}
-
-const sendOTP = async () => {
-  otpSending.value = true
-  showToast('OTP sent to your phone', 'info')
-  otpSending.value = false
 }
 
 const editAddress = (address: Address) => {
@@ -944,7 +951,9 @@ const showToast = (message: string, type: 'success' | 'error' | 'info' = 'succes
 // Watch for realtime updates
 watch(() => activeOrders.value.length, (newCount, oldCount) => {
   if (newCount !== oldCount) {
-    tabs[1].badge = activeOrders.value.length || undefined
+    if (tabs[1]) {
+      tabs[1].badge = activeOrders.value.length || undefined
+    }
   }
 })
 
@@ -960,7 +969,9 @@ onMounted(async () => {
     showToast(`Order #${update.orderId.slice(-8)} is now ${update.newStatus}`, 'info')
   })
   
-  tabs[1].badge = activeOrders.value.length || undefined
+  if (tabs[1]) {
+    tabs[1].badge = activeOrders.value.length || undefined
+  }
 })
 
 onUnmounted(() => {

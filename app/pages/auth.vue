@@ -1,20 +1,21 @@
 <template>
   <div class="min-h-screen bg-gray-50 flex items-center justify-center p-4">
     <div class="w-full max-w-md">
-        <!-- Redirect Notice -->
-        <div v-if="unauthorizedReason" class="mb-6 p-4 bg-amber-50 border border-amber-200 rounded-xl">
-          <div class="flex items-start gap-3">
-            <svg class="w-5 h-5 text-amber-600 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-            </svg>
-            <div>
-              <p class="font-medium text-amber-900">Authentication Required</p>
-              <p class="text-sm text-amber-700">
-                Please sign in to continue to {{ redirectPath !== '/' ? 'your requested page' : 'Home Affairs' }}.
-              </p>
-            </div>
+      <!-- Redirect Notice -->
+      <div v-if="unauthorizedReason" class="mb-6 p-4 bg-amber-50 border border-amber-200 rounded-xl">
+        <div class="flex items-start gap-3">
+          <svg class="w-5 h-5 text-amber-600 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+          </svg>
+          <div>
+            <p class="font-medium text-amber-900">Authentication Required</p>
+            <p class="text-sm text-amber-700">
+              Please sign in to continue to {{ redirectPath !== '/' ? 'your requested page' : 'Home Affairs' }}.
+            </p>
           </div>
         </div>
+      </div>
+
       <div class="text-center mb-8">
         <div class="w-16 h-16 bg-gradient-to-br from-red-500 to-red-600 rounded-2xl mx-auto mb-4 flex items-center justify-center shadow-lg">
           <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -22,96 +23,162 @@
           </svg>
         </div>
         <h1 class="text-2xl font-bold text-gray-900">Home Affairs</h1>
-        <p class="text-gray-600 mt-1">Sign in to continue</p>
+        <p class="text-gray-600 mt-1">{{ isSignUp ? 'Create an account' : 'Sign in to continue' }}</p>
       </div>
 
       <!-- Auth Card -->
       <FormCard class="shadow-xl border-0">
         <div class="space-y-4">
-          <!-- Success State - Link Sent -->
-          <div v-if="emailSent" class="text-center space-y-5 py-4">
-            <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto">
-              <svg class="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+          <!-- Email Input -->
+          <FormInput
+            v-model="email"
+            type="email"
+            label="Email Address"
+            placeholder="you@example.com"
+            size="lg"
+          >
+            <template #leading>
+              <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
               </svg>
+            </template>
+          </FormInput>
+
+          <!-- Password Input -->
+          <FormInput
+            v-model="password"
+            type="password"
+            label="Password"
+            placeholder="Enter your password"
+            size="lg"
+          >
+            <template #leading>
+              <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+              </svg>
+            </template>
+          </FormInput>
+
+          <!-- Confirm Password (Sign Up only) -->
+          <FormInput
+            v-if="isSignUp"
+            v-model="confirmPassword"
+            type="password"
+            label="Confirm Password"
+            placeholder="Confirm your password"
+            size="lg"
+          >
+            <template #leading>
+              <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </template>
+          </FormInput>
+
+          <!-- Password Strength (Sign Up only) -->
+          <div v-if="isSignUp && password" class="space-y-2">
+            <div class="flex gap-1">
+              <div v-for="i in 4" :key="i" class="h-1 flex-1 rounded-full" :class="passwordStrength >= i ? 'bg-green-500' : 'bg-gray-200'"></div>
             </div>
-            <div>
-              <h3 class="text-lg font-semibold text-gray-900 mb-2">Check your email</h3>
-              <p class="text-sm text-gray-600">
-                We've sent a login link to<br>
-                <span class="font-medium text-gray-900">{{ sentEmail }}</span>
-              </p>
-            </div>
-            <div class="bg-blue-50 p-4 rounded-lg text-left">
-              <p class="text-sm text-blue-800">
-                <span class="font-semibold">Next steps:</span><br>
-                1. Open your email inbox<br>
-                2. Look for an email from Home Affairs<br>
-                3. Click the login link to sign in instantly
-              </p>
-            </div>
-            <div class="space-y-3 pt-2">
-              <p v-if="resendCountdown > 0" class="text-sm text-gray-500">
-                Didn't receive it? You can request a new link in {{ resendCountdown }} seconds
-              </p>
-              <FormButton
-                v-else
-                variant="outline"
-                color="neutral"
-                size="sm"
-                :loading="loading"
-                @click="sendMagicLink"
-              >
-                Resend login link
-              </FormButton>
-              <div>
-                <FormButton
-                  variant="ghost"
-                  color="neutral"
-                  size="sm"
-                  @click="resetForm"
-                >
-                  Use a different email address
-                </FormButton>
-              </div>
-            </div>
+            <p class="text-xs text-gray-500">Password strength: {{ passwordStrengthLabel }}</p>
           </div>
 
-          <!-- Email Input Form -->
-          <div v-else class="space-y-4">
-            <FormInput
-              v-model="email"
-              type="email"
-              label="Email Address"
-              help="We'll send you a login link"
-              placeholder="you@example.com"
-              size="lg"
-            >
-              <template #leading>
-                <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2z" />
-                </svg>
-              </template>
-            </FormInput>
+          <!-- Main Action Button -->
+          <FormButton
+            block
+            size="lg"
+            :loading="loading"
+            :disabled="!canSubmit"
+            @click="handleAuth"
+          >
+            {{ isSignUp ? 'Create Account' : 'Sign In' }}
+          </FormButton>
 
+          <!-- Forgot Password Link -->
+          <div v-if="!isSignUp" class="text-center">
             <FormButton
-              block
-              size="lg"
-              :loading="loading"
-              :disabled="!isValidEmail"
-              @click="sendMagicLink"
+              variant="ghost"
+              color="neutral"
+              size="sm"
+              @click="showForgotPassword = true"
             >
-              Send Login Link
+              Forgot password?
             </FormButton>
+          </div>
 
-            <p class="text-xs text-gray-500 text-center">
-              Click the link in your email to sign in instantly
+          <!-- Toggle Sign Up / Sign In -->
+          <div class="text-center pt-4 border-t">
+            <p class="text-sm text-gray-600">
+              {{ isSignUp ? 'Already have an account?' : "Don't have an account?" }}
+              <FormButton
+                variant="ghost"
+                color="primary"
+                size="sm"
+                @click="toggleAuthMode"
+              >
+                {{ isSignUp ? 'Sign In' : 'Create Account' }}
+              </FormButton>
             </p>
           </div>
         </div>
       </FormCard>
 
-      <!-- Success Notification -->
+      <!-- Forgot Password Modal -->
+      <div v-if="showForgotPassword" class="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50" @click.self="showForgotPassword = false">
+        <FormCard class="w-full max-w-sm shadow-2xl border-0">
+          <div class="space-y-4">
+            <div class="text-center">
+              <div class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                </svg>
+              </div>
+              <h3 class="text-lg font-semibold text-gray-900">Reset Password</h3>
+              <p class="text-sm text-gray-600 mt-1">
+                Enter your email address and we'll send you a link to reset your password.
+              </p>
+            </div>
+
+            <FormInput
+              v-model="resetEmail"
+              type="email"
+              label="Email Address"
+              placeholder="you@example.com"
+              size="lg"
+            />
+
+            <div class="flex gap-3">
+              <FormButton
+                variant="outline"
+                color="neutral"
+                @click="showForgotPassword = false"
+              >
+                Cancel
+              </FormButton>
+              <FormButton
+                flex-1
+                :loading="resetLoading"
+                :disabled="!isValidResetEmail"
+                @click="sendPasswordReset"
+              >
+                Send Reset Link
+              </FormButton>
+            </div>
+
+            <!-- Reset Success State -->
+            <div v-if="resetSent" class="text-center space-y-3 pt-2">
+              <div class="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mx-auto">
+                <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                </svg>
+              </div>
+              <p class="text-sm text-green-700">Reset link sent! Check your email.</p>
+            </div>
+          </div>
+        </FormCard>
+      </div>
+
+      <!-- Notification -->
       <FormNotification
         v-if="notification.show"
         :show="notification.show"
@@ -125,7 +192,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onBeforeUnmount } from 'vue'
+import { ref, computed } from 'vue'
 import { useCartStore } from '~/stores/useCartStore'
 
 // Types
@@ -146,11 +213,10 @@ const unauthorizedReason = computed(() => route.query.reason as string)
 
 // State
 const loading = ref(false)
+const isSignUp = ref(false)
 const email = ref('')
-const sentEmail = ref('')
-const emailSent = ref(false)
-const resendCountdown = ref(0)
-let resendTimer: ReturnType<typeof setInterval> | null = null
+const password = ref('')
+const confirmPassword = ref('')
 const notification = ref<NotificationType>({
   show: false,
   title: '',
@@ -158,13 +224,52 @@ const notification = ref<NotificationType>({
   color: 'green'
 })
 
+// Forgot password state
+const showForgotPassword = ref(false)
+const resetEmail = ref('')
+const resetLoading = ref(false)
+const resetSent = ref(false)
+
 // Supabase
 const supabase = useSupabaseClient()
-const config = useRuntimeConfig()
 
-// Email validation
+// Validation
 const isValidEmail = computed(() => {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.value)
+})
+
+const isValidResetEmail = computed(() => {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(resetEmail.value)
+})
+
+const isValidPassword = computed(() => {
+  return password.value.length >= 8
+})
+
+const passwordsMatch = computed(() => {
+  return password.value === confirmPassword.value
+})
+
+const canSubmit = computed(() => {
+  if (!isValidEmail.value || !isValidPassword.value) return false
+  if (isSignUp.value && !passwordsMatch.value) return false
+  return true
+})
+
+// Password strength
+const passwordStrength = computed(() => {
+  const pwd = password.value
+  let strength = 0
+  if (pwd.length >= 8) strength++
+  if (/[a-z]/.test(pwd) && /[A-Z]/.test(pwd)) strength++
+  if (/\d/.test(pwd)) strength++
+  if (/[^a-zA-Z0-9]/.test(pwd)) strength++
+  return strength
+})
+
+const passwordStrengthLabel = computed(() => {
+  const labels = ['Weak', 'Fair', 'Good', 'Strong']
+  return labels[passwordStrength.value - 1] || 'Weak'
 })
 
 // Show notification helper
@@ -180,56 +285,81 @@ const showNotification = (title: string, description: string, color: 'green' | '
   }, 5000)
 }
 
-// Magic link flow
-const sendMagicLink = async () => {
+// Toggle between sign in and sign up
+const toggleAuthMode = () => {
+  isSignUp.value = !isSignUp.value
+  password.value = ''
+  confirmPassword.value = ''
+}
+
+// Main auth handler
+const handleAuth = async () => {
   loading.value = true
   try {
-    const { error } = await supabase.auth.signInWithOtp({
-      email: email.value,
-      options: {
-        emailRedirectTo: `${config.public.siteUrl}/confirm`
-      }
-    })
+    if (isSignUp.value) {
+      // Sign up
+      const { error, data } = await supabase.auth.signUp({
+        email: email.value,
+        password: password.value
+      })
 
-    if (error) throw error
+      if (error) throw error
 
-    // Store the email and show success state
-    sentEmail.value = email.value
-    emailSent.value = true
-    startResendCountdown()
-    showNotification('Login Link Sent!', 'Check your email for the sign-in link.', 'green')
+      showNotification('Account Created!', 'Your account has been created successfully. You are now signed in.', 'green')
+      
+      // Load user's cart from database
+      const cartStore = useCartStore()
+      await cartStore.loadFromDatabase(supabase)
+      
+      // Redirect
+      navigateTo(redirectPath.value)
+    } else {
+      // Sign in
+      const { error, data } = await supabase.auth.signInWithPassword({
+        email: email.value,
+        password: password.value
+      })
+
+      if (error) throw error
+
+      showNotification('Welcome Back!', 'You have signed in successfully.', 'green')
+      
+      // Load user's cart from database
+      const cartStore = useCartStore()
+      await cartStore.loadFromDatabase(supabase)
+      
+      // Redirect
+      navigateTo(redirectPath.value)
+    }
   } catch (error: any) {
-    showNotification('Error', error.message || 'Failed to send login link. Please try again.', 'red')
+    const message = error.message || 'Authentication failed. Please try again.'
+    showNotification('Error', message, 'red')
   } finally {
     loading.value = false
   }
 }
 
-// Resend countdown timer
-const startResendCountdown = () => {
-  resendCountdown.value = 60
-  if (resendTimer) clearInterval(resendTimer)
-  resendTimer = setInterval(() => {
-    if (resendCountdown.value > 0) {
-      resendCountdown.value--
-    } else {
-      if (resendTimer) clearInterval(resendTimer)
-    }
-  }, 1000)
-}
+// Send password reset email
+const sendPasswordReset = async () => {
+  resetLoading.value = true
+  try {
+    const { error } = await supabase.auth.resetPasswordForEmail(resetEmail.value, {
+      redirectTo: `${window.location.origin}/auth/reset-password`
+    })
 
-// Reset form to enter different email
-const resetForm = () => {
-  emailSent.value = false
-  email.value = ''
-  sentEmail.value = ''
-  if (resendTimer) clearInterval(resendTimer)
-  resendCountdown.value = 0
-}
+    if (error) throw error
 
-// Cleanup on unmount
-onBeforeUnmount(() => {
-  if (resendTimer) clearInterval(resendTimer)
-})
+    resetSent.value = true
+    setTimeout(() => {
+      showForgotPassword.value = false
+      resetSent.value = false
+      resetEmail.value = ''
+    }, 3000)
+  } catch (error: any) {
+    showNotification('Error', error.message || 'Failed to send reset email. Please try again.', 'red')
+  } finally {
+    resetLoading.value = false
+  }
+}
 </script>
 
