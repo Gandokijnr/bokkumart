@@ -1,8 +1,8 @@
 <template>
-  <div class="min-h-screen bg-gray-50">
+  <div class="min-h-screen bg-gray-50 overflow-x-hidden">
     <AppHeader />
 
-    <main class="mx-auto max-w-7xl px-4 py-4 pb-32 sm:px-6 lg:py-8 lg:pb-8">
+    <main class="mx-auto w-full max-w-7xl px-4 py-4 pb-32 sm:px-6 lg:py-8 lg:pb-8">
 
       <!-- Client-Only Cart Content -->
       <ClientOnly>
@@ -17,8 +17,8 @@
         </template>
 
         <!-- Page Title with Count -->
-        <div class="mb-4 flex items-center justify-between sm:mb-6">
-          <h1 class="text-xl font-bold text-gray-900 sm:text-2xl lg:text-3xl">
+        <div class="mb-4 flex min-w-0 flex-wrap items-center justify-between gap-2 sm:mb-6">
+          <h1 class="min-w-0 text-xl font-bold text-gray-900 sm:text-2xl lg:text-3xl">
             <span v-if="cartStore.cartCount > 0" class="ml-2 text-base font-medium text-gray-500 sm:text-lg">
               ({{ cartStore.cartCount }} {{ cartStore.cartCount === 1 ? 'item' : 'items' }})
             </span>
@@ -40,9 +40,9 @@
         />
 
         <!-- Cart Content -->
-        <div v-else class="grid gap-6 lg:grid-cols-3">
+        <div v-else class="grid min-w-0 gap-6 lg:grid-cols-3">
           <!-- Left Column: Items -->
-          <div class="order-2 space-y-4 lg:order-1 lg:col-span-2">
+          <div class="order-2 min-w-0 space-y-4 lg:order-1 lg:col-span-2">
             <!-- Store Context Header -->
             <StoreHeader
               :store-name="cartStore.currentStoreName"
@@ -79,7 +79,7 @@
           </div>
 
           <!-- Right Column: Order Summary -->
-          <div class="order-1 lg:order-2">
+          <div class="order-1 min-w-0 w-full lg:order-2">
             <CartSummary
               :item-count="cartStore.cartCount"
               :subtotal="cartStore.cartSubtotal"
