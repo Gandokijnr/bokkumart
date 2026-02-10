@@ -144,33 +144,28 @@ const openCreateModal = () => {
 const createUser = async () => {
   loading.value = true
   try {
-    // Create user via Supabase Auth Admin API
-    const { data: authData, error: authError } = await supabase.auth.admin.createUser({
-      email: createForm.value.email,
-      password: createForm.value.password,
-      email_confirm: true,
-      user_metadata: {
-        full_name: createForm.value.fullName,
+    const { data: sessionData, error: sessionError } = await supabase.auth.getSession()
+    if (sessionError) throw sessionError
+
+    const accessToken = sessionData?.session?.access_token
+    if (!accessToken) {
+      throw new Error('You must be logged in to create a user')
+    }
+
+    const result = await $fetch('/api/admin/create-user', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${accessToken}`
+      },
+      body: {
+        email: createForm.value.email,
+        password: createForm.value.password,
+        fullName: createForm.value.fullName,
         phone: createForm.value.phone,
         role: createForm.value.role,
-        managed_store_ids: createForm.value.managedStoreIds
+        managedStoreIds: createForm.value.managedStoreIds
       }
     })
-
-    if (authError) throw authError
-
-    // Update profile with role and managed stores
-    const { error: profileError } = await supabase
-      .from('profiles')
-      .update({
-        full_name: createForm.value.fullName,
-        phone_number: createForm.value.phone,
-        role: createForm.value.role,
-        managed_store_ids: createForm.value.managedStoreIds.length > 0 ? createForm.value.managedStoreIds : null
-      })
-      .eq('id', authData.user.id)
-
-    if (profileError) throw profileError
 
     toast.add({
       title: 'User Created',
@@ -185,7 +180,7 @@ const createUser = async () => {
     console.error('Error creating user:', err)
     toast.add({
       title: 'Error',
-      description: err.message || 'Failed to create user',
+      description: err?.data?.message || err?.message || 'Failed to create user',
       color: 'error'
     })
   } finally {

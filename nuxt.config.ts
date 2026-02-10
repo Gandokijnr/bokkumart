@@ -95,6 +95,7 @@ export default defineNuxtConfig({
 
   runtimeConfig: {
     paystackSecretKey: process.env.PAYSTACK_SECRET_KEY,
+    supabaseServiceRoleKey: process.env.SUPABASE_SERVICE_ROLE_KEY,
     public: {
       siteUrl: process.env.SITE_URL || 'http://localhost:3000',
       paystackPublicKey: process.env.PAYSTACK_PUBLIC_KEY
