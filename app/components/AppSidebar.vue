@@ -1,245 +1,397 @@
 <template>
   <div>
     <!-- Mobile Header -->
-    <div class="lg:hidden fixed top-0 left-0 right-0 z-40 bg-white border-b border-gray-200 px-4 py-3 flex items-center justify-between">
+    <div class="lg:hidden fixed top-0 left-0 right-0 z-40 bg-white border-b border-gray-200 px-4 py-3 flex items-center justify-between shadow-sm">
       <NuxtLink to="/" class="flex items-center gap-2">
-        <div class="w-8 h-8 bg-red-600 rounded-lg flex items-center justify-center">
+        <div class="w-8 h-8 bg-gradient-to-br from-red-600 to-red-700 rounded-lg flex items-center justify-center shadow-sm">
           <span class="text-sm font-bold text-white">HA</span>
         </div>
         <span class="font-bold text-gray-900">HomeAffairs</span>
       </NuxtLink>
       <button
         @click="isMobileMenuOpen = !isMobileMenuOpen"
-        class="p-2 rounded-lg hover:bg-gray-100"
+        class="p-2 rounded-lg hover:bg-gray-100 transition-colors"
+        aria-label="Toggle menu"
       >
-        <svg v-if="!isMobileMenuOpen" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg v-if="!isMobileMenuOpen" class="w-6 h-6 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
         </svg>
-        <svg v-else class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg v-else class="w-6 h-6 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
         </svg>
       </button>
     </div>
 
     <!-- Mobile Overlay -->
-    <div
-      v-if="isMobileMenuOpen"
-      class="lg:hidden fixed inset-0 bg-black/50 z-40"
-      @click="isMobileMenuOpen = false"
-    />
+    <Transition
+      enter-active-class="transition-opacity duration-300"
+      enter-from-class="opacity-0"
+      enter-to-class="opacity-100"
+      leave-active-class="transition-opacity duration-200"
+      leave-from-class="opacity-100"
+      leave-to-class="opacity-0"
+    >
+      <div
+        v-if="isMobileMenuOpen"
+        class="lg:hidden fixed inset-0 bg-black/50 z-40 backdrop-blur-sm"
+        @click="isMobileMenuOpen = false"
+      />
+    </Transition>
 
     <!-- Sidebar -->
     <aside
-      class="fixed lg:sticky top-0 left-0 z-50 h-screen w-64 bg-white border-r border-gray-200 flex flex-col transform transition-transform duration-300 ease-in-out"
+      class="fixed lg:sticky top-0 left-0 z-50 h-screen w-72 bg-white border-r border-gray-200 flex flex-col transform transition-transform duration-300 ease-in-out shadow-xl lg:shadow-none"
       :class="[
         isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full',
         'lg:translate-x-0'
       ]"
     >
-      <!-- Logo (hidden on mobile, shown on desktop) -->
-      <div class="hidden lg:block p-4 border-b border-gray-200">
-        <NuxtLink to="/" class="flex items-center gap-2">
-          <div class="w-8 h-8 bg-red-600 rounded-lg flex items-center justify-center">
-            <span class="text-sm font-bold text-white">HA</span>
+      <!-- Logo & Brand (Desktop Only) -->
+      <div class="hidden lg:block p-6 border-b border-gray-200">
+        <NuxtLink to="/" class="flex items-center gap-3 group">
+          <div class="w-10 h-10 bg-gradient-to-br from-red-600 to-red-700 rounded-xl flex items-center justify-center shadow-md group-hover:shadow-lg transition-shadow">
+            <span class="text-base font-bold text-white">HA</span>
           </div>
-          <span class="font-bold text-gray-900">HomeAffairs</span>
+          <div>
+            <span class="font-bold text-lg text-gray-900">HomeAffairs</span>
+            <p class="text-xs text-gray-500">Admin Portal</p>
+          </div>
         </NuxtLink>
       </div>
     
-    <!-- User Info -->
-    <div class="p-4 border-b border-gray-200">
-      <div class="flex items-center gap-3">
-        <div class="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center">
-          <svg class="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+      <!-- User Info Card -->
+      <div class="p-4 border-b border-gray-200 bg-gradient-to-br from-gray-50 to-white">
+        <div class="flex items-center gap-3">
+          <div class="w-12 h-12 rounded-full bg-gradient-to-br from-teal-500 to-teal-600 flex items-center justify-center shadow-md ring-2 ring-teal-100">
+            <span class="text-lg font-bold text-white">{{ userInitials }}</span>
+          </div>
+          <div class="flex-1 min-w-0">
+            <p class="text-sm font-semibold text-gray-900 truncate">
+              {{ userStore.displayName }}
+            </p>
+            <p class="text-xs text-gray-600 capitalize flex items-center gap-1">
+              <span class="w-2 h-2 rounded-full bg-green-500"></span>
+              {{ userRoleDisplay }}
+            </p>
+          </div>
+        </div>
+        
+        <!-- Branch Manager Store Badge -->
+        <div v-if="userStore.isBranchManager && currentStoreDisplay" class="mt-3 px-3 py-2 bg-teal-50 border border-teal-200 rounded-lg">
+          <div class="flex items-center gap-2">
+            <span class="text-sm">📍</span>
+            <div class="flex-1 min-w-0">
+              <p class="text-xs text-teal-600 font-medium">Current Store</p>
+              <p class="text-sm font-semibold text-teal-900 truncate">{{ currentStoreDisplay }}</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Super Admin Store Switcher -->
+        <div v-if="userStore.isSuperAdmin && stores.length > 0" class="mt-3">
+          <label class="block text-xs font-medium text-gray-700 mb-1">Switch Branch View</label>
+          <select 
+            v-model="selectedStoreId"
+            @change="handleStoreSwitch"
+            class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 bg-white"
+          >
+            <option value="">All Stores</option>
+            <option v-for="store in stores" :key="store.id" :value="store.id">
+              {{ store.name }}
+            </option>
+          </select>
+        </div>
+      </div>
+    
+      <!-- Navigation -->
+      <nav class="flex-1 p-4 space-y-1 overflow-y-auto">
+        <!-- Dynamically filtered navigation items -->
+        <NuxtLink
+          v-for="item in visibleNav"
+          :key="item.to"
+          :to="item.to"
+          class="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 group relative"
+          :class="[
+            isActive(item.to)
+              ? 'bg-gradient-to-r from-teal-500 to-teal-600 text-white shadow-md'
+              : 'text-gray-700 hover:bg-gray-50 hover:text-teal-600'
+          ]"
+        >
+          <!-- Icon -->
+          <SidebarIcon 
+            :name="item.icon"
+            class="flex-shrink-0 transition-transform group-hover:scale-110"
+            :class="[
+              isActive(item.to) ? 'text-white' : 'text-gray-400 group-hover:text-teal-600'
+            ]"
+          />
+          
+          <span class="flex-1">{{ item.label }}</span>
+          
+          <!-- Notification Badge (Verification Queue for Branch Managers) -->
+          <span 
+            v-if="item.badge && item.badge > 0"
+            class="flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-full text-xs font-bold transition-all"
+            :class="[
+              isActive(item.to) 
+                ? 'bg-white text-teal-600' 
+                : 'bg-red-500 text-white'
+            ]"
+          >
+            {{ item.badge }}
+          </span>
+          
+          <!-- Active indicator -->
+          <div 
+            v-if="isActive(item.to)"
+            class="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-white rounded-r-full"
+          />
+        </NuxtLink>
+      </nav>
+    
+      <!-- Session Info (for staff/admin) -->
+      <div v-if="userStore.hasAdminAccess" class="px-4 py-3 border-t border-gray-200 bg-gradient-to-br from-gray-50 to-white">
+        <div class="flex items-center gap-2 text-xs text-gray-600">
+          <svg class="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
           </svg>
+          <span class="font-medium">Secure Session</span>
         </div>
-        <div class="flex-1 min-w-0">
-          <p class="text-sm font-medium text-gray-900 truncate">
-            {{ userStore.displayName }}
-          </p>
-          <p class="text-xs text-gray-500 capitalize">
-            {{ userStore.userRole }}
-          </p>
-        </div>
-      </div>
-    </div>
-    
-    <!-- Navigation -->
-    <nav class="flex-1 p-4 space-y-1 overflow-y-auto">
-      <!-- Dynamic navigation based on role -->
-      <NuxtLink
-        v-for="item in userStore.userNavigation"
-        :key="item.to"
-        :to="item.to"
-        class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors"
-        :class="[
-          $route.path === item.to || $route.path.startsWith(item.to + '/')
-            ? 'bg-red-50 text-red-700'
-            : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900'
-        ]"
-      >
-        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path v-if="item.icon === 'home'" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-          <path v-else-if="item.icon === 'shopping-bag'" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
-          <path v-else-if="item.icon === 'user'" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-          <path v-else-if="item.icon === 'shopping-cart'" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
-          <path v-else-if="item.icon === 'clipboard-list'" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
-          <path v-else-if="item.icon === 'phone'" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
-          <path v-else-if="item.icon === 'package'" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
-          <path v-else-if="item.icon === 'chart-bar'" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-          <path v-else-if="item.icon === 'list'" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16" />
-          <path v-else-if="item.icon === 'users'" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
-          <path v-else-if="item.icon === 'cog'" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-          <path v-else stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-        </svg>
-        <span>{{ item.label }}</span>
-      </NuxtLink>
-      
-      <!-- Divider for admin sections -->
-      <div v-if="userStore.hasStaffAccess" class="my-4 border-t border-gray-200"></div>
-      
-      <!-- Operations Section -->
-      <div v-if="userStore.hasStaffAccess" class="mb-4">
-        <p class="px-3 py-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">
-          Operations
+        <p class="text-xs text-gray-500 mt-1 ml-6">
+          Auto-logout: 30 min inactive
         </p>
-        <div class="mt-1 space-y-1">
-          <NuxtLink
-            to="/admin"
-            class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors"
-            :class="[$route.path === '/admin' ? 'bg-red-50 text-red-700' : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900']"
-          >
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
-            </svg>
-            <span>Dashboard</span>
-          </NuxtLink>
-          <NuxtLink
-            to="/admin/verification-queue"
-            class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors"
-            :class="[$route.path === '/admin/verification-queue' ? 'bg-red-50 text-red-700' : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900']"
-          >
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
-            </svg>
-            <span>Verification Queue</span>
-          </NuxtLink>
-        </div>
       </div>
-
-      <!-- Management Section (Manager/Admin only) -->
-      <div v-if="userStore.hasAdminAccess" class="mb-4">
-        <p class="px-3 py-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">
-          Management
-        </p>
-        <div class="mt-1 space-y-1">
-          <NuxtLink
-            to="/admin/inventory"
-            class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors"
-            :class="[$route.path === '/admin/inventory' ? 'bg-red-50 text-red-700' : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900']"
-          >
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
-            </svg>
-            <span>Inventory</span>
-          </NuxtLink>
-          <NuxtLink
-            to="/admin/dashboard"
-            class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors"
-            :class="[$route.path === '/admin/dashboard' ? 'bg-red-50 text-red-700' : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900']"
-          >
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-            </svg>
-            <span>Analytics</span>
-          </NuxtLink>
-          <NuxtLink
-            to="/admin/orders-new"
-            class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors"
-            :class="[$route.path === '/admin/orders-new' ? 'bg-red-50 text-red-700' : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900']"
-          >
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16" />
-            </svg>
-            <span>All Orders</span>
-          </NuxtLink>
-        </div>
-      </div>
-
-      <!-- Administration Section (Admin only) -->
-      <div v-if="userStore.isAdmin" class="mb-4">
-        <p class="px-3 py-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">
-          Administration
-        </p>
-        <div class="mt-1 space-y-1">
-          <NuxtLink
-            to="/admin/settings"
-            class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors"
-            :class="[$route.path === '/admin/settings' ? 'bg-red-50 text-red-700' : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900']"
-          >
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
-            </svg>
-            <span>Staff Management</span>
-          </NuxtLink>
-          <NuxtLink
-            to="/admin/settings"
-            class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors"
-            :class="[$route.path === '/admin/settings' ? 'bg-red-50 text-red-700' : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900']"
-          >
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-            </svg>
-            <span>Settings</span>
-          </NuxtLink>
-        </div>
-      </div>
-    </nav>
     
-    <!-- Session Info (for staff/admin) -->
-    <div v-if="userStore.hasStaffAccess" class="p-4 border-t border-gray-200 bg-gray-50">
-      <div class="flex items-center gap-2 text-xs text-gray-500">
-        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-        </svg>
-        <span>Secure Session</span>
+      <!-- Sign Out Button -->
+      <div class="p-4 border-t border-gray-200 bg-white">
+        <button
+          @click="handleLogout"
+          class="w-full rounded-xl px-4 py-3 text-sm font-semibold text-gray-700 hover:bg-red-50 hover:text-red-600 transition-all duration-200 flex items-center justify-center gap-2 border border-gray-200 hover:border-red-200"
+        >
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+          </svg>
+          Sign Out
+        </button>
       </div>
-      <p class="text-xs text-gray-400 mt-1">
-        Auto-logout: 30 min
-      </p>
-    </div>
-    
-    <!-- Logout -->
-    <div class="p-4 border-t border-gray-200">
-      <button
-        @click="handleLogout"
-        class="w-full rounded-lg px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 transition-colors flex items-center justify-center gap-2"
-      >
-        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-        </svg>
-        Sign Out
-      </button>
-    </div>
-  </aside>
-</div>
+    </aside>
+  </div>
 </template>
 
 <script setup lang="ts">
 import { useUserStore } from '~/stores/user'
+import type { UserRole } from '~/stores/user'
+
+// Icon components
+const IconHome = 'svg'
+const IconGlobe = 'svg'
+const IconOfficeBuilding = 'svg'
+const IconClipboardList = 'svg'
+const IconPackage = 'svg'
+const IconChartBar = 'svg'
+const IconUsers = 'svg'
+const IconCog = 'svg'
+const IconPhone = 'svg'
+const IconCube = 'svg'
 
 const userStore = useUserStore()
-const isMobileMenuOpen = ref(false)
+const route = useRoute()
+const supabase = useSupabaseClient()
 
-async function handleLogout() {
+// State
+const isMobileMenuOpen = ref(false)
+const selectedStoreId = ref('')
+const stores = ref<any[]>([])
+const pendingVerificationCount = ref(0)
+
+// Navigation Items with Role-Based Access
+interface NavItem {
+  label: string
+  to: string
+  icon: string
+  requiredRoles: UserRole[]
+  badge?: number
+}
+
+const navItems = ref<NavItem[]>([
+  // Super Admin Only
+  {
+    label: 'Global Dashboard',
+    to: '/admin/global-dashboard',
+    icon: 'globe',
+    requiredRoles: ['super_admin']
+  },
+  {
+    label: 'Staff Management',
+    to: '/admin/staff-management',
+    icon: 'users',
+    requiredRoles: ['super_admin']
+  },
+  {
+    label: 'All Orders',
+    to: '/admin/orders',
+    icon: 'clipboardList',
+    requiredRoles: ['super_admin', 'branch_manager', 'staff']
+  },
+  {
+    label: 'Analytics',
+    to: '/admin/analytics',
+    icon: 'chartBar',
+    requiredRoles: ['super_admin', 'branch_manager', 'staff']
+  },
+  
+  // Branch Manager
+  {
+    label: 'Branch Dashboard',
+    to: '/admin/branch-dashboard',
+    icon: 'officeBuilding',
+    requiredRoles: ['branch_manager']
+  },
+  {
+    label: 'Verification Queue',
+    to: '/admin/verification-queue',
+    icon: 'phone',
+    requiredRoles: ['branch_manager', 'staff'],
+    badge: 0 // Will be updated dynamically
+  },
+  
+  // Staff Only
+  {
+    label: 'Dashboard',
+    to: '/admin/dashboard',
+    icon: 'home',
+    requiredRoles: ['staff']
+  },
+  {
+    label: 'Inventory',
+    to: '/admin/inventory',
+    icon: 'cube',
+    requiredRoles: ['super_admin', 'branch_manager', 'staff']
+  },
+  {
+    label: 'Settings',
+    to: '/admin/settings',
+    icon: 'cog',
+    requiredRoles: ['super_admin']
+  }
+])
+
+// Computed: Filter navigation based on current user role
+const visibleNav = computed(() => {
+  const userRole = userStore.effectiveRole
+  
+  return navItems.value
+    .filter(item => item.requiredRoles.includes(userRole))
+    .map(item => {
+      // Add badge for verification queue if branch manager
+      if (item.to === '/admin/verification-queue' && userStore.isBranchManager) {
+        return { ...item, badge: pendingVerificationCount.value }
+      }
+      return item
+    })
+})
+
+// Computed: User initials
+const userInitials = computed(() => {
+  const name = userStore.displayName
+  if (!name) return '?'
+  const parts = name.split(' ')
+  if (parts.length >= 2) {
+    return (parts[0][0] + parts[1][0]).toUpperCase()
+  }
+  return name.substring(0, 2).toUpperCase()
+})
+
+// Computed: User role display
+const userRoleDisplay = computed(() => {
+  const role = userStore.effectiveRole
+  const roleNames = {
+    super_admin: 'Super Admin',
+    branch_manager: 'Branch Manager',
+    admin: 'Administrator',
+    manager: 'Manager',
+    staff: 'Staff Member',
+    customer: 'Customer'
+  }
+  return roleNames[role] || role
+})
+
+// Computed: Current store display for branch manager
+const currentStoreDisplay = computed(() => {
+  return userStore.managedStoreNames
+})
+
+// Check if route is active
+const isActive = (to: string) => {
+  return route.path === to || route.path.startsWith(to + '/')
+}
+
+// Handle store switch (super admin only)
+const handleStoreSwitch = () => {
+  // Emit event or update global state for store filtering
+  console.log('Switched to store:', selectedStoreId.value)
+  // You can emit this to a global state or event bus
+}
+
+// Fetch stores for super admin
+const fetchStores = async () => {
+  if (userStore.isSuperAdmin) {
+    const { data } = await supabase
+      .from('stores')
+      .select('id, name')
+      .eq('is_active', true)
+      .order('name')
+    
+    if (data) {
+      stores.value = data
+    }
+  }
+}
+
+// Fetch pending verification count for branch managers
+const fetchPendingCount = async () => {
+  if (userStore.isBranchManager && userStore.profile?.store_id) {
+    // This would be a real query to your orders table
+    // For now, using a placeholder
+    pendingVerificationCount.value = 5
+  }
+}
+
+// Handle logout
+const handleLogout = async () => {
+  isMobileMenuOpen.value = false
   await userStore.signOut()
   navigateTo('/auth')
 }
 
 // Close mobile menu when route changes
-const route = useRoute()
 watch(() => route.path, () => {
   isMobileMenuOpen.value = false
 })
+
+// Initialize
+onMounted(() => {
+  fetchStores()
+  fetchPendingCount()
+})
 </script>
+
+<style scoped>
+/* Custom scrollbar for navigation */
+nav::-webkit-scrollbar {
+  width: 6px;
+}
+
+nav::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+nav::-webkit-scrollbar-thumb {
+  background: #d1d5db;
+  border-radius: 3px;
+}
+
+nav::-webkit-scrollbar-thumb:hover {
+  background: #9ca3af;
+}
+</style>

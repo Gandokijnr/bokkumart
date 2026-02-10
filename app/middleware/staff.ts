@@ -58,7 +58,7 @@ export default defineNuxtRouteMiddleware(async (to, from) => {
   console.log('[Staff Middleware] Role found:', role)
   
   // Allow admin, manager, or staff
-  const allowedRoles = ['admin', 'manager', 'staff']
+  const allowedRoles = ['admin', 'manager', 'staff', 'super_admin', 'branch_manager']
   if (!allowedRoles.includes(role)) {
     console.log(`[Staff Middleware] Access denied - role '${role}' not in [${allowedRoles.join(', ')}]`)
     return navigateTo('/forbidden')

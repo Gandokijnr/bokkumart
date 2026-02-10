@@ -215,7 +215,7 @@
             <h3 class="text-lg font-semibold text-gray-900">No orders yet</h3>
             <p class="mt-2 text-sm text-gray-500">Start shopping to see your order history here</p>
             <button 
-              @click="navigateTo('/shop')"
+              @click="navigateTo('/')"
               class="mt-6 rounded-xl bg-red-600 px-6 py-3 font-medium text-white hover:bg-red-700"
             >
               Start Shopping

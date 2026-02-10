@@ -19,6 +19,10 @@ export interface Database {
           phone_number: string | null
           default_address: Json | null
           loyalty_points: number
+          role: 'customer' | 'staff' | 'admin' | 'manager' | 'super_admin' | 'branch_manager' | 'driver'
+          store_id: string | null
+          managed_store_ids: string[] | null
+          driver_status: 'offline' | 'available' | 'on_delivery'
           created_at: string
           updated_at: string
         }
@@ -28,6 +32,10 @@ export interface Database {
           phone_number?: string | null
           default_address?: Json | null
           loyalty_points?: number
+          role?: 'customer' | 'staff' | 'admin' | 'manager' | 'super_admin' | 'branch_manager' | 'driver'
+          store_id?: string | null
+          managed_store_ids?: string[] | null
+          driver_status?: 'offline' | 'available' | 'on_delivery'
           created_at?: string
           updated_at?: string
         }
@@ -37,6 +45,10 @@ export interface Database {
           phone_number?: string | null
           default_address?: Json | null
           loyalty_points?: number
+          role?: 'customer' | 'staff' | 'admin' | 'manager' | 'super_admin' | 'branch_manager' | 'driver'
+          store_id?: string | null
+          managed_store_ids?: string[] | null
+          driver_status?: 'offline' | 'available' | 'on_delivery'
           created_at?: string
           updated_at?: string
         }
@@ -87,43 +99,82 @@ export interface Database {
           id: string
           user_id: string
           store_id: string
-          status: 'pending' | 'confirmed' | 'preparing' | 'ready' | 'out_for_delivery' | 'delivered' | 'cancelled'
-          total_amount: number
-          delivery_address: Json
-          delivery_instructions: string | null
-          payment_method: 'cash_on_delivery' | 'online_payment'
-          payment_status: 'pending' | 'paid' | 'failed' | 'refunded'
+          items: Json
+          subtotal: number
           delivery_fee: number
+          total_amount: number
+          status: 'pending' | 'processing' | 'paid' | 'confirmed' | 'assigned' | 'picked_up' | 'arrived' | 'delivered' | 'cancelled' | 'refunded'
+          delivery_method: 'pickup' | 'delivery'
+          delivery_details: Json | null
+          paystack_reference: string | null
+          paystack_transaction_id: string | null
+          metadata: Json
           created_at: string
           updated_at: string
+          paid_at: string | null
+          delivered_at: string | null
+          driver_id: string | null
+          assigned_at: string | null
+          picked_up_at: string | null
+          arrived_at: string | null
+          confirmation_code: string | null
+          payment_method: 'online' | 'pod'
+          nearest_landmark: string | null
+          driver_notes: string | null
         }
         Insert: {
           id?: string
           user_id: string
           store_id: string
-          status?: 'pending' | 'confirmed' | 'preparing' | 'ready' | 'out_for_delivery' | 'delivered' | 'cancelled'
-          total_amount: number
-          delivery_address: Json
-          delivery_instructions?: string | null
-          payment_method: 'cash_on_delivery' | 'online_payment'
-          payment_status?: 'pending' | 'paid' | 'failed' | 'refunded'
+          items: Json
+          subtotal?: number
           delivery_fee?: number
+          total_amount: number
+          status?: 'pending' | 'processing' | 'paid' | 'confirmed' | 'assigned' | 'picked_up' | 'arrived' | 'delivered' | 'cancelled' | 'refunded'
+          delivery_method: 'pickup' | 'delivery'
+          delivery_details?: Json | null
+          paystack_reference?: string | null
+          paystack_transaction_id?: string | null
+          metadata?: Json
           created_at?: string
           updated_at?: string
+          paid_at?: string | null
+          delivered_at?: string | null
+          driver_id?: string | null
+          assigned_at?: string | null
+          picked_up_at?: string | null
+          arrived_at?: string | null
+          confirmation_code?: string | null
+          payment_method?: 'online' | 'pod'
+          nearest_landmark?: string | null
+          driver_notes?: string | null
         }
         Update: {
           id?: string
           user_id?: string
           store_id?: string
-          status?: 'pending' | 'confirmed' | 'preparing' | 'ready' | 'out_for_delivery' | 'delivered' | 'cancelled'
-          total_amount?: number
-          delivery_address?: Json
-          delivery_instructions?: string | null
-          payment_method?: 'cash_on_delivery' | 'online_payment'
-          payment_status?: 'pending' | 'paid' | 'failed' | 'refunded'
+          items?: Json
+          subtotal?: number
           delivery_fee?: number
+          total_amount?: number
+          status?: 'pending' | 'processing' | 'paid' | 'confirmed' | 'assigned' | 'picked_up' | 'arrived' | 'delivered' | 'cancelled' | 'refunded'
+          delivery_method?: 'pickup' | 'delivery'
+          delivery_details?: Json | null
+          paystack_reference?: string | null
+          paystack_transaction_id?: string | null
+          metadata?: Json
           created_at?: string
           updated_at?: string
+          paid_at?: string | null
+          delivered_at?: string | null
+          driver_id?: string | null
+          assigned_at?: string | null
+          picked_up_at?: string | null
+          arrived_at?: string | null
+          confirmation_code?: string | null
+          payment_method?: 'online' | 'pod'
+          nearest_landmark?: string | null
+          driver_notes?: string | null
         }
       }
       order_items: {
@@ -637,6 +688,53 @@ export interface Database {
           updated_at?: string
         }
       }
+      audit_logs: {
+        Row: {
+          id: string
+          user_id: string
+          user_name: string | null
+          action_type: 'price_change' | 'inventory_update' | 'stock_adjustment' | 'product_visibility_change' | 'manager_assignment' | 'role_change'
+          entity_type: 'product' | 'store_inventory' | 'store' | 'profile'
+          entity_id: string
+          store_id: string | null
+          store_name: string | null
+          old_value: Json | null
+          new_value: Json | null
+          description: string
+          metadata: Json
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          user_name?: string | null
+          action_type: 'price_change' | 'inventory_update' | 'stock_adjustment' | 'product_visibility_change' | 'manager_assignment' | 'role_change'
+          entity_type: 'product' | 'store_inventory' | 'store' | 'profile'
+          entity_id: string
+          store_id?: string | null
+          store_name?: string | null
+          old_value?: Json | null
+          new_value?: Json | null
+          description: string
+          metadata?: Json
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          user_name?: string | null
+          action_type?: 'price_change' | 'inventory_update' | 'stock_adjustment' | 'product_visibility_change' | 'manager_assignment' | 'role_change'
+          entity_type?: 'product' | 'store_inventory' | 'store' | 'profile'
+          entity_id?: string
+          store_id?: string | null
+          store_name?: string | null
+          old_value?: Json | null
+          new_value?: Json | null
+          description?: string
+          metadata?: Json
+          created_at?: string
+        }
+      }
     }
     Views: {
       user_profile_summary: {
@@ -752,6 +850,31 @@ export interface Database {
       is_store_manager: {
         Args: { p_store_id: string }
         Returns: boolean
+      }
+      is_super_admin: {
+        Args: {}
+        Returns: boolean
+      }
+      is_branch_manager: {
+        Args: { p_user_id?: string }
+        Returns: boolean
+      }
+      get_managed_store_ids: {
+        Args: { p_user_id?: string }
+        Returns: string[]
+      }
+      log_audit_action: {
+        Args: {
+          p_action_type: string
+          p_entity_type: string
+          p_entity_id: string
+          p_store_id: string
+          p_old_value?: Json
+          p_new_value?: Json
+          p_description?: string
+          p_metadata?: Json
+        }
+        Returns: string
       }
     }
   }

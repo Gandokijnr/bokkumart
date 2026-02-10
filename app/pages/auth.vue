@@ -193,6 +193,7 @@
 
 <script setup lang="ts">
 import { ref, computed } from 'vue'
+import { useUserStore } from '~/stores/user'
 import { useCartStore } from '~/stores/useCartStore'
 
 // Types
@@ -307,12 +308,23 @@ const handleAuth = async () => {
 
       showNotification('Account Created!', 'Your account has been created successfully. You are now signed in.', 'green')
       
+      // Initialize user store and set the user BEFORE fetching profile
+      const userStore = useUserStore()
+      
+      // Set the authenticated user in the store
+      if (data.user) {
+        userStore.user = data.user
+      }
+      
+      // Now fetch the profile (it will use the user we just set)
+      await userStore.fetchProfile()
+      
       // Load user's cart from database
       const cartStore = useCartStore()
       await cartStore.loadFromDatabase(supabase)
       
-      // Redirect
-      navigateTo(redirectPath.value)
+      // Handle redirect based on role
+      userStore.handleRedirectAfterLogin()
     } else {
       // Sign in
       const { error, data } = await supabase.auth.signInWithPassword({
@@ -324,12 +336,23 @@ const handleAuth = async () => {
 
       showNotification('Welcome Back!', 'You have signed in successfully.', 'green')
       
+      // Initialize user store and set the user before fetching profile
+      const userStore = useUserStore()
+      
+      // Set the authenticated user in the store
+      if (data.user) {
+        userStore.user = data.user
+      }
+      
+      // Now fetch the profile (it will use the user we just set)
+      await userStore.fetchProfile()
+      
       // Load user's cart from database
       const cartStore = useCartStore()
       await cartStore.loadFromDatabase(supabase)
       
-      // Redirect
-      navigateTo(redirectPath.value)
+      // Handle redirect based on role
+      userStore.handleRedirectAfterLogin()
     }
   } catch (error: any) {
     const message = error.message || 'Authentication failed. Please try again.'

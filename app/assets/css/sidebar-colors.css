@@ -1,0 +1,205 @@
+/* HomeAffairs Sidebar - Tailwind CSS Color Reference */
+
+/* ============================================
+   TEAL BRAND COLORS (Primary)
+   ============================================ */
+
+/* Active Navigation Item */
+.active-nav {
+  @apply bg-gradient-to-r from-teal-500 to-teal-600;
+  /* Gradient: #14B8A6 → #0D9488 */
+}
+
+/* Teal Backgrounds */
+.teal-bg-light {
+  @apply bg-teal-50;
+  /* Very light teal for subtle backgrounds */
+}
+
+.teal-border {
+  @apply border-teal-200;
+  /* Light teal for borders */
+}
+
+.teal-text {
+  @apply text-teal-600;
+  /* Main teal text color */
+}
+
+.teal-text-dark {
+  @apply text-teal-900;
+  /* Dark teal for emphasis */
+}
+
+/* Teal Hover States */
+.hover-teal {
+  @apply hover:text-teal-600;
+}
+
+.hover-teal-bg {
+  @apply hover:bg-gray-50 hover:text-teal-600;
+}
+
+/* ============================================
+   RED COLORS (Secondary - Notifications, Brand)
+   ============================================ */
+
+/* HomeAffairs Brand Red */
+.brand-red {
+  @apply bg-red-600;
+  /* #DC2626 - Main brand color */
+}
+
+.brand-red-gradient {
+  @apply bg-gradient-to-br from-red-600 to-red-700;
+  /* Rich red gradient */
+}
+
+/* Notification Badge */
+.notification-badge {
+  @apply bg-red-500 text-white;
+  /* Bright red for urgency */
+}
+
+/* Sign Out Hover */
+.signout-hover {
+  @apply hover:bg-red-50 hover:text-red-600 hover:border-red-200;
+}
+
+/* ============================================
+   GRAYSCALE (Neutral Colors)
+   ============================================ */
+
+.text-primary {
+  @apply text-gray-900;
+  /* Darkest text - headings, labels */
+}
+
+.text-secondary {
+  @apply text-gray-700;
+  /* Standard text - navigation items */
+}
+
+.text-muted {
+  @apply text-gray-600;
+  /* Subtle text - descriptions */
+}
+
+.text-subtle {
+  @apply text-gray-500;
+  /* Very subtle - timestamps, meta */
+}
+
+.icon-muted {
+  @apply text-gray-400;
+  /* Inactive icons */
+}
+
+/* Borders */
+.border-default {
+  @apply border-gray-200;
+  /* Standard borders throughout */
+}
+
+/* Backgrounds */
+.bg-subtle {
+  @apply bg-gray-50;
+  /* Very light gray backgrounds */
+}
+
+.bg-gradient-subtle {
+  @apply bg-gradient-to-br from-gray-50 to-white;
+  /* Subtle gradient for cards */
+}
+
+/* ============================================
+   GREEN (Status Indicators)
+   ============================================ */
+
+/* Active Status Dot */
+.status-active {
+  @apply bg-green-500;
+  /* Bright green dot */
+}
+
+/* Secure Session Icon */
+.secure-icon {
+  @apply text-green-500;
+  /* Security indicator color */
+}
+
+/* ============================================
+   USAGE EXAMPLES
+   ============================================ */
+
+/* Active Navigation Link */
+.nav-link-active {
+  @apply bg-gradient-to-r from-teal-500 to-teal-600 text-white shadow-md;
+}
+
+/* Inactive Navigation Link */
+.nav-link-inactive {
+  @apply text-gray-700 hover:bg-gray-50 hover:text-teal-600;
+}
+
+/* User Avatar (Branch Manager) */
+.user-avatar {
+  @apply bg-gradient-to-br from-teal-500 to-teal-600 ring-2 ring-teal-100;
+}
+
+/* Brand Avatar (Logo) */
+.brand-avatar {
+  @apply bg-gradient-to-br from-red-600 to-red-700;
+}
+
+/* Store Badge (Branch Manager) */
+.store-badge {
+  @apply bg-teal-50 border-teal-200 text-teal-900;
+}
+
+/* Notification Count Badge */
+.notif-badge-active {
+  @apply bg-white text-teal-600;
+  /* On active navigation item */
+}
+
+.notif-badge-inactive {
+  @apply bg-red-500 text-white;
+  /* On inactive navigation item */
+}
+
+/* ============================================
+   COLOR PALETTE SUMMARY
+   ============================================ */
+
+/*
+PRIMARY (Teal):
+- teal-50:  #F0FDFA (lightest backgrounds)
+- teal-100: #CCFBF1 (rings, very subtle)
+- teal-200: #99F6E4 (borders)
+- teal-500: #14B8A6 (primary brand)
+- teal-600: #0D9488 (hover, text)
+- teal-900: #134E4A (dark text on teal bg)
+
+SECONDARY (Red):
+- red-50:  #FEF2F2 (hover backgrounds)
+- red-200: #FECACA (hover borders)
+- red-500: #EF4444 (notification badges)
+- red-600: #DC2626 (brand primary)
+- red-700: #B91C1C (brand gradient end)
+
+NEUTRAL (Gray):
+- gray-50:  #F9FAFB
+- gray-200: #E5E7EB
+- gray-400: #9CA3AF
+- gray-500: #6B7280
+- gray-600: #4B5563
+- gray-700: #374151
+- gray-900: #111827
+
+STATUS:
+- green-500: #22C55E (active indicator)
+
+WHITE: #FFFFFF (active text, badges)
+BLACK/50: rgba(0, 0, 0, 0.5) (mobile overlay)
+*/
