@@ -210,10 +210,7 @@ export const useDriverStore = defineStore('driver', {
             try {
                 const { data, error } = await supabase
                     .from('orders')
-                    .select(`
-            *,
-            customer:profiles!orders_user_id_fkey(full_name, phone_number)
-          `)
+                    .select('*')
                     .eq('driver_id', userId)
                     .in('status', ['assigned', 'picked_up', 'arrived'])
                     .order('assigned_at', { ascending: false })
@@ -225,6 +222,18 @@ export const useDriverStore = defineStore('driver', {
                 }
 
                 this.activeOrder = data as any
+
+                if (this.activeOrder?.user_id) {
+                    const { data: customerProfile } = await supabase
+                        .from('profiles')
+                        .select('full_name, phone_number')
+                        .eq('id', this.activeOrder.user_id)
+                        .single()
+
+                    if (customerProfile && this.activeOrder) {
+                        this.activeOrder.customer = customerProfile as any
+                    }
+                }
 
                 if (this.activeOrder) {
                     this.driverStatus = 'on_delivery'
@@ -245,10 +254,7 @@ export const useDriverStore = defineStore('driver', {
             try {
                 const { data, error } = await supabase
                     .from('orders')
-                    .select(`
-            *,
-            customer:profiles!orders_user_id_fkey(full_name, phone_number)
-          `)
+                    .select('*')
                     .eq('driver_id', userId)
                     .eq('status', 'delivered')
                     .order('delivered_at', { ascending: false })
@@ -256,7 +262,27 @@ export const useDriverStore = defineStore('driver', {
 
                 if (error) throw error
 
-                this.orderHistory = data as any
+                const orders = (data || []) as any[]
+
+                // Attach customer profiles best-effort (no FK join assumption)
+                const userIds = Array.from(new Set(orders.map(o => o.user_id).filter(Boolean)))
+                let customerMap = new Map<string, any>()
+
+                if (userIds.length > 0) {
+                    const { data: customers } = await supabase
+                        .from('profiles')
+                        .select('id, full_name, phone_number')
+                        .in('id', userIds)
+
+                    for (const c of (customers || []) as any[]) {
+                        customerMap.set(c.id, c)
+                    }
+                }
+
+                this.orderHistory = orders.map(o => ({
+                    ...o,
+                    customer: o.user_id ? customerMap.get(o.user_id) || null : null
+                })) as any
             } catch (err: any) {
                 console.error('Failed to fetch order history:', err)
             }

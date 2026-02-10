@@ -12,7 +12,12 @@
             </div>
             <div>
               <h1 class="text-lg font-bold text-white">Driver Dashboard</h1>
-              <p class="text-xs text-slate-400">{{ userStore.displayName }}</p>
+              <ClientOnly>
+                <p class="text-xs text-slate-400">{{ userStore.displayName }}</p>
+                <template #fallback>
+                  <p class="text-xs text-slate-400">Guest</p>
+                </template>
+              </ClientOnly>
             </div>
           </div>
 
