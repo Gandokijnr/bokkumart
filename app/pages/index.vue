@@ -28,12 +28,12 @@
 </template>
 
 <script setup lang="ts">
-import { useProducts, type Product } from '../composables/useProducts'
-
+import { useProducts } from '../composables/useProducts'
 import { useLocationStore } from '../stores/useLocationStore'
+import { useStoreLocator } from '../composables/useStoreLocator'
 
 const locationStore = useLocationStore()
-const supabase = useSupabaseClient()
+const { fetchStores } = useStoreLocator()
 
 const categories = [
   { name: 'Fresh Produce', icon: '🥬', sub: 'Fruits & vegetables' },
@@ -73,7 +73,7 @@ onMounted(async () => {
   locationStore.loadStoredSelection()
   
   if (locationStore.stores.length === 0) {
-    await locationStore.fetchStores(supabase)
+    await fetchStores()
   }
 })
 

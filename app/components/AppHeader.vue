@@ -14,6 +14,21 @@
           </div>
         </button>
 
+        <!-- Store Selector -->
+        <button
+          @click="showStoreSwitcher = true"
+          class="hidden md:flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-700 shadow-sm transition-all hover:border-red-300 hover:shadow-md"
+        >
+          <svg class="h-4 w-4 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+          </svg>
+          <span class="max-w-[150px] truncate">{{ storeStore.selectedStore?.name || 'Select Store' }}</span>
+          <svg class="h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+          </svg>
+        </button>
+
         <!-- Desktop Navigation -->
         <nav class="hidden items-center gap-8 lg:flex" aria-label="Primary">
           <button @click="navigateTo('/#categories')" class="text-sm font-medium text-gray-700 transition-colors hover:text-red-600">Categories</button>
@@ -140,6 +155,11 @@
 
           <!-- Mobile nav links -->
           <nav class="space-y-1" aria-label="Mobile">
+            <!-- Mobile Store Selector -->
+            <button @click="showStoreSwitcher = true; mobileMenuOpen = false" class="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-left text-sm font-semibold text-gray-700 transition-colors hover:bg-red-50 hover:text-red-700">
+              <span class="text-lg">🏪</span>
+              <span>{{ storeStore.selectedStore?.name || 'Select Store' }}</span>
+            </button>
             <button @click="navigateTo('/#categories'); mobileMenuOpen = false" class="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-left text-sm font-semibold text-gray-700 transition-colors hover:bg-red-50 hover:text-red-700">
               <span class="text-lg">🏪</span>
               <span>Categories</span>
@@ -179,18 +199,24 @@
       </Transition>
     </div>
   </header>
+
+  <!-- Store Switcher Modal -->
+  <StoreSwitcher v-model="showStoreSwitcher" />
 </template>
 
 <script setup lang="ts">
 import { useCartStore } from '~/stores/useCartStore'
 import { useUserStore } from '~/stores/user'
+import { useStoreStore } from '~/stores/store'
 
 const cartStore = useCartStore()
 const userStore = useUserStore()
+const storeStore = useStoreStore()
 const searchOpen = ref(false)
 const mobileMenuOpen = ref(false)
 const searchQuery = ref('')
 const searchInput = ref<HTMLInputElement | null>(null)
+const showStoreSwitcher = ref(false)
 
 // Reactive cart count from store
 const cartCount = computed(() => cartStore.cartCount)

@@ -426,6 +426,7 @@ export interface Database {
           product_id?: string
           stock_level?: number
           reserved_stock?: number
+          available_stock?: number
           digital_buffer?: number
           is_visible?: boolean
           store_price?: number | null

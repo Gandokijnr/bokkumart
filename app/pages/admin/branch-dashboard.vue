@@ -77,12 +77,12 @@
         </NuxtLink>
 
         <NuxtLink
-          to="/admin/inventory"
+          to="/admin/branch-inventory"
           class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow"
         >
-          <span class="text-3xl mb-3 block">📦</span>
-          <h3 class="text-lg font-semibold text-gray-900">Local Inventory</h3>
-          <p class="text-sm text-gray-600 mt-2">Manage inventory for your stores</p>
+          <span class="text-3xl mb-3 block">�</span>
+          <h3 class="text-lg font-semibold text-gray-900">Manage Inventory</h3>
+          <p class="text-sm text-gray-600 mt-2">Upload CSV or manage stock for your stores</p>
         </NuxtLink>
 
         <NuxtLink

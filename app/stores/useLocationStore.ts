@@ -46,21 +46,13 @@ export const useLocationStore = defineStore('location', {
   },
 
   actions: {
-    async fetchStores(supabase: any) {
+    async fetchStores() {
       this.isLoading = true
       this.error = null
 
       try {
-        const { data, error } = await supabase
-          .from('stores')
-          .select('id, name, code, address, city, latitude, longitude, phone, base_delivery_fee, is_flagship')
-          .eq('is_active', true)
-          .order('is_flagship', { ascending: false })
-          .order('name')
-
-        if (error) throw error
-
-        this.stores = data || []
+        const result = await $fetch('/api/stores') as { success: boolean; stores: Store[] }
+        this.stores = result.stores || []
 
         // Auto-select flagship store if none selected
         if (!this.selectedStoreId && this.stores.length > 0) {

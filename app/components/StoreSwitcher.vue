@@ -12,17 +12,16 @@ const emit = defineEmits<{
 }>()
 
 const storeStore = useStoreStore()
-const { stores, loading, error, getNearestStoreSuggestion, LAGOS_AREA_COORDINATES } = useStoreLocator()
-const supabase = useSupabaseClient()
+const { stores, loading, error, getNearestStoreSuggestion, LAGOS_AREA_COORDINATES, fetchStores } = useStoreLocator()
 
 const selectedStoreId = ref<string | null>(storeStore.selectedStore?.id || null)
 const nearestStore = ref<StoreWithDistance | null>(null)
 const detectingLocation = ref(false)
 const shoppingMode = ref<'delivery' | 'pickup'>(storeStore.shoppingMode)
 
-// Load stores on mount
+// Load stores on mount using public API
 onMounted(async () => {
-  await useStoreLocator().fetchStores(supabase)
+  await fetchStores()
   
   // Auto-detect nearest store if none selected
   if (!storeStore.isStoreSelected && stores.value.length > 0) {
@@ -97,8 +96,6 @@ const confirmSelection = async () => {
   
   storeStore.setStore(store)
   storeStore.setShoppingMode(shoppingMode.value)
-  
-  await storeStore.syncWithSupabase(supabase)
   
   emit('select', store)
   emit('update:modelValue', false)

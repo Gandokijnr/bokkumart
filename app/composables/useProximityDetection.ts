@@ -10,7 +10,6 @@ export interface ProximityDetectionOptions {
 export const useProximityDetection = () => {
   const storeStore = useStoreStore()
   const storeLocator = useStoreLocator()
-  const supabase = useSupabaseClient()
   
   const detecting = ref(false)
   const showStoreModal = ref(false)
@@ -33,7 +32,7 @@ export const useProximityDetection = () => {
     }
 
     // Fetch stores first
-    await storeLocator.fetchStores(supabase)
+    await storeLocator.fetchStores()
     
     if (storeLocator.stores.value.length === 0) {
       return { store: null, detected: false, error: 'No stores available' }
@@ -49,7 +48,7 @@ export const useProximityDetection = () => {
       if (nearest && autoSelectNearest) {
         // Auto-select the nearest store for better UX
         storeStore.setStore(nearest)
-        await storeStore.syncWithSupabase(supabase)
+        // Store selection is now local-only, no need to sync with supabase
         
         detecting.value = false
         return { store: nearest, detected: true }

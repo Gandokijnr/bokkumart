@@ -9,7 +9,7 @@
       </div>
 
       <!-- Store Selection Notice -->
-      <div v-if="!locationStore.selectedStoreId" class="mb-6 rounded-xl border-2 border-yellow-200 bg-yellow-50 p-4">
+      <div v-if="!storeStore.isStoreSelected" class="mb-6 rounded-xl border-2 border-yellow-200 bg-yellow-50 p-4">
         <p class="text-sm text-yellow-800">Please select a store to view available products.</p>
       </div>
 
@@ -34,14 +34,14 @@
       </div>
 
       <!-- Empty state -->
-      <div v-else-if="products.length === 0 && locationStore.selectedStoreId" class="rounded-2xl border-2 border-gray-200 bg-white p-8 text-center">
+      <div v-else-if="products.length === 0 && storeStore.isStoreSelected" class="rounded-2xl border-2 border-gray-200 bg-white p-8 text-center">
         <div class="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-gray-100 mx-auto">
           <svg class="h-8 w-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
           </svg>
         </div>
         <h3 class="text-lg font-semibold text-gray-900">No products available</h3>
-        <p class="mt-2 text-sm text-gray-600">There are no products available at {{ locationStore.selectedStoreName }} right now.</p>
+        <p class="mt-2 text-sm text-gray-600">There are no products available at {{ storeStore.storeName }} right now.</p>
       </div>
 
       <!-- Products grid -->
@@ -203,12 +203,12 @@
 <script setup lang="ts">
 import { useProducts, type Product } from '../composables/useProducts'
 import { useCartStore } from '../stores/useCartStore'
-import { useLocationStore } from '../stores/useLocationStore'
+import { useStoreStore } from '../stores/store'
 import type { Database } from '../types/database.types'
 
 const { products, pending, error, fetchProducts, subscribeToStockUpdates, unsubscribeFromStockUpdates, checkStock, formatPrice, stockUpdates } = useProducts()
 const cartStore = useCartStore()
-const locationStore = useLocationStore()
+const storeStore = useStoreStore()
 const supabase = useSupabaseClient<Database>()
 
 // Local state
@@ -356,12 +356,12 @@ const refreshProducts = async () => {
 
 // Setup on mount
 onMounted(async () => {
-  locationStore.loadStoredSelection()
+  storeStore.loadFromLocalStorage()
 
-  if (locationStore.selectedStoreId) {
+  if (storeStore.isStoreSelected && storeStore.selectedStore) {
     await fetchProducts()
 
-    subscribeToStockUpdates(locationStore.selectedStoreId, (update) => {
+    subscribeToStockUpdates(storeStore.selectedStore.id, (update) => {
       if (!update.isAvailable) {
         const product = products.value.find(p => p.id === update.productId)
         if (product) {
@@ -378,7 +378,7 @@ onUnmounted(() => {
 })
 
 // Watch for store changes
-watch(() => locationStore.selectedStoreId, async (newStoreId, oldStoreId) => {
+watch(() => storeStore.selectedStore?.id, async (newStoreId, oldStoreId) => {
   if (newStoreId && newStoreId !== oldStoreId) {
     unsubscribeFromStockUpdates()
     await fetchProducts()

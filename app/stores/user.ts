@@ -128,7 +128,7 @@ export const useUserStore = defineStore('user', {
           { label: 'My Store Orders', icon: '📦', to: '/admin/orders', roles: ['branch_manager'] },
           { label: 'Dispatch', icon: '🛵', to: '/admin/dispatch', roles: ['branch_manager'] },
           { label: 'Drivers', icon: '🚗', to: '/admin/drivers', roles: ['branch_manager'] },
-          { label: 'Local Inventory', icon: '📦', to: '/admin/inventory', roles: ['branch_manager'] },
+          { label: 'Manage Inventory', icon: '�', to: '/admin/branch-inventory', roles: ['branch_manager'] },
           { label: 'Daily Sales Report', icon: '💰', to: '/admin/sales', roles: ['branch_manager'] },
           { label: 'My Activity Log', icon: '📝', to: '/admin/my-audit-logs', roles: ['branch_manager'] }
         )

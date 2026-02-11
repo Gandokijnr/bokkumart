@@ -183,23 +183,16 @@ export const useStoreLocator = () => {
   const error = ref<string | null>(null)
   const userLocation = ref<Coordinates | null>(null)
 
-  // Fetch all active stores from Supabase
-  const fetchStores = async (supabase: any) => {
+  // Fetch all active stores from API (bypasses RLS)
+  const fetchStores = async () => {
     loading.value = true
     error.value = null
     
     try {
-      const { data, error: supabaseError } = await supabase
-        .from('stores')
-        .select('*')
-        .eq('is_active', true)
-        .order('is_flagship', { ascending: false })
-        
-      if (supabaseError) throw supabaseError
-      
-      stores.value = data || []
-    } catch (e) {
-      error.value = e instanceof Error ? e.message : 'Failed to fetch stores'
+      const result = await $fetch('/api/stores') as { success: boolean; stores: Store[] }
+      stores.value = result.stores || []
+    } catch (e: any) {
+      error.value = e.message || 'Failed to fetch stores'
       console.error('Error fetching stores:', e)
     } finally {
       loading.value = false

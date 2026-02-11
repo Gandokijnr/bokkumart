@@ -1,4 +1,4 @@
-import { useLocationStore } from '~/stores/useLocationStore'
+import { useStoreStore } from '../stores/store'
 import type { Database } from '../types/database.types'
 
 export type Product = {
@@ -42,7 +42,7 @@ const formatNaira = (value: number) => {
 
 export const useProducts = () => {
   const supabase = useSupabaseClient<Database>()
-  const locationStore = useLocationStore()
+  const storeStore = useStoreStore()
 
   // Reactive state for SSR and real-time updates
   const products = ref<Product[]>([])
@@ -56,7 +56,7 @@ export const useProducts = () => {
    * Uses separate queries to avoid schema cache dependency
    */
   const fetchProducts = async () => {
-    const storeId = locationStore.selectedStoreId
+    const storeId = storeStore.selectedStore?.id
 
     if (!storeId) {
       error.value = 'No store selected'
@@ -74,7 +74,7 @@ export const useProducts = () => {
         .eq('id', storeId)
         .single() as { data: { id: string; name: string } | null }
 
-      const storeName = storeData?.name || locationStore.selectedStoreName
+      const storeName = storeData?.name || storeStore.selectedStore?.name || storeStore.storeName
 
       // Fetch inventory for this store
       const { data: inventoryData, error: inventoryError } = await supabase
@@ -145,6 +145,13 @@ export const useProducts = () => {
         const category = categoriesMap[product.category_id]
         const finalPrice = inventory?.store_price || product.price
         const effectiveStock = Math.max(0, (inventory?.available_stock || 0) - (inventory?.digital_buffer || 2))
+        
+        // Generate public URL for image if it's a storage path
+        let imageUrl = product.image_url
+        if (imageUrl && !imageUrl.startsWith('http')) {
+          const { data: { publicUrl } } = supabase.storage.from('products').getPublicUrl(imageUrl)
+          imageUrl = publicUrl
+        }
 
         return {
           id: product.id,
@@ -152,8 +159,8 @@ export const useProducts = () => {
           description: product.description,
           price: finalPrice,
           oldPrice: inventory?.store_price && inventory.store_price < product.price ? product.price : undefined,
-          imageUrl: product.image_url,
-          image_url: product.image_url,
+          imageUrl: imageUrl,
+          image_url: imageUrl,
           unit: product.unit,
           sku: product.sku,
           metadata: product.metadata,
@@ -236,7 +243,7 @@ export const useProducts = () => {
 
             // If product just went out of stock, show a toast
             if (wasAvailable && !isNowAvailable) {
-              console.warn(`Product ${productData?.name} just went out of stock at ${locationStore.selectedStoreName}`)
+              console.warn(`Product ${productData?.name} just went out of stock at ${storeStore.selectedStore?.name || storeStore.storeName}`)
             }
           }
         }
@@ -287,7 +294,7 @@ export const useProducts = () => {
    * Fetch products filtered by category
    */
   const fetchProductsByCategory = async (categorySlug: string) => {
-    const storeId = locationStore.selectedStoreId
+    const storeId = storeStore.selectedStore?.id
 
     if (!storeId) {
       error.value = 'No store selected'
@@ -372,12 +379,19 @@ export const useProducts = () => {
         
         if (!inventory) {
           // Product exists but no inventory at this store
+          // Generate public URL for image if it's a storage path
+          let imageUrl = product.image_url
+          if (imageUrl && !imageUrl.startsWith('http')) {
+            const { data: { publicUrl } } = supabase.storage.from('products').getPublicUrl(imageUrl)
+            imageUrl = publicUrl
+          }
+
           return {
             id: product.id,
             name: product.name,
             description: product.description,
             price: product.price,
-            imageUrl: product.image_url,
+            imageUrl: imageUrl,
             unit: product.unit,
             sku: product.sku,
             metadata: product.metadata,
@@ -388,7 +402,7 @@ export const useProducts = () => {
             availableStock: 0,
             digitalBuffer: 2,
             storeId: storeId,
-            storeName: storeData?.name || locationStore.selectedStoreName,
+            storeName: storeData?.name || storeStore.selectedStore?.name || storeStore.storeName,
             isAvailable: false,
             badge: undefined
           }
@@ -397,13 +411,20 @@ export const useProducts = () => {
         const finalPrice = inventory.store_price || product.price
         const effectiveStock = Math.max(0, inventory.available_stock - (inventory.digital_buffer || 2))
 
+        // Generate public URL for image if it's a storage path
+        let imageUrl = product.image_url
+        if (imageUrl && !imageUrl.startsWith('http')) {
+          const { data: { publicUrl } } = supabase.storage.from('products').getPublicUrl(imageUrl)
+          imageUrl = publicUrl
+        }
+
         return {
           id: product.id,
           name: product.name,
           description: product.description,
           price: finalPrice,
           oldPrice: inventory.store_price && inventory.store_price < product.price ? product.price : undefined,
-          imageUrl: product.image_url,
+          imageUrl: imageUrl,
           unit: product.unit,
           sku: product.sku,
           metadata: product.metadata,
@@ -414,7 +435,7 @@ export const useProducts = () => {
           availableStock: effectiveStock,
           digitalBuffer: inventory.digital_buffer || 2,
           storeId: storeId,
-          storeName: storeData?.name || locationStore.selectedStoreName,
+          storeName: storeData?.name || storeStore.selectedStore?.name || storeStore.storeName,
           isAvailable: effectiveStock > 0,
           badge: finalPrice < product.price ? 'Deal' : effectiveStock <= 5 ? 'Low Stock' : undefined
         }
