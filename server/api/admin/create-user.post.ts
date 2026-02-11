@@ -88,6 +88,9 @@ export default defineEventHandler(async (event) => {
     email: body.email,
     password: body.password,
     email_confirm: true,
+    app_metadata: {
+      role: body.role || 'staff'
+    },
     user_metadata: {
       full_name: body.fullName || '',
       phone: body.phone || '',
@@ -105,13 +108,13 @@ export default defineEventHandler(async (event) => {
 
   const { error: updateProfileErr } = await (admin as any)
     .from('profiles')
-    .update({
+    .upsert({
+      id: created.user.id,
       full_name: body.fullName || null,
       phone_number: body.phone || null,
       role: body.role || 'staff',
       managed_store_ids: body.managedStoreIds && body.managedStoreIds.length > 0 ? body.managedStoreIds : null
-    })
-    .eq('id', created.user.id)
+    }, { onConflict: 'id' })
 
   if (updateProfileErr) {
     throw createError({

@@ -85,18 +85,15 @@ const fetchUsers = async () => {
   loading.value = true
   try {
     // Fetch all profiles with user auth data
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from('profiles')
-      .select(`
-        *,
-        user_email:id
-      `)
+      .select('*')
       .order('created_at', { ascending: false })
 
     if (error) throw error
 
     // Fetch email addresses from auth.users (requires admin access)
-    const userIds = data?.map(p => p.id) || []
+    const userIds = ((data as any[]) || []).map(p => p.id) || []
     
     // Get emails via admin API or stored metadata
     // For now, we'll use a workaround - store email in metadata
@@ -207,18 +204,28 @@ const updateUser = async () => {
     const oldStoreIds = editingUser.value.managed_store_ids || []
     const newStoreIds = editForm.value.managedStoreIds
 
-    // Update profile
-    const { error: updateError } = await supabase
-      .from('profiles')
-      .update({
-        full_name: editForm.value.fullName,
-        phone_number: editForm.value.phone,
-        role: editForm.value.role,
-        managed_store_ids: newStoreIds.length > 0 ? newStoreIds : null
-      })
-      .eq('id', editingUser.value.id)
+    const { data: sessionData, error: sessionError } = await supabase.auth.getSession()
+    if (sessionError) throw sessionError
 
-    if (updateError) throw updateError
+    const accessToken = sessionData?.session?.access_token
+    if (!accessToken) {
+      throw new Error('You must be logged in to update a user')
+    }
+
+    // Use server API to bypass RLS recursion issues
+    await $fetch('/api/admin/update-user', {
+      method: 'PATCH',
+      headers: {
+        Authorization: `Bearer ${accessToken}`
+      },
+      body: {
+        id: editingUser.value.id,
+        fullName: editForm.value.fullName,
+        phone: editForm.value.phone,
+        role: editForm.value.role,
+        managedStoreIds: newStoreIds.length > 0 ? newStoreIds : null
+      }
+    })
 
     // Log manager assignment change if stores changed
     if (JSON.stringify(oldStoreIds.sort()) !== JSON.stringify(newStoreIds.sort())) {
@@ -243,7 +250,7 @@ const updateUser = async () => {
     console.error('Error updating user:', err)
     toast.add({
       title: 'Error',
-      description: err.message || 'Failed to update user',
+      description: err?.data?.message || err?.message || 'Failed to update user',
       color: 'error'
     })
   } finally {
@@ -252,7 +259,7 @@ const updateUser = async () => {
 }
 
 const getStoreName = (storeId: string) => {
-  return stores.value.find(s => s.id === storeId)?.name || 'Unknown Store'
+  return (stores.value as any[]).find(s => s.id === storeId)?.name || 'Unknown Store'
 }
 
 const getRoleBadgeColor = (role: string) => {

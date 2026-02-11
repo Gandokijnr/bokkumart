@@ -50,7 +50,8 @@ export const useUserStore = defineStore('user', {
   getters: {
     // Current effective role (consider impersonation)
     effectiveRole: (state): UserRole => {
-      return state.impersonatingRole || state.profile?.role || 'customer'
+      const jwtRole = ((state.user as any)?.app_metadata?.role as UserRole | undefined) || undefined
+      return state.impersonatingRole || state.profile?.role || jwtRole || 'customer'
     },
 
     // Role checks
@@ -239,7 +240,23 @@ export const useUserStore = defineStore('user', {
           .eq('id', userId)
           .single()
 
-        if (error) throw error
+        if (error) {
+          const jwtRole = ((this.user as any)?.app_metadata?.role as UserRole | undefined) || undefined
+          if (jwtRole) {
+            this.profile = {
+              id: userId,
+              full_name: null,
+              phone_number: null,
+              role: jwtRole,
+              store_id: null,
+              managed_store_ids: null,
+              created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString()
+            }
+            return
+          }
+          throw error
+        }
 
         this.profile = data as UserProfile | null
 

@@ -2,13 +2,12 @@ import { defineEventHandler, readBody, createError } from 'h3'
 import { createClient } from '@supabase/supabase-js'
 import type { Database } from '~/types/database.types'
 
-interface CreateUserBody {
-  email: string
-  password: string
+interface UpdateUserBody {
+  id: string
   fullName?: string
   phone?: string
   role?: 'staff' | 'branch_manager' | 'super_admin' | 'customer' | 'driver'
-  managedStoreIds?: string[]
+  managedStoreIds?: string[] | null
 }
 
 export default defineEventHandler(async (event) => {
@@ -25,11 +24,10 @@ export default defineEventHandler(async (event) => {
   if (!supabaseUrl || !serviceRoleKey) {
     throw createError({
       statusCode: 500,
-      statusMessage: 'Server not configured for admin user creation'
+      statusMessage: 'Server not configured for admin user updates'
     })
   }
 
-  // Verify the caller is authenticated and is a super_admin
   const authHeader = event.node.req.headers['authorization']
   const bearer = Array.isArray(authHeader) ? authHeader[0] : authHeader
   const token = typeof bearer === 'string' && bearer.startsWith('Bearer ')
@@ -76,55 +74,63 @@ export default defineEventHandler(async (event) => {
     })
   }
 
-  const body = await readBody<CreateUserBody>(event)
-  if (!body?.email || !body?.password) {
+  const body = await readBody<UpdateUserBody>(event)
+  if (!body?.id) {
     throw createError({
       statusCode: 400,
-      statusMessage: 'Email and password are required'
+      statusMessage: 'User id is required'
     })
   }
 
-  const { data: created, error: createErr } = await admin.auth.admin.createUser({
-    email: body.email,
-    password: body.password,
-    email_confirm: true,
-    user_metadata: {
-      full_name: body.fullName || '',
-      phone: body.phone || '',
-      role: body.role || 'staff',
-      managed_store_ids: body.managedStoreIds || []
-    }
-  })
-
-  if (createErr || !created?.user) {
-    throw createError({
-      statusCode: 400,
-      statusMessage: createErr?.message || 'Failed to create user'
-    })
+  const updateData: Database['public']['Tables']['profiles']['Update'] = {
+    full_name: body.fullName ?? null,
+    phone_number: body.phone ?? null,
+    role: (body.role as any) ?? undefined,
+    managed_store_ids: Array.isArray(body.managedStoreIds)
+      ? (body.managedStoreIds.length > 0 ? body.managedStoreIds : null)
+      : body.managedStoreIds === null
+        ? null
+        : undefined
   }
 
-  const { error: updateProfileErr } = await (admin as any)
+  const { data, error } = await (admin as any)
     .from('profiles')
-    .update({
-      full_name: body.fullName || null,
-      phone_number: body.phone || null,
-      role: body.role || 'staff',
-      managed_store_ids: body.managedStoreIds && body.managedStoreIds.length > 0 ? body.managedStoreIds : null
-    })
-    .eq('id', created.user.id)
+    .update(updateData)
+    .eq('id', body.id)
+    .select('*')
+    .single()
 
-  if (updateProfileErr) {
-    throw createError({
-      statusCode: 400,
-      statusMessage: updateProfileErr.message
-    })
-  }
+  if (!error && body.role) {
+    const { data: targetUserData, error: targetUserErr } = await (admin as any).auth.admin.getUserById(body.id)
+    if (targetUserErr) {
+      throw createError({
+        statusCode: 400,
+        statusMessage: targetUserErr.message
+      })
+    }
 
-  return {
-    success: true,
-    user: {
-      id: created.user.id,
-      email: created.user.email
+    const existingAppMeta = (targetUserData?.user as any)?.app_metadata || {}
+    const { error: authUpdateErr } = await (admin as any).auth.admin.updateUserById(body.id, {
+      app_metadata: {
+        ...existingAppMeta,
+        role: body.role
+      }
+    })
+
+    if (authUpdateErr) {
+      throw createError({
+        statusCode: 400,
+        statusMessage: authUpdateErr.message
+      })
     }
   }
+
+  if (error) {
+    throw createError({
+      statusCode: 400,
+      statusMessage: error.message
+    })
+  }
+
+  return { success: true, profile: data }
 })

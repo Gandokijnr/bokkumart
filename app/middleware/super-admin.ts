@@ -20,7 +20,8 @@ export default defineNuxtRouteMiddleware(async (to, from) => {
     }
 
     // Check if user has super_admin role
-    if (userStore.profile?.role !== 'super_admin') {
+    const jwtRole = ((userStore.user as any)?.app_metadata?.role as string | undefined) || undefined
+    if (userStore.profile?.role !== 'super_admin' && jwtRole !== 'super_admin') {
         return navigateTo('/forbidden')
     }
 })
