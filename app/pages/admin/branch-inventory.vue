@@ -551,7 +551,7 @@ import { useUserStore } from '~/stores/user'
 
 definePageMeta({
   layout: 'admin',
-  middleware: ['auth']
+  middleware: ['inventory-manager']
 })
 
 useHead({
@@ -692,17 +692,34 @@ const fetchInventory = async () => {
 }
 
 const updateStock = async (item: any) => {
-  const { error } = await (supabase as any)
-    .from('store_inventory')
-    .update({
-      stock_level: Math.max(0, parseInt(item.stock_level) || 0),
-      available_stock: Math.max(0, parseInt(item.stock_level) || 0),
-      updated_at: new Date().toISOString()
-    })
-    .eq('id', item.id)
+  const { data: sessionData, error: sessionError } = await supabase.auth.getSession()
+  if (sessionError) {
+    toast.add({ title: 'Error', description: 'Failed to get session', color: 'error' })
+    return
+  }
+
+  const accessToken = sessionData?.session?.access_token
+  if (!accessToken) {
+    toast.add({ title: 'Error', description: 'Not authenticated', color: 'error' })
+    return
+  }
+
+  const nextStockLevel = Math.max(0, parseInt(item.stock_level) || 0)
+
+  const { error } = await $fetch('/api/admin/update-store-inventory', {
+    method: 'PATCH',
+    headers: {
+      Authorization: `Bearer ${accessToken}`
+    },
+    body: {
+      id: item.id,
+      store_id: item.store_id,
+      stock_level: nextStockLevel
+    }
+  }).then(() => ({ error: null as any })).catch((e: any) => ({ error: e }))
 
   if (error) {
-    toast.add({ title: 'Error', description: error.message, color: 'error' })
+    toast.add({ title: 'Error', description: error?.data?.message || error?.message || 'Failed to update stock', color: 'error' })
   } else {
     toast.add({ title: 'Success', description: 'Stock updated', color: 'success' })
   }
@@ -711,16 +728,32 @@ const updateStock = async (item: any) => {
 const toggleVisibility = async (item: any) => {
   const newVisibility = !item.is_visible
 
-  const { error } = await (supabase as any)
-    .from('store_inventory')
-    .update({
-      is_visible: newVisibility,
-      updated_at: new Date().toISOString()
-    })
-    .eq('id', item.id)
+  const { data: sessionData, error: sessionError } = await supabase.auth.getSession()
+  if (sessionError) {
+    toast.add({ title: 'Error', description: 'Failed to get session', color: 'error' })
+    return
+  }
+
+  const accessToken = sessionData?.session?.access_token
+  if (!accessToken) {
+    toast.add({ title: 'Error', description: 'Not authenticated', color: 'error' })
+    return
+  }
+
+  const { error } = await $fetch('/api/admin/update-store-inventory', {
+    method: 'PATCH',
+    headers: {
+      Authorization: `Bearer ${accessToken}`
+    },
+    body: {
+      id: item.id,
+      store_id: item.store_id,
+      is_visible: newVisibility
+    }
+  }).then(() => ({ error: null as any })).catch((e: any) => ({ error: e }))
 
   if (error) {
-    toast.add({ title: 'Error', description: error.message, color: 'error' })
+    toast.add({ title: 'Error', description: error?.data?.message || error?.message || 'Failed to update item', color: 'error' })
   } else {
     item.is_visible = newVisibility
     toast.add({ title: 'Success', description: `Item ${newVisibility ? 'visible' : 'hidden'}`, color: 'success' })

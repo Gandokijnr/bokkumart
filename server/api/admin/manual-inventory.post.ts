@@ -61,9 +61,8 @@ export default defineEventHandler(async (event) => {
 
   const isBranchManager = callerProfile?.role === 'branch_manager'
   const isSuperAdmin = callerProfile?.role === 'super_admin'
-  const isStaff = callerProfile?.role === 'staff'
 
-  if (!isBranchManager && !isSuperAdmin && !isStaff) {
+  if (!isBranchManager && !isSuperAdmin) {
     throw createError({ statusCode: 403, statusMessage: 'Not authorized to manage inventory' })
   }
 
