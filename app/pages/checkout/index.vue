@@ -135,18 +135,86 @@
         <!-- Store Locations for Pickup -->
         <div v-if="fulfillmentMode === 'pickup'" class="space-y-4">
           <div class="flex items-center justify-between">
-            <p class="text-sm font-medium text-gray-700">Select a pickup location:</p>
-            <button 
-              v-if="userLocation"
-              @click="getUserLocation"
-              class="text-xs text-red-600 hover:text-red-700 flex items-center gap-1"
-            >
-              <svg class="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-              </svg>
-              Refresh Location
-            </button>
+            <p class="text-sm font-medium text-gray-700">Pickup</p>
+            <div class="flex items-center gap-3">
+              <button
+                type="button"
+                class="text-xs font-medium text-red-600 hover:text-red-700"
+                @click="showAllPickupStores = !showAllPickupStores"
+              >
+                {{ showAllPickupStores ? 'Hide branches' : 'Change Pickup Branch' }}
+              </button>
+
+              <button
+                v-if="userLocation"
+                @click="getUserLocation"
+                class="text-xs text-red-600 hover:text-red-700 flex items-center gap-1"
+              >
+                <svg class="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+                Refresh Location
+              </button>
+            </div>
+          </div>
+
+          <!-- Selected Pickup Card (Smart Default) -->
+          <div v-if="selectedStore" class="rounded-xl border-2 border-gray-200 bg-white p-5">
+            <div class="flex items-start justify-between gap-4">
+              <div class="min-w-0 flex-1">
+                <p class="text-xs font-semibold text-gray-500">
+                  Pickup from your selected store:
+                </p>
+                <div class="mt-1 flex items-center gap-2">
+                  <p class="font-bold text-gray-900 truncate">{{ selectedStore.name }}</p>
+                  <span class="rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-800">
+                    Ready in 30 mins
+                  </span>
+                </div>
+                <p class="mt-1 text-sm text-gray-600">{{ selectedStore.address }}</p>
+                <div class="mt-2 flex items-center gap-3 text-xs">
+                  <span class="text-gray-500">{{ selectedStore.hours }}</span>
+                  <span v-if="selectedStore.distance !== null" class="text-red-600 font-medium">
+                    {{ selectedStore.distance.toFixed(1) }} km away
+                  </span>
+                </div>
+              </div>
+
+              <div class="flex flex-col items-end gap-2">
+                <span
+                  class="px-2 py-0.5 rounded-full text-xs font-medium"
+                  :class="selectedStore.isOpen ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'"
+                >
+                  {{ selectedStore.isOpen ? 'Open' : 'Closed' }}
+                </span>
+                <a
+                  href="#"
+                  class="text-xs font-semibold text-red-600 hover:text-red-700"
+                  @click.prevent="showAllPickupStores = !showAllPickupStores"
+                >
+                  {{ showAllPickupStores ? 'Cancel' : 'Change store' }}
+                </a>
+              </div>
+            </div>
+          </div>
+
+          <div v-if="selectedStore" class="rounded-xl border-2 border-blue-200 bg-blue-50 p-4">
+            <div class="flex items-start justify-between gap-3">
+              <div>
+                <p class="text-sm font-bold text-blue-900">Prefer delivery instead?</p>
+                <p class="mt-1 text-sm text-blue-800">
+                  You are picking up from {{ selectedStore.name }}. Would you rather have our rider deliver it to you for just ₦1,500?
+                </p>
+              </div>
+              <button
+                type="button"
+                class="whitespace-nowrap rounded-lg bg-red-600 px-3 py-2 text-xs font-bold text-white hover:bg-red-700"
+                @click="switchToDeliveryFromPickup"
+              >
+                Switch to Delivery
+              </button>
+            </div>
           </div>
           
           <!-- Location Loading -->
@@ -168,10 +236,10 @@
             </div>
           </div>
           
-          <!-- Store Cards with Distance -->
-          <div v-else class="space-y-3">
+          <!-- Other Branches (Expanded) -->
+          <div v-else-if="showAllPickupStores" class="space-y-3">
             <label
-              v-for="store in sortedStores"
+              v-for="store in pickupStoresVisible"
               :key="store.id"
               class="flex cursor-pointer items-start gap-3 rounded-xl border-2 p-4 transition-all"
               :class="selectedStoreId === store.id ? 'border-red-600 bg-red-50' : 'border-gray-200 hover:border-gray-300 bg-white'"
@@ -210,6 +278,11 @@
                 </div>
               </div>
             </label>
+
+            <div v-if="storeChangeChecking" class="flex items-center gap-2 text-xs text-gray-500 py-2">
+              <div class="h-3.5 w-3.5 animate-spin rounded-full border-2 border-gray-300 border-t-red-600"></div>
+              Checking availability at this branch...
+            </div>
           </div>
           
           <!-- Pickup Instructions Block -->
@@ -392,6 +465,10 @@
           </div>
         </div>
 
+        <div v-if="fulfillmentMode === 'pickup'" class="rounded-xl border-2 border-amber-200 bg-amber-50 p-4">
+          <p class="font-bold text-amber-900">Store Pickup requires upfront payment to secure your inventory and priority packing.</p>
+        </div>
+
         <!-- Final Bill Breakdown -->
         <div class="rounded-xl border-2 border-gray-200 bg-white p-5">
           <h2 class="font-bold text-gray-900 mb-4">Final Bill</h2>
@@ -410,7 +487,7 @@
             </div>
             
             <div class="flex justify-between text-sm">
-              <span class="text-gray-600">Service Fee (2.5%)</span>
+              <span class="text-gray-600">{{ fulfillmentMode === 'pickup' ? 'Packing & Handling Fee' : 'Service Fee' }}</span>
               <span class="font-medium">{{ formatPrice(serviceFee) }}</span>
             </div>
 
@@ -459,7 +536,7 @@
 
           <!-- POD Option -->
           <label 
-            v-if="canUsePOD"
+            v-if="canUsePOD && fulfillmentMode !== 'pickup'"
             class="flex cursor-pointer items-center gap-4 rounded-xl border-2 p-4 transition-all"
             :class="paymentMethod === 'pod' ? 'border-red-600 bg-red-50' : 'border-gray-200 hover:border-gray-300'"
           >
@@ -523,6 +600,8 @@
         </div>
       </div>
 
+    </main>
+
       <!-- Payment Processing Modal -->
       <div v-if="showPaymentModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
         <div class="w-full max-w-md rounded-2xl bg-white p-6 text-center">
@@ -537,31 +616,46 @@
         <div class="w-full max-w-sm rounded-2xl bg-white p-6 shadow-xl">
           <div class="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-amber-100">
             <svg class="h-6 w-6 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
           </div>
-          <h3 class="mb-2 text-lg font-bold text-gray-900">Change Store?</h3>
-          <p class="mb-6 text-sm text-gray-600">
-            This will refresh your cart items based on <span class="font-medium text-red-600">{{ pendingStore?.name }}</span> availability. 
-            Some items in your cart may not be available at this location.
+          <h3 class="mb-2 text-lg font-bold text-gray-900">Switch pickup branch?</h3>
+          <p class="mb-4 text-sm text-gray-600">
+            You selected <span class="font-medium text-red-600">{{ pendingStore?.name }}</span>.
+          </p>
+
+          <div v-if="storeChangeWarnings.length" class="mb-5 rounded-xl border border-amber-200 bg-amber-50 p-4">
+            <p class="text-sm font-semibold text-amber-900">Some items may be unavailable at this branch:</p>
+            <ul class="mt-2 space-y-2">
+              <li v-for="w in storeChangeWarnings" :key="w.product_id" class="flex items-start justify-between gap-3 text-sm">
+                <span class="text-amber-900">{{ w.name }}</span>
+                <span class="text-amber-800 whitespace-nowrap">Need {{ w.requested }}, available {{ w.available }}</span>
+              </li>
+            </ul>
+            <p class="mt-3 text-xs text-amber-800">
+              If you continue, we’ll clear your cart so you can re-add available items from the new branch.
+            </p>
+          </div>
+
+          <p v-else class="mb-5 text-sm text-gray-600">
+            Your cart items look available at this branch. Do you want to switch?
           </p>
           <div class="flex gap-3">
             <button
               @click="cancelStoreChange"
-              class="flex-1 rounded-xl border-2 border-gray-200 py-3 text-sm font-bold text-gray-700 hover:bg-gray-50"
+              class="flex-1 rounded-xl border-2 border-gray-200 bg-white py-3 text-sm font-bold text-gray-700 hover:bg-gray-50"
             >
-              Keep Current
+              Cancel
             </button>
             <button
               @click="confirmStoreChange"
               class="flex-1 rounded-xl bg-red-600 py-3 text-sm font-bold text-white hover:bg-red-700"
             >
-              Change Store
+              Switch Branch
             </button>
           </div>
         </div>
       </div>
-    </main>
 
     <!-- Toast Notification -->
     <Teleport to="body">
@@ -599,11 +693,19 @@
 <script setup lang="ts">
 import { useCartStore } from '~/stores/useCartStore'
 import { navigateTo } from '#app'
+import { useStoreStore } from '~/stores/store'
+import { useBranchStore } from '~/stores/useBranchStore'
 
 const cartStore = useCartStore()
+const storeStore = useStoreStore()
+const branchStore = useBranchStore()
 const supabase = useSupabaseClient()
 const user = useSupabaseUser()
 const userLoading = computed(() => user.value === undefined) // Supabase user starts as undefined while loading
+
+if (import.meta.client) {
+  storeStore.loadFromLocalStorage()
+}
 
 const step = ref(1)
 const fulfillmentMode = ref<'delivery' | 'pickup' | null>(null)
@@ -616,6 +718,9 @@ const loadingLocation = ref(false)
 const processingPayment = ref(false)
 const showPaymentModal = ref(false)
 const showStoreChangeModal = ref(false)
+const showAllPickupStores = ref(false)
+const storeChangeChecking = ref(false)
+const storeChangeWarnings = ref<{ product_id: string; name: string; requested: number; available: number }[]>([])
 
 const paymentMethod = ref<'paystack' | 'pod'>('paystack')
 const showPODIncentive = ref(true)
@@ -665,12 +770,22 @@ const deliveryZones = [
   { id: 'magodo', name: 'Magodo', fee: 1500 }
 ]
 
-const serviceFee = computed(() => Math.round(cartStore.cartSubtotal * 0.025))
+const serviceFee = computed(() => {
+  return fulfillmentMode.value === 'pickup'
+    ? 500
+    : Math.round(cartStore.cartSubtotal * 0.025)
+})
 const finalTotal = computed(() => {
   const base = cartStore.cartSubtotal + currentDeliveryFee.value + serviceFee.value
-  return paymentMethod.value === 'paystack' && currentDeliveryFee.value > 0 
+  return fulfillmentMode.value === 'delivery' && paymentMethod.value === 'paystack' && currentDeliveryFee.value > 0 
     ? base - 500 
     : base
+})
+
+watch(fulfillmentMode, (mode) => {
+  if (mode === 'pickup' && paymentMethod.value === 'pod') {
+    paymentMethod.value = 'paystack'
+  }
 })
 
 const selectedStore = computed(() => {
@@ -684,6 +799,11 @@ const sortedStores = computed(() => {
     const distB = b.distance ?? Infinity
     return distA - distB
   })
+})
+
+const pickupStoresVisible = computed(() => {
+  if (!showAllPickupStores.value) return []
+  return sortedStores.value.filter(s => s.id !== selectedStoreId.value)
 })
 
 const canProceedStep1 = computed(() => {
@@ -751,18 +871,33 @@ function getUserLocation() {
 async function selectFulfillment(mode: 'delivery' | 'pickup') {
   fulfillmentMode.value = mode
   if (mode === 'pickup') {
+    const preferredStoreId = (branchStore.activeBranchId || (cartStore.items.length > 0 ? cartStore.currentStoreId : storeStore.selectedStore?.id)) || null
     await loadStores()
+    if (preferredStoreId && stores.value.some(s => s.id === preferredStoreId)) {
+      selectedStoreId.value = preferredStoreId
+    }
+    previousStoreId.value = selectedStoreId.value
+    showAllPickupStores.value = false
     getUserLocation()
   }
 }
 
+function switchToDeliveryFromPickup() {
+  fulfillmentMode.value = 'delivery'
+  currentDeliveryFee.value = 0
+  showAllPickupStores.value = false
+}
+
 async function loadStores() {
   loadingStores.value = true
-  const { data } = await supabase
+  let query = supabase
     .from('stores')
     .select('id, name, address, operating_hours, is_flagship, latitude, longitude, pickup_instructions')
     .eq('is_active', true)
-    .order('is_flagship', { ascending: false })
+
+  query = query.order('is_flagship', { ascending: false })
+
+  const { data } = await query
   
   if (data) {
     stores.value = data.map((s: any) => ({
@@ -777,9 +912,11 @@ async function loadStores() {
       isOpen: isStoreOpen(),
       pickupInstructions: s.pickup_instructions || getDefaultPickupInstructions(s.name)
     }))
-    if (stores.value.length > 0 && !selectedStoreId.value) {
-      selectedStoreId.value = stores.value[0].id
-      previousStoreId.value = stores.value[0].id
+
+    const firstStore = stores.value[0]
+    if (firstStore && !selectedStoreId.value) {
+      selectedStoreId.value = firstStore.id
+      previousStoreId.value = firstStore.id
     }
   }
   loadingStores.value = false
@@ -798,15 +935,90 @@ function getDefaultPickupInstructions(storeName: string): string {
   return 'Present your order confirmation at the pickup counter. Our staff will assist you.'
 }
 
-function checkStoreChange(newStoreId: string) {
+async function checkStoreChange(newStoreId: string) {
   if (previousStoreId.value && previousStoreId.value !== newStoreId) {
-    if (cartStore.items.length > 0) {
-      const store = stores.value.find(s => s.id === newStoreId)
-      pendingStore.value = store ? { id: store.id, name: store.name } : null
-      showStoreChangeModal.value = true
-      selectedStoreId.value = previousStoreId.value
+    const store = stores.value.find(s => s.id === newStoreId)
+    pendingStore.value = store ? { id: store.id, name: store.name } : null
+
+    // No cart items => switch immediately
+    if (cartStore.items.length === 0) {
+      selectedStoreId.value = newStoreId
+      previousStoreId.value = newStoreId
       return
     }
+
+    storeChangeChecking.value = true
+    storeChangeWarnings.value = []
+
+    try {
+      const { data: rpcData, error: rpcError } = await (supabase.rpc as any)('check_cart_availability', {
+        cart_items: cartStore.items.map(i => ({ product_id: i.product_id, quantity: i.quantity })),
+        new_branch_id: newStoreId
+      })
+
+      let warnings: { product_id: string; name: string; requested: number; available: number }[] = []
+
+      if (rpcError) {
+        console.error('Failed to check store availability via RPC:', rpcError)
+        const productIds = [...new Set(cartStore.items.map(i => i.product_id))]
+        const { data, error } = await supabase
+          .from('store_inventory')
+          .select('product_id, stock_level, reserved_stock')
+          .eq('store_id', newStoreId)
+          .in('product_id', productIds)
+
+        if (error) {
+          console.error('Failed to check store availability:', error)
+          // fallback: show the confirmation modal (as if warnings exist)
+          showStoreChangeModal.value = true
+          selectedStoreId.value = previousStoreId.value
+          return
+        }
+
+        const invMap = new Map<string, { stock_level: number; reserved_stock: number }>()
+        for (const row of (data || []) as any[]) {
+          invMap.set(row.product_id, { stock_level: row.stock_level || 0, reserved_stock: row.reserved_stock || 0 })
+        }
+
+        warnings = cartStore.items
+          .map(item => {
+            const inv = invMap.get(item.product_id)
+            const available = inv ? Math.max(0, (inv.stock_level || 0) - (inv.reserved_stock || 0)) : 0
+            return {
+              product_id: item.product_id,
+              name: item.name,
+              requested: item.quantity,
+              available
+            }
+          })
+          .filter(w => w.available < w.requested)
+      } else {
+        warnings = Array.isArray(rpcData)
+          ? (rpcData as any[]).map(row => ({
+              product_id: row.product_id,
+              name: row.name,
+              requested: row.requested,
+              available: row.available
+            }))
+          : []
+      }
+
+      storeChangeWarnings.value = warnings
+
+      if (warnings.length > 0) {
+        showStoreChangeModal.value = true
+        selectedStoreId.value = previousStoreId.value
+        return
+      }
+
+      // All items available => switch immediately
+      selectedStoreId.value = newStoreId
+      previousStoreId.value = newStoreId
+    } finally {
+      storeChangeChecking.value = false
+    }
+
+    return
   }
   previousStoreId.value = newStoreId
 }
@@ -815,15 +1027,20 @@ function confirmStoreChange() {
   if (pendingStore.value) {
     selectedStoreId.value = pendingStore.value.id
     previousStoreId.value = pendingStore.value.id
-    cartStore.clearCart()
+    if (storeChangeWarnings.value.length > 0) {
+      cartStore.clearCart()
+    }
   }
   showStoreChangeModal.value = false
   pendingStore.value = null
+  storeChangeWarnings.value = []
+  showAllPickupStores.value = false
 }
 
 function cancelStoreChange() {
   showStoreChangeModal.value = false
   pendingStore.value = null
+  storeChangeWarnings.value = []
 }
 
 function updateDeliveryFee() {
@@ -867,6 +1084,26 @@ async function initiatePaystackPayment() {
       return
     }
 
+    const paymentExpiresAt = fulfillmentMode.value === 'pickup'
+      ? new Date(Date.now() + 15 * 60 * 1000).toISOString()
+      : null
+
+    const orderDeliveryDetails = fulfillmentMode.value === 'delivery'
+      ? {
+          address: {
+            area: selectedArea.value,
+            street: userDetails.value.streetAddress,
+            landmark: userDetails.value.landmark
+          },
+          contactPhone: userDetails.value.phone,
+          contactName: userDetails.value.fullName
+        }
+      : {
+          contactPhone: userDetails.value.phone,
+          contactName: userDetails.value.fullName,
+          pickup_store_id: selectedStoreId.value || null
+        }
+
     const { data: orderData }: { data: { id: string } | null } = await (supabase
       .from('orders')
       .insert({
@@ -882,32 +1119,81 @@ async function initiatePaystackPayment() {
           options: item.options || {}
         })),
         delivery_method: fulfillmentMode.value,
-        delivery_zone: selectedArea.value,
-        contact_name: userDetails.value.fullName,
-        contact_phone: userDetails.value.phone,
         subtotal: cartStore.cartSubtotal,
         delivery_fee: currentDeliveryFee.value,
-        service_fee: serviceFee.value,
         total_amount: finalTotal.value,
-        pickup_store_id: fulfillmentMode.value === 'pickup' ? selectedStoreId.value : null
+        payment_method: 'online',
+        delivery_details: orderDeliveryDetails as any,
+        metadata: {
+          ...(paymentExpiresAt ? { payment_expires_at: paymentExpiresAt } : {}),
+          service_fee: serviceFee.value,
+          delivery_zone: selectedArea.value
+        }
       } as any)
       .select('id')
       .single() as any)
 
-    const response: { authorization_url: string } = await $fetch('/api/paystack/initialize', {
+    const response: { authorization_url: string; reference?: string } = await $fetch('/api/paystack/initialize', {
       method: 'POST',
       body: {
         email: userEmail,
         amount: Math.round(finalTotal.value * 100),
-        metadata: { order_id: orderData?.id, pickup_store_id: selectedStoreId.value }
+        metadata: {
+          order_id: orderData?.id,
+          user_id: userId,
+          store_id: cartStore.currentStoreId,
+          items: cartStore.items.map(item => ({
+            product_id: item.product_id,
+            name: item.name,
+            quantity: item.quantity,
+            price: item.price
+          })),
+          delivery_method: fulfillmentMode.value as any,
+          delivery_details: fulfillmentMode.value === 'delivery'
+            ? {
+                area: selectedArea.value,
+                street: userDetails.value.streetAddress,
+                landmark: userDetails.value.landmark,
+                contactPhone: userDetails.value.phone
+              }
+            : {
+                contactPhone: userDetails.value.phone
+              },
+          store_address: selectedStore.value?.address,
+          subtotal: cartStore.cartSubtotal,
+          delivery_fee: currentDeliveryFee.value,
+          service_fee: serviceFee.value,
+          pickup_store_id: fulfillmentMode.value === 'pickup' ? selectedStoreId.value : null,
+          payment_expires_at: paymentExpiresAt
+        }
       }
     })
+
+    if (response?.reference && orderData?.id) {
+      await (supabase as any)
+        .from('orders')
+        .update({ paystack_reference: response.reference })
+        .eq('id', orderData.id)
+    }
 
     if (response.authorization_url) {
       window.open(response.authorization_url, '_blank')
       setTimeout(() => {
         navigateTo(`/checkout/success?order=${orderData?.id}`)
       }, 2000)
+    }
+
+    if (paymentExpiresAt && orderData?.id && import.meta.client) {
+      setTimeout(async () => {
+        try {
+          await $fetch('/api/orders/expire-unpaid-pickup', {
+            method: 'POST',
+            body: { orderId: orderData.id }
+          })
+        } catch (e) {
+          console.error('[Pickup Expiry] Failed to expire unpaid pickup order', e)
+        }
+      }, 15 * 60 * 1000)
     }
   } catch (error: any) {
     alert(error.message || 'Payment failed')
@@ -977,6 +1263,12 @@ async function initiatePODOrder() {
   }
   
   // User ID is in the 'sub' field (JWT subject), not 'id'
+
+  if (fulfillmentMode.value === 'pickup') {
+    alert('Store Pickup requires upfront payment. Please select Pay Online.')
+    paymentMethod.value = 'paystack'
+    return
+  }
   const userId = user.value?.id || user.value?.sub
   if (!userId) {
     console.error('[POD] User not logged in', user.value)
@@ -1000,12 +1292,6 @@ async function initiatePODOrder() {
   if (fulfillmentMode.value === 'delivery' && !selectedArea.value) {
     console.error('[POD] No delivery area selected')
     alert('Please select a delivery area')
-    return
-  }
-  
-  if (fulfillmentMode.value === 'pickup' && !selectedStoreId.value) {
-    console.error('[POD] No pickup store selected')
-    alert('Please select a pickup store')
     return
   }
 
@@ -1051,8 +1337,7 @@ async function initiatePODOrder() {
         service_fee: serviceFee.value,
         total_amount: finalTotal.value,
         payment_method: 'pod',
-        payment_status: 'pending',
-        pickup_store_id: fulfillmentMode.value === 'pickup' ? selectedStoreId.value : null
+        pickup_store_id: null
       } as any)
       .select('id')
       .single() as any)
@@ -1068,7 +1353,7 @@ async function initiatePODOrder() {
     showToast('Order placed! Our team will call you shortly to confirm.', 'success')
 
     // Clear cart after successful order creation
-    cartStore.clearCart()
+    cartStore.retainCartFor48Hours()
 
     // Redirect to pending order page
     console.log('[POD] Redirecting to pending page...')

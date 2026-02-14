@@ -106,9 +106,9 @@
               <div v-if="lastOrder" class="mt-3 flex items-center gap-2">
                 <span 
                   class="rounded-full px-2.5 py-0.5 text-xs font-medium"
-                  :class="getStatusBadge(lastOrder.status).bg + ' ' + getStatusBadge(lastOrder.status).color"
+                  :class="getStatusBadge(lastOrder.status, lastOrder.delivery_method).bg + ' ' + getStatusBadge(lastOrder.status, lastOrder.delivery_method).color"
                 >
-                  {{ getStatusBadge(lastOrder.status).label }}
+                  {{ getStatusBadge(lastOrder.status, lastOrder.delivery_method).label }}
                 </span>
                 <NuxtLink 
                   :to="`/order/pending-${lastOrder.id}`"
@@ -162,9 +162,9 @@
                 <div class="flex items-center gap-3">
                   <span 
                     class="rounded-full px-3 py-1 text-xs font-medium"
-                    :class="getStatusBadge(order.status).bg + ' ' + getStatusBadge(order.status).color"
+                    :class="getStatusBadge(order.status, order.delivery_method).bg + ' ' + getStatusBadge(order.status, order.delivery_method).color"
                   >
-                    {{ getStatusBadge(order.status).label }}
+                    {{ getStatusBadge(order.status, order.delivery_method).label }}
                   </span>
                   <button 
                     @click="viewOrderDetails(order)"
@@ -238,9 +238,9 @@
                       <p class="font-bold text-gray-900">Order #{{ order.id.slice(-8) }}</p>
                       <span 
                         class="rounded-full px-2.5 py-0.5 text-xs font-medium"
-                        :class="getStatusBadge(order.status).bg + ' ' + getStatusBadge(order.status).color"
+                        :class="getStatusBadge(order.status, order.delivery_method).bg + ' ' + getStatusBadge(order.status, order.delivery_method).color"
                       >
-                        {{ getStatusBadge(order.status).label }}
+                        {{ getStatusBadge(order.status, order.delivery_method).label }}
                       </span>
                     </div>
                     <p class="mt-1 text-sm text-gray-500">
@@ -263,6 +263,20 @@
                     <span v-if="reorderingOrderId === order.id" class="h-4 w-4 animate-spin rounded-full border-2 border-red-600 border-t-transparent"></span>
                     {{ reorderingOrderId === order.id ? 'Adding...' : 'Buy Again' }}
                   </button>
+                  <button
+                    v-if="order.delivery_method === 'pickup' && order.status === 'picked_up' && !order.metadata?.pickup_arrived_at"
+                    @click="reportPickupArrival(order)"
+                    :disabled="arrivalPending.has(order.id)"
+                    class="rounded-xl bg-black px-4 py-2 font-medium text-white hover:bg-gray-900 disabled:opacity-50"
+                  >
+                    <span v-if="arrivalPending.has(order.id)" class="flex items-center gap-2">
+                      <span class="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"></span>
+                      Sending...
+                    </span>
+                    <span v-else>
+                      I've Arrived at the Store
+                    </span>
+                  </button>
                   <button 
                     @click="viewOrderDetails(order)"
                     class="rounded-xl bg-red-600 px-4 py-2 font-medium text-white hover:bg-red-700"
@@ -276,7 +290,7 @@
               <div class="mt-4 pt-4 border-t border-gray-100">
                 <div class="flex items-center justify-between">
                   <div 
-                    v-for="(step, index) in getOrderStatusSteps(order.status)" 
+                    v-for="(step, index) in getOrderStatusSteps(order.status, order.delivery_method)" 
                     :key="step.key"
                     class="flex flex-col items-center flex-1"
                     :class="{ 'opacity-50': !step.active && !step.completed }"
@@ -616,9 +630,20 @@
 </template>
 
 <script setup lang="ts">
-import { useUserOrders, type Order, type OrderStatus } from '../composables/useUserOrders'
+import { useUserOrders, type Order, type OrderStatus, getOrderStepperSteps, getStepperKeyForStatus, type FulfillmentType, getStatusLabel } from '../composables/useUserOrders'
 import { useUserAddresses, type Address, type AddressLabel, LAGOS_AREAS } from '../composables/useUserAddresses'
 import type { Database } from '../types/database.types'
+
+const supabase = useSupabaseClient<Database>()
+const user = useSupabaseUser()
+
+const profile = ref<any>(null)
+const profilePending = ref(false)
+const savingProfile = ref(false)
+const profileForm = ref({
+  full_name: '',
+  phone_number: ''
+})
 
 // Tabs configuration
 const tabs = [
@@ -630,19 +655,7 @@ const tabs = [
 
 const activeTab = ref('overview')
 
-// User data
-const user = useSupabaseUser()
-const supabase = useSupabaseClient<Database>()
-
-// Profile state
-const profile = ref<any>(null)
-const profilePending = ref(false)
-const savingProfile = ref(false)
-
-const profileForm = ref({
-  full_name: '',
-  phone_number: ''
-})
+const arrivalPending = ref<Set<string>>(new Set())
 
 // Orders
 const { 
@@ -892,6 +905,36 @@ const viewOrderDetails = (order: Order) => {
   navigateTo(`/order/pending-${order.id}`)
 }
 
+const reportPickupArrival = async (order: Order) => {
+  arrivalPending.value.add(order.id)
+  try {
+    const { data: sessionData, error: sessionError } = await supabase.auth.getSession()
+    if (sessionError) throw sessionError
+
+    const accessToken = sessionData?.session?.access_token
+    if (!accessToken) {
+      showToast('Please sign in again to continue', 'error')
+      return
+    }
+
+    await $fetch('/api/orders/im-here', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${accessToken}`
+      },
+      body: { orderId: order.id }
+    })
+
+    showToast('Notified the store. Head to the Online Pickup Point.', 'success')
+    await fetchOrders()
+  } catch (err: any) {
+    console.error('Failed to report pickup arrival:', err)
+    showToast(err?.data?.message || err?.message || 'Failed to notify store', 'error')
+  } finally {
+    arrivalPending.value.delete(order.id)
+  }
+}
+
 const logout = async () => {
   await supabase.auth.signOut()
   navigateTo('/auth')
@@ -908,27 +951,39 @@ const formatTimeAgo = (dateString: string): string => {
   return `${Math.floor(seconds / 86400)}d ago`
 }
 
-const getOrderStatusSteps = (status: OrderStatus) => {
-  const steps = [
-    { key: 'pending', label: 'Pending', completed: false, active: false },
-    { key: 'confirmed', label: 'Confirmed', completed: false, active: false },
-    { key: 'shipped', label: 'In Transit', completed: false, active: false },
-    { key: 'delivered', label: 'Delivered', completed: false, active: false }
-  ]
-  
-  const statusOrder = ['pending', 'processing', 'paid', 'confirmed', 'shipped', 'delivered']
-  const currentIndex = statusOrder.indexOf(status)
-  
+const getOrderStatusSteps = (status: OrderStatus, fulfillmentType: FulfillmentType) => {
+  const baseSteps = getOrderStepperSteps(fulfillmentType).map(s => ({
+    key: s.key,
+    label: s.label,
+    completed: false,
+    active: false
+  }))
+
+  const currentKey = getStepperKeyForStatus(status, fulfillmentType)
+  const stepKeys = baseSteps.map(s => s.key)
+  const currentIndex = stepKeys.indexOf(currentKey as any)
+
   if (status === 'cancelled' || status === 'refunded') {
-    return steps.map(s => ({ ...s, completed: s.key === 'pending', active: false }))
+    return baseSteps.map(s => ({ ...s, completed: s.key === 'pending', active: false }))
   }
-  
-  return steps.map((step, index) => {
-    const stepIndex = statusOrder.indexOf(step.key)
+
+  if (status === 'delivered') {
+    return baseSteps.map((step) => {
+      const stepIndex = stepKeys.indexOf(step.key)
+      return {
+        ...step,
+        completed: stepIndex !== -1,
+        active: false
+      }
+    })
+  }
+
+  return baseSteps.map((step) => {
+    const stepIndex = stepKeys.indexOf(step.key)
     return {
       ...step,
-      completed: stepIndex < currentIndex || (stepIndex === currentIndex && status === 'delivered'),
-      active: stepIndex === currentIndex
+      completed: stepIndex !== -1 && currentIndex !== -1 && stepIndex < currentIndex,
+      active: stepIndex !== -1 && stepIndex === currentIndex
     }
   })
 }
@@ -966,7 +1021,17 @@ onMounted(async () => {
   ])
   
   subscribeToOrderUpdates((update) => {
-    showToast(`Order #${update.orderId.slice(-8)} is now ${update.newStatus}`, 'info')
+    const order = orders.value.find(o => o.id === update.orderId)
+    const fulfillmentType = (order?.delivery_method || 'delivery') as FulfillmentType
+    const label = getStatusLabel(update.newStatus, fulfillmentType)
+    const storeName = (order as any)?.stores?.name || (order as any)?.metadata?.store_name
+
+    if (fulfillmentType === 'pickup' && update.newStatus === 'picked_up') {
+      showToast(`Great news! Your order is ${label}${storeName ? ` at the ${storeName} branch` : ''}.`, 'info')
+      return
+    }
+
+    showToast(`Order #${update.orderId.slice(-8)} is now ${label}`, 'info')
   })
   
   if (tabs[1]) {

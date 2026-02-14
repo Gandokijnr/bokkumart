@@ -203,7 +203,7 @@
         </div>
       </div>
 
-      <!-- Other Statuses Fallback (pending, shipped, delivered, etc.) -->
+      <!-- Other Statuses Fallback (pending, delivered, etc.) -->
       <div v-else class="space-y-6">
         <div class="rounded-2xl bg-white p-6 shadow-sm">
           <div class="mb-4 flex items-center justify-center">
@@ -301,7 +301,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted } from 'vue'
-import type { RealtimeChannel } from '@supabase/supabase-js'
+import type { Database } from '~/types/database.types'
 
 // Types
 interface OrderItem {
@@ -326,7 +326,9 @@ interface Order {
 
 // Composables
 const route = useRoute()
-const supabase = useSupabaseClient()
+const supabase = useSupabaseClient<Database>()
+
+type RealtimeChannel = ReturnType<typeof supabase.channel>
 
 // State
 const loading = ref(true)
@@ -466,14 +468,11 @@ async function handleCancelOrder() {
   cancelling.value = true
   
   try {
-    const { error } = await supabase
-      .from('orders')
-      .update({
-        status: 'cancelled',
-        confirmation_status: 'cancelled_by_customer',
-        updated_at: new Date().toISOString()
-      })
-      .eq('id', order.value.id)
+    const { error } = await (supabase.from('orders').update as any)({
+      status: 'cancelled',
+      confirmation_status: 'cancelled_by_customer',
+      updated_at: new Date().toISOString()
+    }).eq('id', order.value.id)
 
     if (error) throw error
     
@@ -489,7 +488,7 @@ async function handleCancelOrder() {
 
 function cleanupSubscription() {
   if (subscription.value) {
-    supabase.removeChannel(subscription.value)
+    subscription.value.unsubscribe()
     subscription.value = null
   }
 }

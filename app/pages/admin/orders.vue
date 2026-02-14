@@ -1,5 +1,41 @@
 <template>
   <div>
+    <div v-if="arrivalAlerts.length" class="mb-6 rounded-xl border-2 border-emerald-200 bg-emerald-50 p-4">
+      <div class="flex items-start justify-between gap-4">
+        <div>
+          <p class="font-bold text-emerald-900">Pickup Priority Lane</p>
+          <p class="mt-1 text-sm text-emerald-800">A customer has arrived for pickup. Bring the bag to the Online Pickup Point.</p>
+        </div>
+        <button
+          @click="arrivalAlerts = []"
+          class="rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-bold text-white hover:bg-emerald-700"
+        >
+          Clear
+        </button>
+      </div>
+
+      <div class="mt-3 space-y-2">
+        <div
+          v-for="a in arrivalAlerts"
+          :key="a.orderId"
+          class="flex items-center justify-between gap-3 rounded-lg bg-white px-3 py-2 text-sm"
+        >
+          <div class="min-w-0">
+            <p class="font-semibold text-gray-900 truncate">
+              {{ a.customerName || 'Customer' }} arrived for Order #{{ a.orderId.slice(-8).toUpperCase() }}
+            </p>
+            <p class="text-xs text-gray-500">{{ new Date(a.arrivedAt).toLocaleTimeString('en-NG', { hour: '2-digit', minute: '2-digit' }) }}</p>
+          </div>
+          <button
+            @click="arrivalAlerts = arrivalAlerts.filter(x => x.orderId !== a.orderId)"
+            class="rounded-md bg-gray-100 px-2 py-1 text-xs font-bold text-gray-700 hover:bg-gray-200"
+          >
+            Dismiss
+          </button>
+        </div>
+      </div>
+    </div>
+
     <!-- Filters -->
     <div class="mb-6 flex flex-wrap items-center gap-4 rounded-xl bg-white p-4 shadow-sm">
       <div class="flex-1 min-w-[200px]">
@@ -54,11 +90,11 @@
         v-for="column in kanbanColumns"
         :key="column.status"
         class="rounded-xl bg-gray-100 p-3"
-        :class="{ 'bg-red-50': column.status === 'awaiting_call' }"
+        :class="{ 'bg-red-50': column.status === 'pending' }"
       >
         <div class="mb-3 flex items-center justify-between">
           <h3 class="font-semibold text-gray-900">{{ column.title }}</h3>
-          <span class="rounded-full bg-gray-200 px-2 py-0.5 text-xs font-bold text-gray-700">
+          <span class="rounded-full bg-white px-2 py-0.5 text-xs font-semibold text-gray-700">
             {{ getOrdersByStatus(column.status).length }}
           </span>
         </div>
@@ -67,20 +103,51 @@
           <div
             v-for="order in getOrdersByStatus(column.status)"
             :key="order.id"
-            class="cursor-pointer rounded-lg bg-white p-3 shadow-sm transition-shadow hover:shadow-md"
-            :class="{ 'border-l-4 border-red-500': order.fraudRisk?.isHighRisk }"
+            class="relative cursor-pointer rounded-lg bg-white p-3 shadow-sm transition-shadow hover:shadow-md"
+            :class="{
+              'border-l-4 border-red-500': order.fraudRisk?.isHighRisk,
+              'ring-2 ring-emerald-300': order.delivery_method === 'pickup' && order.metadata?.pickup_arrived_at
+            }"
             @click="openOrderDetails(order)"
           >
+            <div
+              class="absolute right-2 top-2 z-10 inline-flex items-center gap-1 rounded-md bg-gray-100/80 px-2 py-1 text-[10px] font-semibold text-gray-600 backdrop-blur"
+              :title="'This is the exact status currently displayed on the customer\'s mobile app.'"
+              @click.stop
+            >
+              <span aria-hidden="true">👁️</span>
+              <span>{{ customerViewLabel(order) }}</span>
+            </div>
+
+            <div
+              v-if="riderViewLabel(order)"
+              class="absolute right-2 top-9 z-10 inline-flex items-center gap-1 rounded-md bg-gray-100/80 px-2 py-1 text-[10px] font-semibold text-gray-600 backdrop-blur"
+              :title="'This is the likely status currently displayed on the rider\'s app.'"
+              @click.stop
+            >
+              <span aria-hidden="true">👁️</span>
+              <span>{{ riderViewLabel(order) }}</span>
+            </div>
+
             <div class="flex items-start justify-between">
               <span class="font-mono text-xs font-bold text-gray-900">
                 #{{ order.id.slice(-8).toUpperCase() }}
               </span>
-              <span
-                v-if="order.payment_method === 'pod'"
-                class="rounded bg-orange-100 px-1.5 py-0.5 text-xs font-bold text-orange-700"
-              >
-                POD
-              </span>
+              <div class="flex items-center gap-2">
+                <span
+                  v-if="order.delivery_method === 'pickup' && order.metadata?.pickup_arrived_at"
+                  class="rounded bg-emerald-100 px-1.5 py-0.5 text-[11px] font-bold text-emerald-700"
+                  :title="'Customer arrived at ' + new Date(order.metadata.pickup_arrived_at).toLocaleString('en-NG')"
+                >
+                  ARRIVED
+                </span>
+                <span
+                  v-if="order.payment_method === 'pod'"
+                  class="rounded bg-orange-100 px-1.5 py-0.5 text-xs font-bold text-orange-700"
+                >
+                  POD
+                </span>
+              </div>
             </div>
 
             <p class="mt-1 text-sm font-medium text-gray-900">{{ order.customer_name || 'N/A' }}</p>
@@ -125,7 +192,10 @@
               v-for="order in filteredOrders"
               :key="order.id"
               class="hover:bg-gray-50"
-              :class="{ 'bg-red-50': order.fraudRisk?.isHighRisk }"
+              :class="{
+                'bg-red-50': order.fraudRisk?.isHighRisk,
+                'bg-emerald-50': order.delivery_method === 'pickup' && order.metadata?.pickup_arrived_at
+              }"
             >
               <td class="px-4 py-3 font-mono text-sm font-bold text-gray-900">
                 #{{ order.id.slice(-8).toUpperCase() }}
@@ -145,22 +215,31 @@
                 </span>
               </td>
               <td class="px-4 py-3">
-                <span
-                  class="rounded-full px-2 py-1 text-xs font-bold"
-                  :class="getStatusBadgeClass(order.status)"
-                >
-                  {{ order.status.replace('_', ' ') }}
-                </span>
+                <div class="flex flex-wrap items-center gap-2">
+                  <span
+                    class="rounded-full px-2 py-1 text-xs font-bold"
+                    :class="getStatusBadgeClass(order.status)"
+                  >
+                    {{ order.status.replace('_', ' ') }}
+                  </span>
+                  <span
+                    v-if="order.delivery_method === 'pickup' && order.metadata?.pickup_arrived_at"
+                    class="rounded-full bg-emerald-100 px-2 py-1 text-xs font-bold text-emerald-700"
+                    :title="'Customer arrived at ' + new Date(order.metadata.pickup_arrived_at).toLocaleString('en-NG')"
+                  >
+                    Customer Arrived
+                  </span>
+                </div>
               </td>
               <td class="px-4 py-3 text-sm text-gray-500">{{ getTimeElapsed(order.created_at) }}</td>
               <td class="px-4 py-3">
                 <div class="flex gap-2">
                   <button
-                    @click="updateStatus(order, getNextStatus(order.status))"
+                    @click="updateStatus(order, getNextStatus(order))"
                     :disabled="processing.has(order.id) || order.status === 'delivered' || order.status === 'cancelled'"
                     class="rounded-lg bg-red-600 px-3 py-1.5 text-xs font-bold text-white hover:bg-red-700 disabled:cursor-not-allowed disabled:bg-gray-300"
                   >
-                    {{ getNextStatusLabel(order.status) }}
+                    {{ getNextStatusLabel(order) }}
                   </button>
                 </div>
               </td>
@@ -184,6 +263,67 @@
           </button>
         </div>
 
+        <div v-if="showVerifyCollection" class="mt-4 rounded-xl border border-amber-200 bg-amber-50 p-4">
+          <div class="flex items-start justify-between gap-4">
+            <div>
+              <p class="font-bold text-amber-900">Verify Customer Collection</p>
+              <p class="mt-1 text-sm text-amber-800">Please scan the customer's QR code or enter their 6-digit verification code.</p>
+            </div>
+            <button
+              @click="closeVerifyCollection()"
+              class="rounded-lg bg-amber-600 px-3 py-1.5 text-xs font-bold text-white hover:bg-amber-700"
+            >
+              Close
+            </button>
+          </div>
+
+          <div class="mt-3 grid gap-3 md:grid-cols-2">
+            <div class="rounded-lg bg-white p-3">
+              <p class="text-xs font-semibold text-gray-700">Camera Scan</p>
+              <div class="mt-2 overflow-hidden rounded-lg bg-gray-100">
+                <video ref="verifyVideoEl" class="h-40 w-full object-cover" muted playsinline></video>
+              </div>
+              <div class="mt-2 flex gap-2">
+                <button
+                  @click="startVerifyScanner()"
+                  :disabled="scannerActive"
+                  class="flex-1 rounded-lg bg-indigo-600 px-3 py-2 text-xs font-bold text-white hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  Start Camera
+                </button>
+                <button
+                  @click="stopVerifyScanner()"
+                  :disabled="!scannerActive"
+                  class="flex-1 rounded-lg bg-gray-700 px-3 py-2 text-xs font-bold text-white hover:bg-gray-800 disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  Stop
+                </button>
+              </div>
+              <p v-if="scannerError" class="mt-2 text-xs font-semibold text-red-600">{{ scannerError }}</p>
+              <p v-else class="mt-2 text-xs text-gray-500">If scanning isn't supported on this device, use manual entry.</p>
+            </div>
+
+            <div class="rounded-lg bg-white p-3">
+              <p class="text-xs font-semibold text-gray-700">Manual Code</p>
+              <input
+                v-model="verifyCode"
+                inputmode="numeric"
+                maxlength="6"
+                placeholder="Enter 6-digit code"
+                class="mt-2 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-amber-500 focus:outline-none"
+              />
+              <button
+                @click="verifyCollection()"
+                :disabled="verifyingCollection || !verifyCode || verifyCode.length < 4"
+                class="mt-2 w-full rounded-lg bg-green-600 px-3 py-2 text-xs font-bold text-white hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {{ verifyingCollection ? 'Verifying...' : 'Verify & Mark Collected' }}
+              </button>
+              <p v-if="verifyError" class="mt-2 text-xs font-semibold text-red-600">{{ verifyError }}</p>
+            </div>
+          </div>
+        </div>
+
         <div class="mt-4 space-y-4">
           <div class="rounded-lg bg-gray-50 p-4">
             <h4 class="font-semibold text-gray-900">Customer</h4>
@@ -196,12 +336,27 @@
           <div class="rounded-lg bg-gray-50 p-4">
             <h4 class="font-semibold text-gray-900">Delivery</h4>
             <p class="text-gray-700">
-              {{ selectedOrder.delivery_details?.address?.area }}, 
+              {{ selectedOrder.delivery_method }}
+              {{ selectedOrder.delivery_details?.address?.area }} 
               {{ selectedOrder.delivery_details?.address?.street }}
             </p>
             <p v-if="selectedOrder.delivery_details?.address?.landmark" class="text-sm text-gray-500">
               Landmark: {{ selectedOrder.delivery_details.address.landmark }}
             </p>
+
+            <div v-if="selectedOrder.delivery_method === 'delivery' && selectedOrder?.metadata?.out_for_delivery_whatsapp_url" class="mt-3">
+              <a
+                :href="selectedOrder.metadata.out_for_delivery_whatsapp_url"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="inline-flex items-center justify-center rounded-lg bg-green-600 px-3 py-2 text-xs font-bold text-white hover:bg-green-700"
+              >
+                Notify Customer (WhatsApp)
+              </a>
+              <p class="mt-1 text-xs text-gray-500">
+                Sends “Out for Delivery” update with rider contact.
+              </p>
+            </div>
           </div>
 
           <div class="rounded-lg bg-gray-50 p-4">
@@ -213,7 +368,7 @@
                 class="flex items-center justify-between text-sm"
               >
                 <span>{{ item.name }} x{{ item.quantity }}</span>
-                <span class="font-medium">₦{{ formatNumber(item.price * item.quantity) }}</span>
+                <span class="font-medium">₦{{ formatNumber(item.total_price * item.quantity) }}</span>
               </div>
             </div>
             <div class="mt-3 border-t border-gray-200 pt-2">
@@ -225,13 +380,23 @@
           </div>
 
           <div class="flex gap-3">
-            <button
-              v-if="selectedOrder.status !== 'delivered' && selectedOrder.status !== 'cancelled'"
-              @click="updateStatus(selectedOrder, getNextStatus(selectedOrder.status))"
-              class="flex-1 rounded-xl bg-red-600 py-3 font-bold text-white hover:bg-red-700"
-            >
-              {{ getNextStatusLabel(selectedOrder.status) }}
-            </button>
+            <div v-if="activeStepAction" class="flex-1">
+              <button
+                @click="handleActiveStepAction()"
+                :disabled="processing.has(selectedOrder.id)"
+                class="w-full rounded-xl py-3 font-bold text-white disabled:cursor-not-allowed disabled:opacity-60"
+                :class="activeStepAction.buttonClass"
+              >
+                <span class="inline-flex items-center justify-center gap-2">
+                  <span aria-hidden="true">{{ activeStepAction.icon }}</span>
+                  <span>{{ activeStepAction.label }}</span>
+                </span>
+              </button>
+              <p v-if="activeStepAction.subtext" class="mt-1 text-xs text-gray-500">
+                {{ activeStepAction.subtext }}
+              </p>
+            </div>
+
             <button
               v-if="selectedOrder.status !== 'delivered' && selectedOrder.status !== 'cancelled'"
               @click="cancelOrder(selectedOrder)"
@@ -248,6 +413,11 @@
 
 <script setup lang="ts">
 import type { RealtimeChannel } from '@supabase/supabase-js'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { useSupabaseClient } from '#imports'
+import type { Database } from '~/types/database.types'
+import { getStatusLabel, type FulfillmentType } from '~/composables/useUserOrders'
+import { useToast } from '~/composables/useToast'
 
 definePageMeta({
   layout: 'admin',
@@ -255,6 +425,7 @@ definePageMeta({
 })
 
 const supabase = useSupabaseClient()
+const toast = useToast()
 
 const orders = ref<any[]>([])
 const stores = ref<any[]>([])
@@ -268,28 +439,324 @@ const viewMode = ref<'kanban' | 'table'>('kanban')
 
 const selectedOrder = ref<any>(null)
 
-const kanbanColumns = [
-  { status: 'awaiting_call', title: 'Awaiting Call' },
-  { status: 'processing', title: 'Confirmed' },
-  { status: 'packaging', title: 'Packaging' },
-  { status: 'ready_for_pickup', title: 'Ready for Rider' },
-  { status: 'out_for_delivery', title: 'Out for Delivery' }
-]
+const sensitiveActionConfirm = ref<{ orderId: string; nextStatus: string; armedUntil: number } | null>(null)
 
-const statusWorkflow: Record<string, string> = {
-  'awaiting_call': 'processing',
-  'processing': 'packaging',
-  'packaging': 'ready_for_pickup',
-  'ready_for_pickup': 'out_for_delivery',
-  'out_for_delivery': 'delivered'
+const showVerifyCollection = ref(false)
+const verifyCode = ref('')
+const verifyError = ref('')
+const verifyingCollection = ref(false)
+
+const verifyVideoEl = ref<HTMLVideoElement | null>(null)
+const scannerActive = ref(false)
+const scannerError = ref('')
+const verifyStream = ref<MediaStream | null>(null)
+const verifyScanTimer = ref<any>(null)
+
+const activeStepAction = computed(() => {
+  const order = selectedOrder.value
+  if (!order) return null
+
+  const status = String(order.status || '')
+  const fulfillment = String(order.delivery_method || 'delivery')
+
+  if (status === 'cancelled' || status === 'refunded' || status === 'delivered') return null
+
+  const isPickup = fulfillment === 'pickup'
+
+  type ActionType = 'logistics' | 'completion' | 'urgent'
+  const base = {
+    nextStatus: getNextStatus(order),
+    type: 'logistics' as ActionType,
+    icon: '➡️',
+    label: getNextStatusLabel(order),
+    subtext: '' as string | null,
+    sensitive: false,
+    buttonClass: 'bg-indigo-600 hover:bg-indigo-700'
+  }
+
+  if (isPickup) {
+    if (status === 'pending') {
+      return { ...base, label: 'Confirm Order', icon: '✅', nextStatus: 'confirmed', type: 'logistics', buttonClass: 'bg-indigo-600 hover:bg-indigo-700' }
+    }
+
+    if (status === 'confirmed') {
+      return { ...base, label: 'Mark as Ready', icon: '📦', nextStatus: 'picked_up', type: 'logistics', buttonClass: 'bg-indigo-600 hover:bg-indigo-700' }
+    }
+
+    // “Ready” state for pickup (picked_up/arrived) -> business transaction: Collected
+    if (status === 'picked_up' || status === 'arrived') {
+      return {
+        ...base,
+        label: 'Mark as Collected',
+        icon: '🛍️',
+        nextStatus: 'delivered',
+        type: 'completion',
+        sensitive: true,
+        subtext: 'Verify customer\'s Claim PIN before clicking.',
+        buttonClass: 'bg-green-600 hover:bg-green-700'
+      }
+    }
+  }
+
+  // Delivery flow
+  if (status === 'pending') {
+    return { ...base, label: 'Confirm Order', icon: '✅', nextStatus: 'confirmed', type: 'logistics', buttonClass: 'bg-indigo-600 hover:bg-indigo-700' }
+  }
+
+  if (status === 'confirmed') {
+    return {
+      ...base,
+      label: 'Assign to Rider',
+      icon: '🧾',
+      nextStatus: 'assigned',
+      type: 'logistics',
+      subtext: 'Ensure the thermal bag is sealed.',
+      buttonClass: 'bg-indigo-600 hover:bg-indigo-700'
+    }
+  }
+
+  if (status === 'assigned') {
+    return { ...base, label: 'Hand to Rider', icon: '🚚', nextStatus: 'picked_up', type: 'logistics', buttonClass: 'bg-indigo-600 hover:bg-indigo-700' }
+  }
+
+  if (status === 'arrived') {
+    return {
+      ...base,
+      label: 'Confirm Delivery',
+      icon: '✅',
+      nextStatus: 'delivered',
+      type: 'completion',
+      sensitive: true,
+      subtext: 'Verify delivery PIN / confirmation before clicking.',
+      buttonClass: 'bg-emerald-600 hover:bg-emerald-700'
+    }
+  }
+
+  return { ...base, buttonClass: 'bg-indigo-600 hover:bg-indigo-700' }
+})
+
+const handleActiveStepAction = async () => {
+  if (!selectedOrder.value || !activeStepAction.value) return
+
+  const orderId = String(selectedOrder.value.id)
+  const nextStatus = String(activeStepAction.value.nextStatus)
+
+  const isPickup = String(selectedOrder.value?.delivery_method || '') === 'pickup'
+  if (isPickup && nextStatus === 'delivered') {
+    openVerifyCollection()
+    return
+  }
+
+  if (activeStepAction.value.sensitive) {
+    const now = Date.now()
+    const armed = sensitiveActionConfirm.value
+
+    if (!armed || armed.orderId !== orderId || armed.nextStatus !== nextStatus || armed.armedUntil < now) {
+      sensitiveActionConfirm.value = { orderId, nextStatus, armedUntil: now + 7000 }
+      toast.add({
+        title: 'Confirm Action',
+        description: 'Click again within 7 seconds to confirm this completion step.',
+        color: 'warning'
+      })
+      return
+    }
+
+    sensitiveActionConfirm.value = null
+  }
+
+  await updateStatus(selectedOrder.value, nextStatus)
 }
 
-const statusLabels: Record<string, string> = {
-  'awaiting_call': 'Confirm Order',
-  'processing': 'Start Packaging',
-  'packaging': 'Ready for Pickup',
-  'ready_for_pickup': 'Assign Rider',
-  'out_for_delivery': 'Mark Delivered'
+const openVerifyCollection = () => {
+  showVerifyCollection.value = true
+  verifyCode.value = ''
+  verifyError.value = ''
+  scannerError.value = ''
+}
+
+const closeVerifyCollection = () => {
+  showVerifyCollection.value = false
+  verifyError.value = ''
+  scannerError.value = ''
+  stopVerifyScanner()
+}
+
+const stopVerifyScanner = () => {
+  scannerActive.value = false
+
+  if (verifyScanTimer.value) {
+    clearInterval(verifyScanTimer.value)
+    verifyScanTimer.value = null
+  }
+
+  if (verifyVideoEl.value) {
+    try {
+      verifyVideoEl.value.pause()
+      ;(verifyVideoEl.value as any).srcObject = null
+    } catch {
+      // ignore
+    }
+  }
+
+  if (verifyStream.value) {
+    for (const track of verifyStream.value.getTracks()) {
+      try {
+        track.stop()
+      } catch {
+        // ignore
+      }
+    }
+    verifyStream.value = null
+  }
+}
+
+const startVerifyScanner = async () => {
+  scannerError.value = ''
+
+  if (!import.meta.client) return
+  if (!navigator.mediaDevices?.getUserMedia) {
+    scannerError.value = 'Camera not available in this browser.'
+    return
+  }
+
+  if (!(window as any).BarcodeDetector) {
+    scannerError.value = 'QR scanning is not supported on this device. Use manual entry.'
+    return
+  }
+
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: 'environment' } }, audio: false })
+    verifyStream.value = stream
+    if (verifyVideoEl.value) {
+      ;(verifyVideoEl.value as any).srcObject = stream
+      await verifyVideoEl.value.play()
+    }
+
+    const detector = new (window as any).BarcodeDetector({ formats: ['qr_code'] })
+    scannerActive.value = true
+
+    verifyScanTimer.value = setInterval(async () => {
+      try {
+        if (!verifyVideoEl.value || !scannerActive.value) return
+        const barcodes = await detector.detect(verifyVideoEl.value)
+        const first = Array.isArray(barcodes) && barcodes.length ? barcodes[0] : null
+        const raw = first?.rawValue ? String(first.rawValue) : ''
+        if (!raw) return
+
+        const digits = raw.replace(/\D/g, '')
+        const code = digits.length >= 6 ? digits.slice(0, 6) : raw.trim()
+        verifyCode.value = code
+        await verifyCollection()
+      } catch {
+        // ignore scanning transient errors
+      }
+    }, 600)
+  } catch (e: any) {
+    scannerError.value = e?.message || 'Failed to start camera.'
+    stopVerifyScanner()
+  }
+}
+
+const verifyCollection = async () => {
+  if (!selectedOrder.value) return
+
+  verifyError.value = ''
+
+  const orderId = String(selectedOrder.value.id)
+  const code = String(verifyCode.value || '').trim()
+
+  if (!code) {
+    verifyError.value = 'Please enter the verification code.'
+    return
+  }
+
+  verifyingCollection.value = true
+  try {
+    const { data: sessionData, error: sessionError } = await supabase.auth.getSession()
+    if (sessionError) throw sessionError
+
+    const accessToken = sessionData?.session?.access_token
+    if (!accessToken) {
+      throw new Error('You must be logged in to verify collection')
+    }
+
+    await $fetch('/api/admin/verify-collection', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${accessToken}`
+      },
+      body: { orderId, code }
+    })
+
+    stopVerifyScanner()
+    showVerifyCollection.value = false
+    await updateStatus(selectedOrder.value, 'delivered')
+  } catch (e: any) {
+    verifyError.value = e?.statusMessage || e?.message || 'Validation failed'
+  } finally {
+    verifyingCollection.value = false
+  }
+}
+
+const kanbanColumns = [
+  { status: 'pending', title: 'Pending Orders' },
+  { status: 'confirmed', title: 'Confirmed' },
+  { status: 'assigned', title: 'Assigned' },
+  { status: 'picked_up', title: 'Ready for Pickup' },
+  { status: 'arrived', title: 'Arrived' }
+]
+
+const getNextStatus = (orderOrStatus: any) => {
+  const currentStatus = typeof orderOrStatus === 'string' ? orderOrStatus : orderOrStatus?.status
+  const deliveryMethod = typeof orderOrStatus === 'string' ? null : orderOrStatus?.delivery_method
+
+  // Pickup branch: skip rider assignment entirely
+  if (deliveryMethod === 'pickup') {
+    const workflowPickup: Record<string, string> = {
+      pending: 'confirmed',
+      confirmed: 'picked_up',
+      picked_up: 'arrived',
+      arrived: 'delivered'
+    }
+    return workflowPickup[currentStatus] || currentStatus
+  }
+
+  // Delivery branch (default)
+  const workflowDelivery: Record<string, string> = {
+    pending: 'confirmed',
+    confirmed: 'assigned',
+    assigned: 'picked_up',
+    picked_up: 'arrived',
+    arrived: 'delivered'
+  }
+  return workflowDelivery[currentStatus] || currentStatus
+}
+
+const getNextStatusLabel = (orderOrStatus: any) => {
+  const currentStatus = typeof orderOrStatus === 'string' ? orderOrStatus : orderOrStatus?.status
+  const deliveryMethod = typeof orderOrStatus === 'string' ? null : orderOrStatus?.delivery_method
+  const nextStatus = getNextStatus(orderOrStatus)
+
+  if (nextStatus === currentStatus) return 'Update'
+
+  if (deliveryMethod === 'pickup') {
+    const labelsPickup: Record<string, string> = {
+      pending: 'Confirm Order',
+      confirmed: 'Mark as Ready',
+      picked_up: 'Mark Arrived',
+      arrived: 'Mark Collected'
+    }
+    return labelsPickup[currentStatus] || 'Update'
+  }
+
+  const labelsDelivery: Record<string, string> = {
+    pending: 'Confirm Order',
+    confirmed: 'Assign Rider',
+    assigned: 'Hand to Rider',
+    picked_up: 'Mark Arrived',
+    arrived: 'Mark Delivered'
+  }
+  return labelsDelivery[currentStatus] || 'Update'
 }
 
 const filteredOrders = computed(() => {
@@ -323,21 +790,15 @@ const getOrdersByStatus = (status: string) => {
   return filteredOrders.value.filter(o => o.status === status)
 }
 
-const getNextStatus = (currentStatus: string) => {
-  return statusWorkflow[currentStatus] || currentStatus
-}
-
-const getNextStatusLabel = (currentStatus: string) => {
-  return statusLabels[currentStatus] || 'Update'
-}
+// getNextStatus and getNextStatusLabel are now context-aware (pickup vs delivery)
 
 const getStatusBadgeClass = (status: string) => {
   const classes: Record<string, string> = {
-    'awaiting_call': 'bg-orange-100 text-orange-700',
-    'processing': 'bg-blue-100 text-blue-700',
-    'packaging': 'bg-purple-100 text-purple-700',
-    'ready_for_pickup': 'bg-yellow-100 text-yellow-700',
-    'out_for_delivery': 'bg-indigo-100 text-indigo-700',
+    'pending': 'bg-orange-100 text-orange-700',
+    'confirmed': 'bg-blue-100 text-blue-700',
+    'assigned': 'bg-purple-100 text-purple-700',
+    'picked_up': 'bg-yellow-100 text-yellow-700',
+    'arrived': 'bg-indigo-100 text-indigo-700',
     'delivered': 'bg-green-100 text-green-700',
     'cancelled': 'bg-red-100 text-red-700'
   }
@@ -346,11 +807,11 @@ const getStatusBadgeClass = (status: string) => {
 
 const getProgressPercentage = (status: string) => {
   const percentages: Record<string, number> = {
-    'awaiting_call': 10,
-    'processing': 30,
-    'packaging': 50,
-    'ready_for_pickup': 70,
-    'out_for_delivery': 90
+    'pending': 10,
+    'confirmed': 30,
+    'assigned': 50,
+    'picked_up': 70,
+    'arrived': 90
   }
   return percentages[status] || 0
 }
@@ -362,7 +823,7 @@ const fetchOrders = async () => {
       *,
       stores!store_id(name)
     `)
-    .in('status', ['awaiting_call', 'processing', 'packaging', 'ready_for_pickup', 'out_for_delivery'])
+    .in('status', ['pending', 'confirmed', 'assigned', 'picked_up', 'arrived'])
     .order('created_at', { ascending: true })
 
   if (error) {
@@ -389,7 +850,7 @@ const fetchOrders = async () => {
   if (userIds.length > 0) {
     const { data: profilesData } = await supabase
       .from('profiles')
-      .select('id, full_name, phone')
+      .select('id, full_name, phone_number')
       .in('id', userIds) as any
     Object.assign(profileMap, Object.fromEntries((profilesData || []).map((p: any) => [p.id, p])))
   }
@@ -398,10 +859,11 @@ const fetchOrders = async () => {
     ...order,
     store_name: storeMap[order.store_id] || order.stores?.name,
     customer_name: order.contact_name || profileMap[order.user_id]?.full_name,
-    customer_phone: order.contact_phone || profileMap[order.user_id]?.phone,
+    customer_phone: order.contact_phone || profileMap[order.user_id]?.phone_number,
     item_count: Array.isArray(order.items) ? order.items.length : 0
   }))
 }
+
 
 const fetchStores = async () => {
   const { data } = await supabase.from('stores').select('id, name').eq('is_active', true)
@@ -411,19 +873,50 @@ const fetchStores = async () => {
 const updateStatus = async (order: any, newStatus: string) => {
   processing.value.add(order.id)
 
-  const { error } = await (supabase as any)
-    .from('orders')
-    .update({
-      status: newStatus,
-      updated_at: new Date().toISOString()
-    })
-    .eq('id', order.id)
+  let updateError: any = null
+  try {
+    const { data: sessionData, error: sessionError } = await supabase.auth.getSession()
+    if (sessionError) throw sessionError
 
-  if (!error) {
+    const accessToken = sessionData?.session?.access_token
+    if (!accessToken) {
+      throw new Error('You must be logged in to update an order')
+    }
+
+    await $fetch('/api/admin/update-order-status', {
+      method: 'PATCH',
+      headers: {
+        Authorization: `Bearer ${accessToken}`
+      },
+      body: {
+        orderId: order.id,
+        status: newStatus
+      }
+    })
+  } catch (err: any) {
+    updateError = err
+    console.error('Error updating order status via admin API:', { orderId: order.id, newStatus, err })
+  }
+
+  if (!updateError) {
     await fetchOrders()
     if (selectedOrder.value?.id === order.id) {
       selectedOrder.value.status = newStatus
     }
+
+    const shortId = order?.id ? String(order.id).slice(-6).toUpperCase() : ''
+    toast.add({
+      title: 'Status Updated',
+      description: shortId ? `Order #${shortId} updated successfully.` : 'Order updated successfully.',
+      color: 'success'
+    })
+  } else {
+    const shortId = order?.id ? String(order.id).slice(-6).toUpperCase() : ''
+    toast.add({
+      title: 'Update Failed',
+      description: shortId ? `Could not update Order #${shortId}.` : 'Could not update order.',
+      color: 'error'
+    })
   }
 
   processing.value.delete(order.id)
@@ -440,6 +933,10 @@ const cancelOrder = async (order: any) => {
     })
     .eq('id', order.id)
 
+  if (error) {
+    console.error('Error cancelling order:', { orderId: order.id, error })
+  }
+
   if (!error) {
     await fetchOrders()
     selectedOrder.value = null
@@ -452,12 +949,88 @@ const openOrderDetails = (order: any) => {
   selectedOrder.value = order
 }
 
+const customerViewLabel = (order: any) => {
+  const fulfillmentType = (order?.delivery_method || 'delivery') as FulfillmentType
+  const label = getStatusLabel(order?.status, fulfillmentType)
+  return `Client Sees: ${label}`
+}
+
+const riderViewLabel = (order: any) => {
+  if (order?.delivery_method !== 'delivery') return null
+
+  const status = String(order?.status || '')
+  const isPOD = String(order?.payment_method || '') === 'pod'
+
+  // Align with driverStore.nextActionText / driver dashboard wording
+  if (status === 'assigned') return 'Rider Sees: Confirm Pickup at Store'
+  if (status === 'picked_up') return 'Rider Sees: Confirm Pickup at Store'
+  if (status === 'arrived') return `Rider Sees: ${isPOD ? 'Confirm Payment & Close Order' : 'Enter Delivery PIN'}`
+  return null
+}
+
+const arrivalAlerts = ref<{ orderId: string; customerName?: string; arrivedAt: string }[]>([])
+const alertedArrivalOrderIds = ref<Set<string>>(new Set())
+
+const playArrivalBeep = () => {
+  if (!import.meta.client) return
+  try {
+    const AudioContextCtor = (window as any).AudioContext || (window as any).webkitAudioContext
+    if (!AudioContextCtor) return
+    const ctx = new AudioContextCtor()
+    const oscillator = ctx.createOscillator()
+    const gain = ctx.createGain()
+
+    oscillator.type = 'sine'
+    oscillator.frequency.value = 880
+
+    gain.gain.setValueAtTime(0.0001, ctx.currentTime)
+    gain.gain.exponentialRampToValueAtTime(0.2, ctx.currentTime + 0.01)
+    gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.35)
+
+    oscillator.connect(gain)
+    gain.connect(ctx.destination)
+
+    oscillator.start()
+    oscillator.stop(ctx.currentTime + 0.4)
+
+    oscillator.onended = () => {
+      try { ctx.close() } catch {}
+    }
+  } catch (e) {
+    console.error('Failed to play arrival beep:', e)
+  }
+}
+
+const handlePickupArrivalAlert = (order: any) => {
+  const arrivedAt = order?.metadata?.pickup_arrived_at
+  if (!arrivedAt) return
+  if (alertedArrivalOrderIds.value.has(order.id)) return
+
+  alertedArrivalOrderIds.value.add(order.id)
+  arrivalAlerts.value.unshift({
+    orderId: order.id,
+    customerName: order.customer_name,
+    arrivedAt
+  })
+
+  if (arrivalAlerts.value.length > 5) {
+    arrivalAlerts.value = arrivalAlerts.value.slice(0, 5)
+  }
+
+  playArrivalBeep()
+}
+
 const setupRealtime = () => {
   realtimeChannel.value = supabase
     .channel('active-orders')
     .on('postgres_changes',
       { event: '*', schema: 'public', table: 'orders' },
-      () => {
+      (payload: any) => {
+        const oldArrivedAt = payload?.old?.metadata?.pickup_arrived_at
+        const newArrivedAt = payload?.new?.metadata?.pickup_arrived_at
+        if (!oldArrivedAt && newArrivedAt) {
+          handlePickupArrivalAlert(payload.new)
+        }
         fetchOrders()
       }
     )

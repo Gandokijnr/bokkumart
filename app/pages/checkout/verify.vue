@@ -83,9 +83,10 @@ async function verifyPayment() {
       .maybeSingle() as { data: { id: string; status: string; total_amount: number } | null }
 
     if (existingOrder?.status === 'paid') {
+      verifying.value = false
       success.value = true
       message.value = `Your payment of ${formatPrice(existingOrder.total_amount)} has been confirmed!`
-      cartStore.clearCart()
+      cartStore.retainCartFor48Hours()
       setTimeout(() => navigateTo(`/checkout/success?order=${existingOrder.id}`), 1500)
       return
     }
@@ -104,9 +105,10 @@ async function verifyPayment() {
         .maybeSingle() as { data: { id: string; status: string; total_amount: number } | null }
 
       if (checkOrder?.status === 'paid') {
+        verifying.value = false
         success.value = true
         message.value = `Your payment of ${formatPrice(checkOrder.total_amount)} has been confirmed!`
-        cartStore.clearCart()
+        cartStore.retainCartFor48Hours()
         setTimeout(() => navigateTo(`/checkout/success?order=${checkOrder.id}`), 1500)
         return
       }

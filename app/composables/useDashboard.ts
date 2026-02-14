@@ -1,0 +1,237 @@
+import type { RealtimeChannel } from '@supabase/supabase-js'
+import type { Database } from '~/types/database.types'
+import { useUserStore } from '~/stores/user'
+
+export type DashboardStats = {
+  pending_count: number
+  todays_count: number
+  todays_revenue: number
+  low_stock_count: number
+}
+
+export type VerificationQueueStats = {
+  call_list_count: number
+  unverified_value: number
+}
+
+let ordersChannel: RealtimeChannel | null = null
+let inventoryChannel: RealtimeChannel | null = null
+let verificationOrdersChannel: RealtimeChannel | null = null
+
+let dashboardRefreshTimer: ReturnType<typeof setTimeout> | null = null
+let verificationRefreshTimer: ReturnType<typeof setTimeout> | null = null
+
+export const useDashboard = () => {
+  const supabase = useSupabaseClient<Database>()
+  const userStore = useUserStore()
+
+  const stats = useState<DashboardStats | null>('dashboard_stats', () => null)
+  const verificationStats = useState<VerificationQueueStats | null>('verification_queue_stats', () => null)
+  const loading = useState<boolean>('dashboard_stats_loading', () => false)
+  const verificationLoading = useState<boolean>('verification_queue_stats_loading', () => false)
+  const error = useState<string | null>('dashboard_stats_error', () => null)
+  const verificationError = useState<string | null>('verification_queue_stats_error', () => null)
+
+  const scheduleRefresh = () => {
+    if (dashboardRefreshTimer) clearTimeout(dashboardRefreshTimer)
+    dashboardRefreshTimer = setTimeout(() => {
+      fetchDashboardStats({ silent: true })
+    }, 250)
+  }
+
+  const scheduleVerificationRefresh = () => {
+    if (verificationRefreshTimer) clearTimeout(verificationRefreshTimer)
+    verificationRefreshTimer = setTimeout(() => {
+      fetchVerificationQueueStats({ silent: true })
+    }, 250)
+  }
+
+  const effectiveRole = computed(() => userStore.effectiveRole)
+
+  // Super Admin => global (null)
+  // Branch Manager => their store scope
+  // Staff => scoped by store_id where available (still hides revenue in UI)
+  const targetBranchId = computed<string | null>(() => {
+    if (effectiveRole.value === 'super_admin') return null
+
+    const profile = userStore.profile
+    if (!profile) return null
+
+    if (profile.store_id) return profile.store_id
+    if (Array.isArray(profile.managed_store_ids) && profile.managed_store_ids.length > 0) {
+      return profile.managed_store_ids[0] || null
+    }
+    return null
+  })
+
+  const showRevenue = computed(() => {
+    // Staff should not see revenue; Managers + Super Admin can.
+    return effectiveRole.value !== 'staff'
+  })
+
+  const fetchDashboardStats = async (options?: { silent?: boolean }) => {
+    const silent = options?.silent === true
+
+    if (!silent) loading.value = true
+    error.value = null
+
+    try {
+      const { data, error: rpcError } = await (supabase.rpc as any)('get_admin_dashboard_stats', {
+        target_branch_id: targetBranchId.value
+      })
+      if (rpcError) throw rpcError
+
+      const payload = Array.isArray(data) ? data[0] : data
+      stats.value = (payload || null) as DashboardStats | null
+    } catch (err: any) {
+      error.value = err?.message || 'Failed to fetch dashboard stats'
+    } finally {
+      if (!silent) loading.value = false
+    }
+  }
+
+  const fetchVerificationQueueStats = async (options?: { silent?: boolean }) => {
+    const silent = options?.silent === true
+
+    if (!silent) verificationLoading.value = true
+    verificationError.value = null
+
+    try {
+      const { data, error: rpcError } = await (supabase.rpc as any)('get_verification_queue_stats', {
+        target_branch_id: targetBranchId.value
+      })
+      if (rpcError) throw rpcError
+
+      const payload = Array.isArray(data) ? data[0] : data
+      verificationStats.value = (payload || null) as VerificationQueueStats | null
+    } catch (err: any) {
+      verificationError.value = err?.message || 'Failed to fetch verification queue stats'
+    } finally {
+      if (!silent) verificationLoading.value = false
+    }
+  }
+
+  const subscribeToRealtime = () => {
+    unsubscribeFromRealtime()
+
+    const storeFilter = targetBranchId.value ? `store_id=eq.${targetBranchId.value}` : undefined
+
+    ordersChannel = supabase
+      .channel('admin-dashboard:orders')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'orders', filter: storeFilter },
+        () => scheduleRefresh()
+      )
+      .subscribe()
+
+    inventoryChannel = supabase
+      .channel('admin-dashboard:store_inventory')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'store_inventory', filter: storeFilter },
+        () => scheduleRefresh()
+      )
+      .subscribe()
+  }
+
+  const subscribeToVerificationRealtime = () => {
+    if (verificationOrdersChannel) {
+      supabase.removeChannel(verificationOrdersChannel)
+      verificationOrdersChannel = null
+    }
+
+    const storeFilter = targetBranchId.value ? `store_id=eq.${targetBranchId.value}` : undefined
+
+    verificationOrdersChannel = supabase
+      .channel('verification-queue:orders')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'orders', filter: storeFilter },
+        () => scheduleVerificationRefresh()
+      )
+      .subscribe()
+  }
+
+  const unsubscribeFromRealtime = () => {
+    if (ordersChannel) {
+      supabase.removeChannel(ordersChannel)
+      ordersChannel = null
+    }
+
+    if (inventoryChannel) {
+      supabase.removeChannel(inventoryChannel)
+      inventoryChannel = null
+    }
+
+    if (verificationOrdersChannel) {
+      supabase.removeChannel(verificationOrdersChannel)
+      verificationOrdersChannel = null
+    }
+
+    if (dashboardRefreshTimer) {
+      clearTimeout(dashboardRefreshTimer)
+      dashboardRefreshTimer = null
+    }
+
+    if (verificationRefreshTimer) {
+      clearTimeout(verificationRefreshTimer)
+      verificationRefreshTimer = null
+    }
+  }
+
+  const ensureUserReady = async () => {
+    if (!userStore.profile && !userStore.loading) {
+      await userStore.initialize()
+    }
+  }
+
+  const startDashboard = async () => {
+    await ensureUserReady()
+    await fetchDashboardStats()
+    subscribeToRealtime()
+  }
+
+  const startVerificationQueue = async () => {
+    await ensureUserReady()
+    await Promise.all([fetchDashboardStats(), fetchVerificationQueueStats()])
+    subscribeToRealtime()
+    subscribeToVerificationRealtime()
+  }
+
+  const stopAll = () => {
+    unsubscribeFromRealtime()
+  }
+
+  const formatNaira = (amount: number) => {
+    return new Intl.NumberFormat('en-NG', {
+      style: 'currency',
+      currency: 'NGN',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0
+    })
+      .format(amount)
+      .replace('NGN', '₦')
+  }
+
+  return {
+    stats,
+    verificationStats,
+    loading,
+    verificationLoading,
+    error,
+    verificationError,
+    fetchDashboardStats,
+    fetchVerificationQueueStats,
+    subscribeToRealtime,
+    subscribeToVerificationRealtime,
+    unsubscribeFromRealtime,
+    startDashboard,
+    startVerificationQueue,
+    stopAll,
+    targetBranchId,
+    effectiveRole,
+    showRevenue,
+    formatNaira
+  }
+}

@@ -8,7 +8,7 @@ export type AdminOrderStatus =
   | 'processing' 
   | 'paid'
   | 'confirmed' 
-  | 'shipped' 
+  | 'picked_up'
   | 'delivered' 
   | 'cancelled'
   | 'refunded'
@@ -138,13 +138,13 @@ export const useAdminStore = defineStore('admin', {
     },
     
     processingOrders: (state) => {
-      const filtered = state.orders.filter(o => ['processing', 'paid', 'confirmed', 'shipped'].includes(o.status))
+      const filtered = state.orders.filter(o => ['processing', 'paid', 'confirmed', 'picked_up'].includes(o.status))
       console.log('processingOrders:', filtered.length, 'orders with statuses:', filtered.map(o => o.status))
       return filtered
     },
     
     deliveryOrders: (state) => {
-      const filtered = state.orders.filter(o => o.status === 'shipped')
+      const filtered = state.orders.filter(o => o.status === 'picked_up')
       console.log('deliveryOrders:', filtered.length, 'orders')
       return filtered
     },

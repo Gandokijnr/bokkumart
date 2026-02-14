@@ -319,9 +319,22 @@ const handleAuth = async () => {
       // Now fetch the profile (it will use the user we just set)
       await userStore.fetchProfile()
       
-      // Load user's cart from database
+      // Load user's cart from server
       const cartStore = useCartStore()
-      await cartStore.loadFromDatabase(supabase)
+      const sessionRes = await supabase.auth.getSession()
+      const token = sessionRes.data?.session?.access_token
+      const userId = (data.user as any)?.id || (data.user as any)?.sub
+      if (token && userId && cartStore.fetchedForUserId !== userId) {
+        const { data: cartRes, error: cartErr } = await useFetch('/api/cart', {
+          immediate: true,
+          headers: { Authorization: `Bearer ${token}` }
+        })
+        cartStore.hydrateFromServerCart((cartRes.value as any)?.cart)
+        cartStore.markFetchedForUser(userId)
+        if (cartErr.value) {
+          console.error('Error loading cart:', cartErr.value)
+        }
+      }
       
       // Handle redirect based on role
       userStore.handleRedirectAfterLogin()
@@ -347,9 +360,22 @@ const handleAuth = async () => {
       // Now fetch the profile (it will use the user we just set)
       await userStore.fetchProfile()
       
-      // Load user's cart from database
+      // Load user's cart from server
       const cartStore = useCartStore()
-      await cartStore.loadFromDatabase(supabase)
+      const sessionRes = await supabase.auth.getSession()
+      const token = sessionRes.data?.session?.access_token
+      const userId = (data.user as any)?.id || (data.user as any)?.sub
+      if (token && userId && cartStore.fetchedForUserId !== userId) {
+        const { data: cartRes, error: cartErr } = await useFetch('/api/cart', {
+          immediate: true,
+          headers: { Authorization: `Bearer ${token}` }
+        })
+        cartStore.hydrateFromServerCart((cartRes.value as any)?.cart)
+        cartStore.markFetchedForUser(userId)
+        if (cartErr.value) {
+          console.error('Error loading cart:', cartErr.value)
+        }
+      }
       
       // Handle redirect based on role
       userStore.handleRedirectAfterLogin()

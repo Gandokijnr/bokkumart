@@ -14,16 +14,15 @@
           </div>
         </button>
 
-        <!-- Store Selector -->
+        <!-- Branch Switcher -->
         <button
-          @click="showStoreSwitcher = true"
+          @click="handleBranchSwitch"
           class="hidden md:flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-700 shadow-sm transition-all hover:border-red-300 hover:shadow-md"
         >
           <svg class="h-4 w-4 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
           </svg>
-          <span class="max-w-[150px] truncate">{{ storeStore.selectedStore?.name || 'Select Store' }}</span>
+          <span class="max-w-[150px] truncate">{{ branchStore.activeBranchName }}</span>
           <svg class="h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
           </svg>
@@ -44,8 +43,7 @@
             class="hidden h-10 w-10 items-center justify-center rounded-xl border border-gray-200 bg-white text-gray-700 shadow-sm transition-all hover:border-gray-300 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-red-600 focus:ring-offset-1 md:flex"
             type="button"
             aria-label="Search"
-            :aria-expanded="searchOpen ? 'true' : 'false'"
-            @click="toggleSearch"
+            @click="showGlobalSearch = true"
           >
             <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
@@ -155,10 +153,10 @@
 
           <!-- Mobile nav links -->
           <nav class="space-y-1" aria-label="Mobile">
-            <!-- Mobile Store Selector -->
-            <button @click="showStoreSwitcher = true; mobileMenuOpen = false" class="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-left text-sm font-semibold text-gray-700 transition-colors hover:bg-red-50 hover:text-red-700">
+            <!-- Mobile Branch Selector -->
+            <button @click="handleBranchSwitch; mobileMenuOpen = false" class="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-left text-sm font-semibold text-gray-700 transition-colors hover:bg-red-50 hover:text-red-700">
               <span class="text-lg">🏪</span>
-              <span>{{ storeStore.selectedStore?.name || 'Select Store' }}</span>
+              <span>{{ branchStore.activeBranchName }}</span>
             </button>
             <button @click="navigateTo('/#categories'); mobileMenuOpen = false" class="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-left text-sm font-semibold text-gray-700 transition-colors hover:bg-red-50 hover:text-red-700">
               <span class="text-lg">🏪</span>
@@ -202,21 +200,94 @@
 
   <!-- Store Switcher Modal -->
   <StoreSwitcher v-model="showStoreSwitcher" />
+
+  <!-- Branch Selector Modal -->
+  <StoreSelector v-model="showBranchSelector" @select="handleBranchSelect" />
+
+  <!-- Branch Switch Cart Warning Dialog -->
+  <Teleport to="body">
+    <Transition
+      enter-active-class="transition duration-200 ease-out"
+      enter-from-class="opacity-0 scale-95"
+      enter-to-class="opacity-100 scale-100"
+      leave-active-class="transition duration-150 ease-in"
+      leave-from-class="opacity-100 scale-100"
+      leave-to-class="opacity-0 scale-95"
+    >
+      <div v-if="showBranchCartWarning" class="fixed inset-0 z-[110] flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
+        <div class="w-full max-w-md bg-white rounded-2xl shadow-2xl overflow-hidden">
+          <div class="p-6">
+            <div class="flex items-center gap-3 mb-4">
+              <div class="flex-shrink-0 w-12 h-12 rounded-full bg-amber-100 flex items-center justify-center">
+                <svg class="w-6 h-6 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+              </div>
+              <div>
+                <h3 class="text-lg font-bold text-gray-900">Switching Stores?</h3>
+                <p class="text-sm text-gray-600">This action will clear your cart</p>
+              </div>
+            </div>
+            
+            <div class="bg-amber-50 border border-amber-200 rounded-xl p-4 mb-6">
+              <p class="text-sm text-amber-800">
+                <span class="font-semibold">Warning:</span> Your cart contains 
+                <span class="font-bold">{{ cartStore.cartCount }}</span> item{{ cartStore.cartCount === 1 ? '' : 's' }} 
+                from <span class="font-bold">{{ cartStore.currentStoreName }}</span>.
+              </p>
+              <p class="text-sm text-amber-800 mt-2">
+                Switching stores will <span class="font-bold">clear your current cart</span>. 
+                Proceed?
+              </p>
+            </div>
+
+            <div class="flex gap-3">
+              <button
+                @click="cancelBranchSwitch"
+                class="flex-1 rounded-xl border border-gray-300 px-4 py-3 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                @click="confirmBranchSwitch"
+                class="flex-1 rounded-xl bg-red-600 px-4 py-3 text-sm font-medium text-white hover:bg-red-700 transition-colors"
+              >
+                Clear Cart & Switch
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </Transition>
+  </Teleport>
+
+  <!-- Global Search Modal -->
+  <GlobalSearch v-model="showGlobalSearch" @switch-branch="pendingBranchId = $event; showBranchCartWarning = true" />
 </template>
 
 <script setup lang="ts">
 import { useCartStore } from '~/stores/useCartStore'
 import { useUserStore } from '~/stores/user'
 import { useStoreStore } from '~/stores/store'
+import { useBranchStore } from '~/stores/useBranchStore'
 
 const cartStore = useCartStore()
 const userStore = useUserStore()
 const storeStore = useStoreStore()
+const branchStore = useBranchStore()
+const supabase = useSupabaseClient()
+
 const searchOpen = ref(false)
 const mobileMenuOpen = ref(false)
 const searchQuery = ref('')
 const searchInput = ref<HTMLInputElement | null>(null)
 const showStoreSwitcher = ref(false)
+
+// Search and branch switcher state
+const showGlobalSearch = ref(false)
+const showBranchSelector = ref(false)
+const showBranchCartWarning = ref(false)
+const pendingBranchId = ref<string | null>(null)
 
 // Reactive cart count from store
 const cartCount = computed(() => cartStore.cartCount)
@@ -228,16 +299,72 @@ const isManager = computed(() => userStore.isManager)
 const hasStaffAccess = computed(() => userStore.hasStaffAccess)
 const userRole = computed(() => userStore.userRole)
 
-// Initialize user store on mount
-onMounted(() => {
+// Initialize stores on mount
+onMounted(async () => {
   userStore.initialize()
+  await branchStore.initialize(supabase)
+  
+  // Show branch selector if no branch is selected
+  if (!branchStore.hasActiveBranch) {
+    showBranchSelector.value = true
+  }
 })
 
 const toggleSearch = async () => {
-  searchOpen.value = !searchOpen.value
-  if (searchOpen.value) {
-    await nextTick()
-    searchInput.value?.focus()
+  showGlobalSearch.value = true
+}
+
+// Handle branch switching with cart warning
+const handleBranchSwitch = () => {
+  showBranchSelector.value = true
+}
+
+// Check for cart conflicts before switching
+const handleBranchSelect = (branch: { id: string; name: string }) => {
+  // Check if user has items in cart from a different branch
+  if (cartStore.items.length > 0 && cartStore.currentStoreId !== branch.id) {
+    showBranchCartWarning.value = true
+    pendingBranchId.value = branch.id
+    return
+  }
+  
+  // No conflict, proceed with switch
+  completeBranchSwitch(branch.id)
+}
+
+// Complete the branch switch
+const completeBranchSwitch = async (branchId: string) => {
+  const result = branchStore.switchBranch(branchId)
+  
+  if (result.success && result.newBranch) {
+    // Clear cart if switching to different branch
+    if (result.requiresCartClear && cartStore.items.length > 0) {
+      cartStore.clearCart()
+    }
+    
+    // Sync with Supabase
+    await branchStore.syncWithSupabase(supabase)
+    
+    // Close modals
+    showBranchSelector.value = false
+    showBranchCartWarning.value = false
+    pendingBranchId.value = null
+    
+    // Reload page to show branch-specific products
+    window.location.reload()
+  }
+}
+
+// Cancel branch switch due to cart conflict
+const cancelBranchSwitch = () => {
+  showBranchCartWarning.value = false
+  pendingBranchId.value = null
+}
+
+// Confirm clearing cart and switching
+const confirmBranchSwitch = async () => {
+  if (pendingBranchId.value) {
+    await completeBranchSwitch(pendingBranchId.value)
   }
 }
 

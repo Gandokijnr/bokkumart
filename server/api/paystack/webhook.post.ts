@@ -56,11 +56,10 @@ export default defineEventHandler(async (event) => {
   try {
     const config = useRuntimeConfig()
     const body = await readBody<PaystackWebhookEvent>(event)
-    
-    // Verify webhook signature
+
     const paystackSecret = config.paystackSecretKey || process.env.PAYSTACK_SECRET_KEY
     const signature = getHeader(event, 'x-paystack-signature')
-    
+
     if (!signature) {
       throw createError({
         statusCode: 401,
@@ -68,19 +67,12 @@ export default defineEventHandler(async (event) => {
       })
     }
 
-    // Verify signature (optional but recommended for production)
-    // In production, compute HMAC and compare
-    // const crypto = await import('crypto')
-    // const hash = crypto.createHmac('sha512', paystackSecret).update(JSON.stringify(body)).digest('hex')
-    // if (hash !== signature) { ... }
-
-    // Only process successful charges
     if (body.event !== 'charge.success') {
       return { received: true, processed: false, reason: 'Not a successful charge' }
     }
 
     const { data } = body
-    
+
     if (!data.reference || !data.metadata) {
       throw createError({
         statusCode: 400,
@@ -103,12 +95,10 @@ export default defineEventHandler(async (event) => {
       })
     }
 
-    // Use service role to bypass RLS
     const supabase = createClient(supabaseUrl, serviceRoleKey, {
       auth: { persistSession: false, autoRefreshToken: false }
     }) as unknown as ReturnType<typeof createClient<Database>>
 
-    // Check if order already exists and is paid
     const { data: existingOrder, error: fetchError } = await (supabase as any)
       .from('orders')
       .select('id, status, confirmation_code, metadata')
@@ -123,19 +113,18 @@ export default defineEventHandler(async (event) => {
       })
     }
 
-    // If order exists and is already paid, don't process again
     if (existingOrder && (existingOrder as any).status === 'paid') {
       return { received: true, processed: false, reason: 'Order already paid' }
     }
 
     const isPickup = data.metadata.delivery_method === 'pickup'
     const claimCode = isPickup ? (existingOrder as any)?.confirmation_code || generateClaimCode() : null
-    const qrPayload = isPickup && claimCode
-      ? JSON.stringify({ order_id: (existingOrder as any)?.id || data.metadata.order_id, claim_code: claimCode })
-      : null
+    const qrPayload =
+      isPickup && claimCode
+        ? JSON.stringify({ order_id: (existingOrder as any)?.id || data.metadata.order_id, claim_code: claimCode })
+        : null
 
     if (existingOrder) {
-      // Update existing order
       const mergedMetadata = {
         ...((existingOrder as any).metadata || {}),
         payment_channel: data.channel,
@@ -165,7 +154,6 @@ export default defineEventHandler(async (event) => {
         })
       }
     } else {
-      // Create new order
       const insertPayload: any = {
         user_id: data.metadata.user_id,
         store_id: data.metadata.store_id,
@@ -209,17 +197,15 @@ export default defineEventHandler(async (event) => {
       }
     }
 
-    // Return success response to Paystack
-    return { 
-      received: true, 
+    return {
+      received: true,
       processed: true,
       reference: data.reference,
       order_id: (existingOrder as any)?.id || 'new'
     }
-
   } catch (error: any) {
     console.error('Paystack webhook error:', error)
-    
+
     if (error.statusCode) {
       throw error
     }

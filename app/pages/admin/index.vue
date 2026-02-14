@@ -163,7 +163,7 @@ function getStatusColor(status: string) {
     processing: 'bg-blue-100 text-blue-800 border-blue-200',
     paid: 'bg-green-100 text-green-800 border-green-200',
     confirmed: 'bg-blue-100 text-blue-800 border-blue-200',
-    shipped: 'bg-indigo-100 text-indigo-800 border-indigo-200',
+    picked_up: 'bg-indigo-100 text-indigo-800 border-indigo-200',
     delivered: 'bg-gray-100 text-gray-800 border-gray-200',
     cancelled: 'bg-red-100 text-red-800 border-red-200',
     refunded: 'bg-red-100 text-red-800 border-red-200'
@@ -177,7 +177,7 @@ function getStatusLabel(status: string) {
     processing: 'Processing',
     paid: 'Paid',
     confirmed: 'Confirmed',
-    shipped: 'Shipped',
+    picked_up: 'Out for Delivery',
     delivered: 'Delivered',
     cancelled: 'Cancelled',
     refunded: 'Refunded'
@@ -609,16 +609,16 @@ async function saveNote(orderId: string) {
                 </div>
 
                 <!-- Processing Actions -->
-                <div v-else-if="['confirmed', 'shipped'].includes(order.status)" class="flex gap-2">
+                <div v-else-if="['confirmed', 'picked_up'].includes(order.status)" class="flex gap-2">
                   <button
-                    @click="adminStore.updateOrderStatus(order.id, 'shipped')"
+                    @click="adminStore.updateOrderStatus(order.id, 'picked_up')"
                     class="flex-1 px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors"
                   >
-                    Mark Shipped
+                    Mark Out for Delivery
                   </button>
                   <button
                     @click="adminStore.updateOrderStatus(order.id, 'delivered')"
-                    class="flex-1 px-4 py-2 text-sm font-medium text-white bg-purple-600 rounded-lg hover:bg-purple-700 transition-colors"
+                    class="flex-1 px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 transition-colors"
                   >
                     Mark Delivered
                   </button>

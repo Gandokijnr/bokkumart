@@ -1,7 +1,5 @@
 <template>
-  <div class="min-h-screen bg-gray-100">
-    <AppHeader />
-    
+  <div class="min-h-screen bg-gray-100">    
     <main class="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
       <!-- Header -->
       <div class="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -199,24 +197,16 @@
         </div>
       </div>
 
-      <!-- Queue Stats -->
-      <div class="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-4">
-        <div class="rounded-xl bg-white p-4 shadow-sm">
-          <p class="text-xs text-gray-500">Total Pending</p>
-          <p class="text-2xl font-bold text-gray-900">{{ pendingOrders.length }}</p>
-        </div>
-        <div class="rounded-xl bg-white p-4 shadow-sm">
-          <p class="text-xs text-gray-500">Unclaimed</p>
-          <p class="text-2xl font-bold text-amber-600">{{ unclaimedOrders.length }}</p>
-        </div>
-        <div class="rounded-xl bg-white p-4 shadow-sm">
-          <p class="text-xs text-gray-500">Being Handled</p>
-          <p class="text-2xl font-bold text-blue-600">{{ claimedOrders.length }}</p>
-        </div>
-        <div class="rounded-xl bg-white p-4 shadow-sm">
-          <p class="text-xs text-gray-500">Over SLA (>3m)</p>
-          <p class="text-2xl font-bold text-red-600">{{ overdueOrders.length }}</p>
-        </div>
+      <!-- Queue Stats (Realtime) -->
+      <div class="mt-6">
+        <AdminStatsCards
+          mode="verification"
+          :stats="dashboard.stats.value"
+          :verification-stats="dashboard.verificationStats.value"
+          :loading="dashboard.loading.value || dashboard.verificationLoading.value"
+          :show-revenue="false"
+          :format-naira="dashboard.formatNaira"
+        />
       </div>
     </main>
 
@@ -290,6 +280,8 @@
 </template>
 
 <script setup lang="ts">
+import { useDashboard } from '~/composables/useDashboard'
+
 interface Order {
   id: string
   status: string
@@ -344,6 +336,8 @@ const SLATimer = defineComponent({
 const supabase = useSupabaseClient()
 const user = useSupabaseUser()
 const currentUserId = computed(() => user.value?.id)
+
+const dashboard = useDashboard()
 
 const loading = ref(false)
 const filter = ref<'all' | 'unclaimed' | 'my_orders'>('all')
@@ -440,6 +434,15 @@ async function loadOrders() {
   
   loading.value = false
 }
+
+onMounted(async () => {
+  await dashboard.startVerificationQueue()
+  await loadOrders()
+})
+
+onUnmounted(() => {
+  dashboard.stopAll()
+})
 
 async function claimOrder(orderId: string) {
   claiming.value[orderId] = true

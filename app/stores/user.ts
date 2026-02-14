@@ -5,6 +5,9 @@ import type { Database } from '~/types/database.types'
 
 export type UserRole = 'customer' | 'staff' | 'branch_manager' | 'super_admin' | 'driver'
 
+type StoreRow = Database['public']['Tables']['stores']['Row']
+type ManagedStore = Pick<StoreRow, 'id' | 'name'>
+
 interface UserProfile {
   id: string
   full_name: string | null
@@ -19,7 +22,7 @@ interface UserProfile {
 interface UserState {
   user: User | null
   profile: UserProfile | null
-  managedStores: Database['public']['Tables']['stores']['Row'][]
+  managedStores: ManagedStore[]
   loading: boolean
   error: string | null
   lastActivityAt: number | null
@@ -35,6 +38,11 @@ interface NavItem {
   badge?: string
 }
 
+ const computeEffectiveRole = (state: UserState): UserRole => {
+   const jwtRole = ((state.user as any)?.app_metadata?.role as UserRole | undefined) || undefined
+   return state.impersonatingRole || state.profile?.role || jwtRole || 'customer'
+ }
+
 export const useUserStore = defineStore('user', {
   state: (): UserState => ({
     user: null,
@@ -49,17 +57,22 @@ export const useUserStore = defineStore('user', {
 
   getters: {
     // Current effective role (consider impersonation)
-    effectiveRole: (state): UserRole => {
-      const jwtRole = ((state.user as any)?.app_metadata?.role as UserRole | undefined) || undefined
-      return state.impersonatingRole || state.profile?.role || jwtRole || 'customer'
-    },
+    effectiveRole: (state): UserRole => computeEffectiveRole(state),
 
     // Role checks
     isAuthenticated: (state) => !!state.user,
 
     isSuperAdmin: (state) => state.profile?.role === 'super_admin',
 
+    isAdmin(): boolean {
+      return this.isSuperAdmin
+    },
+
     isBranchManager: (state) => state.profile?.role === 'branch_manager',
+
+    isManager(): boolean {
+      return this.isBranchManager
+    },
 
     isStaff: (state) => state.profile?.role === 'staff',
 
@@ -69,21 +82,21 @@ export const useUserStore = defineStore('user', {
     hasRole: (state) => !!state.profile?.role,
 
     // Has access to admin routes
-    hasAdminAccess(): boolean {
-      const role = this.effectiveRole
+    hasAdminAccess: (state): boolean => {
+      const role = computeEffectiveRole(state)
       const adminRoles: UserRole[] = ['super_admin', 'branch_manager', 'staff']
       return adminRoles.includes(role as UserRole)
     },
 
     // Has access to staff management
-    hasStaffManagementAccess() {
-      const role = this.effectiveRole
+    hasStaffManagementAccess: (state) => {
+      const role = computeEffectiveRole(state)
       return role === 'super_admin'
     },
 
     // Has staff-level access (includes all admin roles)
-    hasStaffAccess(): boolean {
-      const role = this.effectiveRole
+    hasStaffAccess: (state): boolean => {
+      const role = computeEffectiveRole(state)
       const staffRoles: UserRole[] = ['super_admin', 'branch_manager', 'staff']
       return staffRoles.includes(role as UserRole)
     },
@@ -99,12 +112,12 @@ export const useUserStore = defineStore('user', {
     managedStoreNames: (state) => {
       if (state.managedStores.length === 0) return 'No Stores Assigned'
       if (state.managedStores.length === 1) return state.managedStores[0]?.name || 'Unnamed Store'
-      return state.managedStores.map(s => s?.name || 'Unnamed Store').join(', ')
+      return state.managedStores.map((s) => s.name || 'Unnamed Store').join(', ')
     },
 
     // Navigation items based on role
-    navigationItems(): NavItem[] {
-      const role = this.effectiveRole
+    navigationItems: (state): NavItem[] => {
+      const role = computeEffectiveRole(state)
       const items: NavItem[] = []
 
       // Super Admin Navigation
@@ -258,16 +271,18 @@ export const useUserStore = defineStore('user', {
           throw error
         }
 
-        this.profile = data as UserProfile | null
+        const profile = data as unknown as UserProfile | null
+        this.profile = profile
 
         // Fetch managed stores if branch manager
-        if (data && data.managed_store_ids && data.managed_store_ids.length > 0) {
+        const managedStoreIds = profile?.managed_store_ids || []
+        if (managedStoreIds.length > 0) {
           const { data: storesData } = await supabase
             .from('stores')
-            .select('*')
-            .in('id', data.managed_store_ids)
+            .select('id,name')
+            .in('id', managedStoreIds)
 
-          this.managedStores = storesData || []
+          this.managedStores = (storesData || []) as ManagedStore[]
         }
 
         // Set shorter timeout for staff/admin

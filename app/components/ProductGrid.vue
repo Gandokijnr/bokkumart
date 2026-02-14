@@ -8,9 +8,35 @@
         </div>
       </div>
 
-      <!-- Store Selection Notice -->
-      <div v-if="!storeStore.isStoreSelected" class="mb-6 rounded-xl border-2 border-yellow-200 bg-yellow-50 p-4">
-        <p class="text-sm text-yellow-800">Please select a store to view available products.</p>
+      <!-- Branch Selection Notice -->
+      <div v-if="!branchStore.hasActiveBranch" class="mb-6 rounded-xl border-2 border-amber-200 bg-amber-50 p-4">
+        <div class="flex items-center gap-3">
+          <svg class="h-5 w-5 text-amber-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+          </svg>
+          <p class="text-sm text-amber-800">Please select a store to view available products.</p>
+        </div>
+      </div>
+
+      <!-- Current Branch Indicator -->
+      <div v-else class="mb-6 flex items-center justify-between rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
+        <div class="flex items-center gap-3">
+          <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-red-100">
+            <svg class="h-5 w-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+            </svg>
+          </div>
+          <div>
+            <p class="text-xs text-gray-500">Shopping at</p>
+            <p class="font-semibold text-gray-900">{{ branchStore.activeBranchName }}</p>
+          </div>
+        </div>
+        <button 
+          @click="$emit('showBranchSelector')"
+          class="text-sm font-medium text-red-600 hover:text-red-700 transition-colors"
+        >
+          Change
+        </button>
       </div>
 
       <!-- Loading skeleton -->
@@ -33,15 +59,39 @@
         </button>
       </div>
 
-      <!-- Empty state -->
-      <div v-else-if="products.length === 0 && storeStore.isStoreSelected" class="rounded-2xl border-2 border-gray-200 bg-white p-8 text-center">
+      <!-- Empty state for no branch selected -->
+      <div v-else-if="!branchStore.hasActiveBranch" class="rounded-2xl border-2 border-gray-200 bg-white p-8 text-center">
+        <div class="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-gray-100 mx-auto">
+          <svg class="h-8 w-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+          </svg>
+        </div>
+        <h3 class="text-lg font-semibold text-gray-900">Select a Store</h3>
+        <p class="mt-2 text-sm text-gray-600">Please select your preferred HomeAffairs branch to view available products.</p>
+        <button 
+          @click="$emit('showBranchSelector')"
+          class="mt-4 rounded-xl bg-red-600 px-6 py-2.5 text-sm font-medium text-white hover:bg-red-700 transition-colors"
+        >
+          Choose Store
+        </button>
+      </div>
+
+      <!-- Empty state for selected branch with no products -->
+      <div v-else-if="products.length === 0 && branchStore.hasActiveBranch" class="rounded-2xl border-2 border-gray-200 bg-white p-8 text-center">
         <div class="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-gray-100 mx-auto">
           <svg class="h-8 w-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
           </svg>
         </div>
         <h3 class="text-lg font-semibold text-gray-900">No products available</h3>
-        <p class="mt-2 text-sm text-gray-600">There are no products available at {{ storeStore.storeName }} right now.</p>
+        <p class="mt-2 text-sm text-gray-600">There are no products in stock at {{ branchStore.activeBranchName }} right now.</p>
+        <button 
+          @click="$emit('showBranchSelector')"
+          class="mt-4 rounded-xl border border-gray-300 px-6 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+        >
+          Try Another Store
+        </button>
       </div>
 
       <!-- Products grid -->
@@ -204,12 +254,19 @@
 import { useProducts, type Product } from '../composables/useProducts'
 import { useCartStore } from '../stores/useCartStore'
 import { useStoreStore } from '../stores/store'
+import { useBranchStore } from '../stores/useBranchStore'
 import type { Database } from '../types/database.types'
 
 const { products, pending, error, fetchProducts, subscribeToStockUpdates, unsubscribeFromStockUpdates, checkStock, formatPrice, stockUpdates } = useProducts()
 const cartStore = useCartStore()
 const storeStore = useStoreStore()
+const branchStore = useBranchStore()
 const supabase = useSupabaseClient<Database>()
+
+// Define emits for branch selector
+const emit = defineEmits<{
+  showBranchSelector: []
+}>()
 
 // Local state
 const addingToCart = ref<Set<string>>(new Set())
@@ -356,12 +413,13 @@ const refreshProducts = async () => {
 
 // Setup on mount
 onMounted(async () => {
-  storeStore.loadFromLocalStorage()
+  // Initialize branch store
+  await branchStore.initialize(supabase)
 
-  if (storeStore.isStoreSelected && storeStore.selectedStore) {
+  if (branchStore.hasActiveBranch && branchStore.activeBranchId) {
     await fetchProducts()
 
-    subscribeToStockUpdates(storeStore.selectedStore.id, (update) => {
+    subscribeToStockUpdates(branchStore.activeBranchId, (update) => {
       if (!update.isAvailable) {
         const product = products.value.find(p => p.id === update.productId)
         if (product) {
@@ -377,12 +435,12 @@ onUnmounted(() => {
   unsubscribeFromStockUpdates()
 })
 
-// Watch for store changes
-watch(() => storeStore.selectedStore?.id, async (newStoreId, oldStoreId) => {
-  if (newStoreId && newStoreId !== oldStoreId) {
+// Watch for branch changes
+watch(() => branchStore.activeBranchId, async (newBranchId, oldBranchId) => {
+  if (newBranchId && newBranchId !== oldBranchId) {
     unsubscribeFromStockUpdates()
     await fetchProducts()
-    subscribeToStockUpdates(newStoreId, (update) => {
+    subscribeToStockUpdates(newBranchId, (update) => {
       console.log('Stock update received:', update)
     })
   }

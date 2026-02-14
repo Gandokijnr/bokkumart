@@ -125,7 +125,7 @@ function formatPrice(price: number): string {
 
 onMounted(() => {
   if (orderId.value) {
-    cartStore.clearCart()
+    cartStore.retainCartFor48Hours()
   }
 })
 </script>

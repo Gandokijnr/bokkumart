@@ -139,6 +139,20 @@ useSeoMeta({
 // Stores and composables
 const cartStore = useCartStore()
 const { categories, fetchCategories, getCategoryIcon } = useCategories()
+const supabase = useSupabaseClient()
+const user = useSupabaseUser()
+
+const cartToken = ref<string | null>(null)
+const cartHeaders = computed((): HeadersInit | undefined => {
+  return cartToken.value
+    ? ({ Authorization: `Bearer ${cartToken.value}` } as Record<string, string>)
+    : undefined
+})
+
+const { data: serverCartRes, error: serverCartError, execute: fetchServerCart } = useFetch('/api/cart', {
+  immediate: false,
+  headers: cartHeaders
+})
 
 // State
 const orderNote = ref('')
@@ -270,6 +284,26 @@ onMounted(async () => {
   await fetchCategories()
   if (cartStore.items.length > 0) {
     await loadCrossSellProducts()
+  }
+
+  const userId = (user.value as any)?.id || (user.value as any)?.sub
+  if (userId && cartStore.fetchedForUserId !== userId) {
+    try {
+      cartStore.pruneIfExpired()
+      const { data: sessionData } = await supabase.auth.getSession()
+      cartToken.value = sessionData?.session?.access_token || null
+      if (cartToken.value) {
+        await fetchServerCart()
+        const cart = (serverCartRes.value as any)?.cart
+        cartStore.hydrateFromServerCart(cart)
+      }
+    } finally {
+      cartStore.markFetchedForUser(userId)
+    }
+
+    if (serverCartError.value) {
+      console.error('Error loading cart:', serverCartError.value)
+    }
   }
 })
 

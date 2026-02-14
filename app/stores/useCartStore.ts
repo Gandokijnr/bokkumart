@@ -44,7 +44,11 @@ export interface CartState {
   reservedItems: ReservedItem[]
   reservationExpiry: number | null
   isLoading: boolean
+  fetchedForUserId: string | null
 }
+
+const CART_RETENTION_KEY = 'ha_cart_retention_until'
+const CART_RETENTION_MS = 48 * 60 * 60 * 1000
 
 export const useCartStore = defineStore('cart', {
   state: (): CartState => ({
@@ -55,7 +59,8 @@ export const useCartStore = defineStore('cart', {
     selectedAddress: null,
     reservedItems: [],
     reservationExpiry: null,
-    isLoading: false
+    isLoading: false,
+    fetchedForUserId: null
   }),
 
   getters: {
@@ -117,71 +122,101 @@ export const useCartStore = defineStore('cart', {
   },
 
   actions: {
+    hydrateFromServerCart(cart: any) {
+      if (!cart) {
+        this.items = []
+        this.currentStoreId = null
+        this.currentStoreName = ''
+        this.deliveryDetails = null
+        return
+      }
+
+      this.items = (cart.cart_items || []).map((item: any) => ({
+        id: item.product_id,
+        product_id: item.product_id,
+        name: item.name,
+        price: item.price,
+        quantity: item.quantity,
+        store_id: item.store_id,
+        store_name: cart.store_name || '',
+        image_url: item.image_url || undefined,
+        max_quantity: item.max_quantity,
+        digital_buffer: item.digital_buffer,
+        options: item.options || undefined
+      }))
+
+      this.currentStoreId = cart.store_id
+      this.currentStoreName = cart.store_name || ''
+
+      if (cart.delivery_method) {
+        this.deliveryDetails = {
+          method: cart.delivery_method as 'pickup' | 'delivery',
+          address: cart.delivery_address || undefined,
+          contactPhone: cart.contact_phone || '',
+          deliveryZone: cart.delivery_zone || undefined
+        }
+      } else {
+        this.deliveryDetails = null
+      }
+    },
+
+    markFetchedForUser(userId: string | null) {
+      this.fetchedForUserId = userId
+    },
+
+    pruneIfExpired() {
+      if (!import.meta.client) return
+      try {
+        const raw = localStorage.getItem(CART_RETENTION_KEY)
+        if (!raw) return
+        const until = Number(raw)
+        if (!Number.isFinite(until)) {
+          localStorage.removeItem(CART_RETENTION_KEY)
+          return
+        }
+        if (Date.now() > until) {
+          localStorage.removeItem(CART_RETENTION_KEY)
+          this.clearCart()
+        }
+      } catch {
+        // ignore
+      }
+    },
+
+    retainCartFor48Hours() {
+      if (!import.meta.client) return
+      try {
+        const until = Date.now() + CART_RETENTION_MS
+        localStorage.setItem(CART_RETENTION_KEY, String(until))
+      } catch {
+        // ignore
+      }
+    },
+
     /**
      * Load cart from database (call on login/app start)
      */
     async loadFromDatabase(supabase: SupabaseClient<Database>): Promise<boolean> {
+      this.pruneIfExpired()
       this.isLoading = true
       try {
-        const { data: user } = await supabase.auth.getUser()
-        if (!user.user) {
+        const { data: sessionData } = await supabase.auth.getSession()
+        const token = sessionData?.session?.access_token
+        if (!token) {
           this.isLoading = false
           return false
         }
 
-        // Get user's cart with items
-        const { data: cart, error } = await supabase
-          .from('carts')
-          .select(`
-            id,
-            store_id,
-            store_name,
-            delivery_method,
-            delivery_address,
-            contact_phone,
-            delivery_zone,
-            cart_items (
-              product_id,
-              store_id,
-              name,
-              price,
-              quantity,
-              max_quantity,
-              digital_buffer,
-              image_url,
-              options
-            )
-          `)
-          .eq('user_id', user.user.id)
-          .maybeSingle() as { data: {
-            id: string
-            store_id: string
-            store_name: string | null
-            delivery_method: string | null
-            delivery_address: any
-            contact_phone: string | null
-            delivery_zone: string | null
-            cart_items: {
-              product_id: string
-              store_id: string
-              name: string
-              price: number
-              quantity: number
-              max_quantity: number
-              digital_buffer: number
-              image_url: string | null
-              options: any
-            }[] | null
-          } | null, error: any }
+        const res: { success: boolean; cart: any } = await $fetch('/api/cart', {
+          method: 'GET',
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        })
 
-        if (error) {
-          console.error('Error loading cart:', error)
-          this.isLoading = false
-          return false
-        }
-
+        const cart = res?.cart
         if (cart) {
-          this.items = (cart.cart_items || []).map(item => ({
+          this.items = (cart.cart_items || []).map((item: any) => ({
             id: item.product_id,
             product_id: item.product_id,
             name: item.name,
@@ -207,6 +242,7 @@ export const useCartStore = defineStore('cart', {
           }
         }
 
+        this.pruneIfExpired()
         this.isLoading = false
         return true
       } catch (err) {
@@ -440,6 +476,10 @@ export const useCartStore = defineStore('cart', {
       this.currentStoreName = ''
       this.deliveryDetails = null
       this.clearReservation()
+
+      if (import.meta.client) {
+        try { localStorage.removeItem(CART_RETENTION_KEY) } catch {}
+      }
     },
 
     setDeliveryDetails(details: DeliveryDetails) {

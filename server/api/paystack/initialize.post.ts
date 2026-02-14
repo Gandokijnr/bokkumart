@@ -101,7 +101,7 @@ export default defineEventHandler(async (event) => {
     const response = await fetch('https://api.paystack.co/transaction/initialize', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${paystackSecret}`,
+        Authorization: `Bearer ${paystackSecret}`,
         'Content-Type': 'application/json'
       },
       body: JSON.stringify(payload)
@@ -124,10 +124,9 @@ export default defineEventHandler(async (event) => {
       reference: result.data?.reference,
       access_code: result.data?.access_code
     }
-
   } catch (error: any) {
     console.error('Paystack initialize error:', error)
-    
+
     if (error.statusCode) {
       throw error
     }

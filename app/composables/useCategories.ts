@@ -19,15 +19,20 @@ export const useCategories = () => {
   const pending = ref(false)
   const error = ref<string | null>(null)
 
+  let fetchPromise: Promise<Category[]> | null = null
+
   /**
    * Fetch all active categories from the database
    * Optionally includes product count per category (fetched separately)
    */
   const fetchCategories = async (includeProductCount = false) => {
+    if (fetchPromise) return fetchPromise
+
     pending.value = true
     error.value = null
 
-    try {
+    fetchPromise = (async () => {
+      try {
       // Fetch categories
       const { data: categoriesData, error: categoriesError } = await supabase
         .from('categories')
@@ -78,13 +83,21 @@ export const useCategories = () => {
 
       categories.value = categoriesWithCount
       return categories.value
-    } catch (err: any) {
-      error.value = err.message || 'Failed to fetch categories'
-      console.error('Error fetching categories:', err)
-      return []
-    } finally {
-      pending.value = false
-    }
+      } catch (err: any) {
+        const msg = String(err?.message || '')
+        const isAbort = err?.name === 'AbortError' || msg.includes('AbortError')
+        if (!isAbort) {
+          error.value = err.message || 'Failed to fetch categories'
+          console.error('Error fetching categories:', err)
+        }
+        return []
+      } finally {
+        pending.value = false
+        fetchPromise = null
+      }
+    })()
+
+    return fetchPromise
   }
 
   /**
@@ -92,12 +105,12 @@ export const useCategories = () => {
    */
   const getCategoryBySlug = async (slug: string): Promise<Category | null> => {
     try {
-      const { data, error: fetchError } = await supabase
+      const { data, error: fetchError }: { data: any; error: any } = await (supabase
         .from('categories')
         .select('*')
         .eq('slug', slug)
         .eq('is_active', true)
-        .single()
+        .single() as any)
 
       if (fetchError) throw fetchError
       if (!data) return null

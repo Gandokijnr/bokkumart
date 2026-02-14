@@ -506,10 +506,12 @@ export const useDriverStore = defineStore('driver', {
                         // Show notification for new assignment
                         if (payload.eventType === 'UPDATE' && (payload.new as any).status === 'assigned') {
                             const toast = useToast()
+                            const id = (payload?.new as any)?.id
+                            const shortId = typeof id === 'string' ? id.slice(-6).toUpperCase() : ''
                             toast.add({
-                                title: '🚗 New Delivery Assignment',
-                                description: 'You have been assigned a new delivery',
-                                color: 'blue'
+                                title: 'New Job',
+                                description: `Order #${shortId} is Ready for Dispatch.`,
+                                color: 'info'
                             } as any)
                         }
                     }

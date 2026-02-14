@@ -15,54 +15,15 @@
       </div>
 
       <!-- Quick Stats -->
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-          <div class="flex items-center justify-between">
-            <div>
-              <p class="text-sm text-gray-600">Pending Orders</p>
-              <p class="text-2xl font-bold text-gray-900 mt-1">{{ stats.pendingOrders }}</p>
-            </div>
-            <div class="w-12 h-12 bg-amber-100 rounded-lg flex items-center justify-center">
-              <span class="text-2xl">⏳</span>
-            </div>
-          </div>
-        </div>
-
-        <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-          <div class="flex items-center justify-between">
-            <div>
-              <p class="text-sm text-gray-600">Today's Orders</p>
-              <p class="text-2xl font-bold text-gray-900 mt-1">{{ stats.todaysOrders }}</p>
-            </div>
-            <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-              <span class="text-2xl">📦</span>
-            </div>
-          </div>
-        </div>
-
-        <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-          <div class="flex items-center justify-between">
-            <div>
-              <p class="text-sm text-gray-600">Today's Revenue</p>
-              <p class="text-2xl font-bold text-gray-900 mt-1">₦{{ formatNumber(stats.todaysRevenue) }}</p>
-            </div>
-            <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
-              <span class="text-2xl">💰</span>
-            </div>
-          </div>
-        </div>
-
-        <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-          <div class="flex items-center justify-between">
-            <div>
-              <p class="text-sm text-gray-600">Low Stock Items</p>
-              <p class="text-2xl font-bold text-gray-900 mt-1">{{ stats.lowStockItems }}</p>
-            </div>
-            <div class="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center">
-              <span class="text-2xl">⚠️</span>
-            </div>
-          </div>
-        </div>
+      <div class="mb-8">
+        <AdminStatsCards
+          mode="dashboard"
+          :stats="stats"
+          :loading="loading"
+          :show-revenue="showRevenue"
+          :format-naira="formatNaira"
+          @low-stock-click="handleLowStockClick"
+        />
       </div>
 
       <!-- Quick Actions -->
@@ -100,8 +61,10 @@
 
 <script setup lang="ts">
 import { useUserStore } from '~/stores/user'
+import { useDashboard } from '~/composables/useDashboard'
 
 const userStore = useUserStore()
+const { stats, loading, showRevenue, formatNaira } = useDashboard()
 
 definePageMeta({
   layout: 'admin',
@@ -115,15 +78,17 @@ useHead({
 const managedStores = computed(() => userStore.managedStores)
 const managedStoreNames = computed(() => userStore.managedStoreNames)
 
-// Placeholder stats - replace with real data from useAdminData
-const stats = ref({
-  pendingOrders: 8,
-  todaysOrders: 23,
-  todaysRevenue: 850000,
-  lowStockItems: 3
+onMounted(async () => {
+  const dashboard = useDashboard()
+  await dashboard.startDashboard()
 })
 
-const formatNumber = (num: number) => {
-  return num.toLocaleString('en-NG')
+onUnmounted(() => {
+  const dashboard = useDashboard()
+  dashboard.stopAll()
+})
+
+const handleLowStockClick = () => {
+  navigateTo({ path: '/admin/branch-inventory', query: { status: 'low_stock' } })
 }
 </script>
