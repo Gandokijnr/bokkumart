@@ -80,7 +80,10 @@ export default defineEventHandler(async (event) => {
   if (!body?.email || !body?.password) {
     throw createError({
       statusCode: 400,
-      statusMessage: 'Email and password are required'
+      statusMessage: 'Email and password are required',
+      data: {
+        message: 'Email and password are required'
+      }
     })
   }
 
@@ -100,9 +103,13 @@ export default defineEventHandler(async (event) => {
   })
 
   if (createErr || !created?.user) {
+    const message = createErr?.message || 'Failed to create user'
     throw createError({
       statusCode: 400,
-      statusMessage: createErr?.message || 'Failed to create user'
+      statusMessage: message,
+      data: {
+        message
+      }
     })
   }
 
@@ -117,9 +124,13 @@ export default defineEventHandler(async (event) => {
     }, { onConflict: 'id' })
 
   if (updateProfileErr) {
+    const message = updateProfileErr.message
     throw createError({
       statusCode: 400,
-      statusMessage: updateProfileErr.message
+      statusMessage: message,
+      data: {
+        message
+      }
     })
   }
 
