@@ -9,6 +9,7 @@ export default defineNuxtConfig({
 
   modules: [
     '@nuxtjs/supabase',
+    '@nuxt/icon',
     '@vite-pwa/nuxt',
   ],
 

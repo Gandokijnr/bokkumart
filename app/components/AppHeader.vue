@@ -1,10 +1,45 @@
 <template>
   <header class="sticky top-0 z-50 bg-white shadow-sm">
+    <div class="sticky top-0 z-[60] md:static">
+      <AnnounceBar />
+    </div>
+
+    <div class="bg-slate-900 text-white">
+      <div class="mx-auto max-w-7xl px-4 sm:px-6">
+        <div class="flex h-10 items-center justify-between gap-4">
+          <div class="flex items-center gap-2 text-sm">
+            <span class="opacity-90">📍</span>
+            <span class="opacity-90">Pickup From</span>
+            <span class="font-semibold">{{ branchStore.activeBranchName }}</span>
+            <button
+              type="button"
+              class="ml-1 font-semibold text-amber-300 hover:text-amber-200 underline underline-offset-2"
+              @click="handleBranchSwitch"
+            >
+              Change
+            </button>
+          </div>
+
+          <div class="flex items-center gap-3">
+            <div class="hidden sm:flex items-center gap-2 opacity-90">
+              <a class="hover:opacity-100" href="#" aria-label="Instagram">
+                <Icon name="mdi:instagram" class="text-2xl" />
+              </a>
+              <a class="hover:opacity-100" href="#" aria-label="Twitter/X">
+                <Icon name="mdi:twitter" class="text-2xl" />
+              </a>
+              <a class="hover:opacity-100" href="#" aria-label="WhatsApp">
+                <Icon name="mdi:whatsapp" class="text-2xl" />
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <div class="mx-auto max-w-7xl">
-      <!-- Top bar -->
-      <div class="flex items-center justify-between gap-3 px-4 py-3 md:px-6">
-        <!-- Logo -->
-        <button @click="navigateTo('/')" class="flex items-center gap-2.5 md:gap-3">
+      <div class="grid grid-cols-12 items-center gap-3 px-4 py-4 md:px-6">
+        <button @click="navigateTo('/')" class="col-span-6 sm:col-span-3 flex items-center gap-2.5 md:gap-3">
           <div class="flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br from-red-600 to-red-700 shadow-md md:h-12 md:w-12">
             <span class="text-base font-bold text-white md:text-lg">HA</span>
           </div>
@@ -14,31 +49,40 @@
           </div>
         </button>
 
-        <!-- Branch Switcher -->
-        <button
-          @click="handleBranchSwitch"
-          class="hidden md:flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-700 shadow-sm transition-all hover:border-red-300 hover:shadow-md"
-        >
-          <svg class="h-4 w-4 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-          </svg>
-          <span class="max-w-[150px] truncate">{{ branchStore.activeBranchName }}</span>
-          <svg class="h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-          </svg>
-        </button>
+        <div class="col-span-12 order-last sm:col-span-6 sm:order-none">
+          <div class="relative">
+            <div class="absolute inset-y-0 left-0 flex items-center">
+              <select
+                v-model="scopedCategory"
+                class="h-11 max-w-[160px] rounded-l-xl border-2 border-gray-200 bg-gray-50 pl-3 pr-8 text-sm font-medium text-gray-700 focus:border-red-600 focus:outline-none"
+              >
+                <option value="all">All Categories</option>
+                <option value="prepared">Prepared Food</option>
+                <option value="hampers">Hampers</option>
+                <option value="groceries">Groceries</option>
+                <option value="liquor">Liquor</option>
+              </select>
+            </div>
 
-        <!-- Desktop Navigation -->
-        <nav class="hidden items-center gap-8 lg:flex" aria-label="Primary">
-          <button @click="navigateTo('/#categories')" class="text-sm font-medium text-gray-700 transition-colors hover:text-red-600">Categories</button>
-          <button @click="navigateTo('/#deals')" class="text-sm font-medium text-gray-700 transition-colors hover:text-red-600">Deals</button>
-          <button @click="navigateTo('/#about')" class="text-sm font-medium text-gray-700 transition-colors hover:text-red-600">About</button>
-          <button @click="navigateTo('/#contact')" class="text-sm font-medium text-gray-700 transition-colors hover:text-red-600">Contact</button>
-        </nav>
+            <input
+              v-model="searchQuery"
+              type="search"
+              placeholder="Search for hampers, wine, rice..."
+              class="h-11 w-full rounded-xl border-2 border-gray-200 bg-gray-50 pl-[170px] pr-12 text-sm outline-none transition focus:border-red-600 focus:bg-white"
+            />
 
-        <!-- Actions -->
-        <div class="flex items-center gap-2">
-          <!-- Search button (desktop) -->
+            <button
+              type="button"
+              class="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-500 hover:text-gray-800"
+              @click="showGlobalSearch = true"
+              aria-label="Search"
+            >
+              Search
+            </button>
+          </div>
+        </div>
+
+        <div class="col-span-6 sm:col-span-3 flex items-center justify-end gap-2">
           <button
             class="hidden h-10 w-10 items-center justify-center rounded-xl border border-gray-200 bg-white text-gray-700 shadow-sm transition-all hover:border-gray-300 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-red-600 focus:ring-offset-1 md:flex"
             type="button"
@@ -50,7 +94,6 @@
             </svg>
           </button>
 
-          <!-- Cart -->
           <button @click="navigateTo('/cart')" class="relative flex h-10 w-10 items-center justify-center rounded-xl border border-gray-200 bg-white text-gray-700 shadow-sm transition-all hover:border-gray-300 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-red-600 focus:ring-offset-1" type="button" aria-label="Shopping cart">
             <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
@@ -60,14 +103,12 @@
             </ClientOnly>
           </button>
 
-          <!-- Account -->
           <button @click="navigateTo('/profile')" class="hidden h-10 w-10 items-center justify-center rounded-xl border border-gray-200 bg-white text-gray-700 shadow-sm transition-all hover:border-gray-300 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-red-600 focus:ring-offset-1 sm:flex" type="button" aria-label="Account">
             <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
             </svg>
           </button>
 
-          <!-- Admin Dashboard Link (visible only for admins) -->
           <ClientOnly>
             <button
               v-if="isAdmin"
@@ -83,7 +124,6 @@
             </button>
           </ClientOnly>
 
-          <!-- Mobile menu toggle -->
           <button
             class="flex h-10 w-10 items-center justify-center rounded-xl border border-gray-200 bg-white text-gray-700 shadow-sm transition-all hover:border-gray-300 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-red-600 focus:ring-offset-1 lg:hidden"
             type="button"
@@ -100,6 +140,22 @@
           </button>
         </div>
       </div>
+
+      <!-- <div class="border-t border-gray-100 bg-white px-4 md:px-6">
+        <nav class="flex items-center gap-5 overflow-x-auto py-3 text-sm" aria-label="Primary">
+          <button class="flex items-center gap-2 font-medium text-gray-700 transition-colors hover:text-red-600" @click="navigateTo('/#prepared')">
+            Prepared Food
+            <span class="rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-semibold text-emerald-700">New</span>
+          </button>
+          <button class="flex items-center gap-2 font-medium text-gray-700 transition-colors hover:text-red-600" @click="navigateTo('/#hampers')">
+            Hampers
+            <span class="rounded-full bg-rose-100 px-2 py-0.5 text-xs font-semibold text-rose-700">New</span>
+          </button>
+          <button class="font-medium text-gray-700 transition-colors hover:text-red-600" @click="navigateTo('/#deals')">Deals</button>
+          <button class="font-medium text-gray-700 transition-colors hover:text-red-600" @click="navigateTo('/#about')">About</button>
+          <button class="font-medium text-gray-700 transition-colors hover:text-red-600" @click="navigateTo('/#contact')">Contact</button>
+        </nav>
+      </div> -->
 
       <!-- Search bar (desktop dropdown) -->
       <Transition
@@ -157,10 +213,6 @@
             <button @click="handleBranchSwitch; mobileMenuOpen = false" class="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-left text-sm font-semibold text-gray-700 transition-colors hover:bg-red-50 hover:text-red-700">
               <span class="text-lg">🏪</span>
               <span>{{ branchStore.activeBranchName }}</span>
-            </button>
-            <button @click="navigateTo('/#categories'); mobileMenuOpen = false" class="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-left text-sm font-semibold text-gray-700 transition-colors hover:bg-red-50 hover:text-red-700">
-              <span class="text-lg">🏪</span>
-              <span>Categories</span>
             </button>
             <button @click="navigateTo('/#deals'); mobileMenuOpen = false" class="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-left text-sm font-semibold text-gray-700 transition-colors hover:bg-red-50 hover:text-red-700">
               <span class="text-lg">⚡</span>
@@ -282,6 +334,8 @@ const mobileMenuOpen = ref(false)
 const searchQuery = ref('')
 const searchInput = ref<HTMLInputElement | null>(null)
 const showStoreSwitcher = ref(false)
+
+const scopedCategory = ref<'all' | 'prepared' | 'hampers' | 'groceries' | 'liquor'>('all')
 
 // Search and branch switcher state
 const showGlobalSearch = ref(false)
