@@ -108,7 +108,7 @@
 // just structured for the badge/sidebar loops used above.
 const badges = [
   { icon: '✅', title: 'Authentic Only', desc: 'Premium inventory' },
-  { icon: '🚀', title: 'Same-Day Gbagada', desc: 'Lagos fulfillment' },
+  { icon: '🚀', title: 'Same-Day Delivery', desc: 'Lagos fulfillment' },
   { icon: '🛍️', title: 'Click & Collect', desc: 'Ready in 30 mins' }
 ]
 
