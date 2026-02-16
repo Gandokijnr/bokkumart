@@ -1,4 +1,6 @@
 import { defineEventHandler, readBody, createError } from 'h3'
+import { createClient } from '@supabase/supabase-js'
+import type { Database } from '~/types/database.types'
 
 interface PaystackInitializeRequest {
   email: string
@@ -68,6 +70,91 @@ export default defineEventHandler(async (event) => {
         statusCode: 500,
         statusMessage: 'Paystack secret key not configured'
       })
+    }
+
+    const supabaseUrl =
+      ((config.public as any)?.supabase?.url as string | undefined) ||
+      (process.env.SUPABASE_URL as string | undefined)
+
+    const serviceRoleKey =
+      (config.supabaseServiceRoleKey as string | undefined) ||
+      (process.env.SUPABASE_SERVICE_ROLE_KEY as string | undefined)
+
+    if (!supabaseUrl || !serviceRoleKey) {
+      throw createError({
+        statusCode: 500,
+        statusMessage: 'Server not configured'
+      })
+    }
+
+    // Validate order is still payable (prevents paying for cancelled/paid orders)
+    const orderId = body.metadata?.order_id
+    if (!orderId) {
+      throw createError({
+        statusCode: 400,
+        statusMessage: 'metadata.order_id is required'
+      })
+    }
+
+    const admin = createClient(supabaseUrl, serviceRoleKey, {
+      auth: { persistSession: false, autoRefreshToken: false }
+    }) as unknown as ReturnType<typeof createClient<Database>>
+
+    const { data: orderRow, error: orderErr } = await (admin as any)
+      .from('orders')
+      .select('id, status, payment_method, items, store_id')
+      .eq('id', orderId)
+      .single()
+
+    if (orderErr || !orderRow) {
+      throw createError({ statusCode: 400, statusMessage: orderErr?.message || 'Order not found' })
+    }
+
+    if (String(orderRow.payment_method) !== 'online') {
+      throw createError({ statusCode: 400, statusMessage: 'Order is not an online-payment order' })
+    }
+
+    if (String(orderRow.status) !== 'pending') {
+      throw createError({ statusCode: 400, statusMessage: `Order is not payable (status: ${orderRow.status})` })
+    }
+
+    // Optional stock recheck right before payment initialization
+    if ((config as any).inventoryRecheckBeforePayment) {
+      const items = Array.isArray(orderRow.items) ? orderRow.items : []
+      const productIds = Array.from(new Set(items.map((i: any) => String(i?.product_id || '')).filter(Boolean)))
+      if (productIds.length > 0) {
+        const { data: invRows, error: invErr } = await (admin as any)
+          .from('store_inventory')
+          .select('product_id, available_stock, digital_buffer, is_visible')
+          .eq('store_id', String(orderRow.store_id))
+          .in('product_id', productIds)
+
+        if (invErr) {
+          throw createError({ statusCode: 500, statusMessage: invErr.message })
+        }
+
+        const invMap = new Map<string, any>()
+        for (const r of (invRows || []) as any[]) invMap.set(String(r.product_id), r)
+
+        for (const it of items as any[]) {
+          const pid = String(it?.product_id || '')
+          const qty = Number(it?.quantity || 0)
+          if (!pid || !Number.isFinite(qty) || qty <= 0) continue
+
+          const inv = invMap.get(pid)
+          const rawAvail = inv ? Number(inv.available_stock || 0) : 0
+          const buffer = inv ? Number(inv.digital_buffer || 0) : 0
+          const avail = Math.max(0, rawAvail - buffer)
+          const visible = inv ? !!inv.is_visible : false
+
+          if (!inv || !visible || avail < qty) {
+            throw createError({
+              statusCode: 409,
+              statusMessage: 'Some items are no longer available. Please refresh your cart.'
+            })
+          }
+        }
+      }
     }
 
     // Build callback URL

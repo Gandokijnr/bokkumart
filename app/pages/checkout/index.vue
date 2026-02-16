@@ -1076,6 +1076,28 @@ async function initiatePaystackPayment() {
   showPaymentModal.value = true
 
   try {
+    // Server-authoritative stock validation (prevents stale client stock)
+    const { data: sessionData } = await supabase.auth.getSession()
+    const accessToken = sessionData?.session?.access_token
+    if (!accessToken) {
+      throw new Error('Session expired. Please log in again.')
+    }
+
+    const validation: { ok: boolean; issues?: any[] } = await $fetch('/api/orders/validate-cart-stock', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${accessToken}`
+      },
+      body: {
+        store_id: cartStore.currentStoreId,
+        items: cartStore.items.map(i => ({ product_id: i.product_id, quantity: i.quantity }))
+      }
+    })
+
+    if (!validation?.ok) {
+      throw new Error('Some items are no longer available. Please refresh your cart.')
+    }
+
     const reserved = await cartStore.createReservation(supabase)
     if (!reserved) {
       alert('Some items are no longer available')
@@ -1084,9 +1106,8 @@ async function initiatePaystackPayment() {
       return
     }
 
-    const paymentExpiresAt = fulfillmentMode.value === 'pickup'
-      ? new Date(Date.now() + 15 * 60 * 1000).toISOString()
-      : null
+    const timeoutMinutes = Number((useRuntimeConfig() as any).orderPaymentTimeoutMinutes || 15)
+    const paymentExpiresAt = new Date(Date.now() + timeoutMinutes * 60 * 1000).toISOString()
 
     const orderDeliveryDetails = fulfillmentMode.value === 'delivery'
       ? {
@@ -1125,13 +1146,29 @@ async function initiatePaystackPayment() {
         payment_method: 'online',
         delivery_details: orderDeliveryDetails as any,
         metadata: {
-          ...(paymentExpiresAt ? { payment_expires_at: paymentExpiresAt } : {}),
+          payment_expires_at: paymentExpiresAt,
           service_fee: serviceFee.value,
           delivery_zone: selectedArea.value
         }
       } as any)
       .select('id')
       .single() as any)
+
+    // Optional: recheck stock right before payment init (server will also enforce)
+    const shouldRecheck = !!(useRuntimeConfig() as any).inventoryRecheckBeforePayment
+    if (shouldRecheck) {
+      const again: { ok: boolean } = await $fetch('/api/orders/validate-cart-stock', {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${accessToken}` },
+        body: {
+          store_id: cartStore.currentStoreId,
+          items: cartStore.items.map(i => ({ product_id: i.product_id, quantity: i.quantity }))
+        }
+      })
+      if (!again?.ok) {
+        throw new Error('Stock changed. Please refresh your cart and try again.')
+      }
+    }
 
     const response: { authorization_url: string; reference?: string } = await $fetch('/api/paystack/initialize', {
       method: 'POST',
@@ -1186,14 +1223,14 @@ async function initiatePaystackPayment() {
     if (paymentExpiresAt && orderData?.id && import.meta.client) {
       setTimeout(async () => {
         try {
-          await $fetch('/api/orders/expire-unpaid-pickup', {
+          await $fetch('/api/orders/expire-unpaid', {
             method: 'POST',
             body: { orderId: orderData.id }
           })
         } catch (e) {
-          console.error('[Pickup Expiry] Failed to expire unpaid pickup order', e)
+          console.error('[Order Expiry] Failed to expire unpaid order', e)
         }
-      }, 15 * 60 * 1000)
+      }, timeoutMinutes * 60 * 1000)
     }
   } catch (error: any) {
     alert(error.message || 'Payment failed')
@@ -1299,6 +1336,28 @@ async function initiatePODOrder() {
   showPaymentModal.value = true
 
   try {
+    // Server-authoritative stock validation (prevents stale client stock)
+    const { data: sessionData } = await supabase.auth.getSession()
+    const accessToken = sessionData?.session?.access_token
+    if (!accessToken) {
+      throw new Error('Session expired. Please log in again.')
+    }
+
+    const validation: { ok: boolean; issues?: any[] } = await $fetch('/api/orders/validate-cart-stock', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${accessToken}`
+      },
+      body: {
+        store_id: cartStore.currentStoreId,
+        items: cartStore.items.map(i => ({ product_id: i.product_id, quantity: i.quantity }))
+      }
+    })
+
+    if (!validation?.ok) {
+      throw new Error('Some items are no longer available. Please refresh your cart.')
+    }
+
     console.log('[POD] Reserving stock...')
     const reserved = await cartStore.createReservation(supabase)
     if (!reserved) {
@@ -1309,45 +1368,37 @@ async function initiatePODOrder() {
     }
     console.log('[POD] Stock reserved successfully')
 
-    // Create POD order with awaiting_call status
     console.log('[POD] Creating order...')
-    
-    // Build items array from cart
+
     const orderItems = cartStore.items.map(item => ({
       product_id: item.product_id,
       name: item.name,
       quantity: item.quantity,
       unit_price: item.price,
-      total_price: item.price * item.quantity
+      total_price: item.price * item.quantity,
+      options: item.options || {}
     }))
-    
-    const { data: orderData, error: orderError }: { data: { id: string } | null, error: any } = await (supabase
-      .from('orders')
-      .insert({
-        user_id: userId,
+
+    const createRes: { success: boolean; order_id: string } = await $fetch('/api/orders/create-pod', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${accessToken}`
+      },
+      body: {
         store_id: cartStore.currentStoreId,
-        status: 'pending',
-        items: orderItems,
         delivery_method: fulfillmentMode.value,
         delivery_zone: selectedArea.value,
         contact_name: userDetails.value.fullName,
         contact_phone: userDetails.value.phone,
+        items: orderItems,
         subtotal: cartStore.cartSubtotal,
         delivery_fee: currentDeliveryFee.value,
         service_fee: serviceFee.value,
-        total_amount: finalTotal.value,
-        payment_method: 'pod',
-        pickup_store_id: null
-      } as any)
-      .select('id')
-      .single() as any)
-    
-    if (orderError) {
-      console.error('[POD] Order creation failed:', orderError)
-      throw orderError
-    }
-    
-    console.log('[POD] Order created:', orderData?.id)
+        total_amount: finalTotal.value
+      }
+    })
+
+    console.log('[POD] Order created:', createRes?.order_id)
 
     // Show confirmation that staff will call
     showToast('Order placed! Our team will call you shortly to confirm.', 'success')
@@ -1357,7 +1408,7 @@ async function initiatePODOrder() {
 
     // Redirect to pending order page
     console.log('[POD] Redirecting to pending page...')
-    navigateTo(`/order/pending-${orderData?.id}`)
+    navigateTo(`/order/pending-${createRes?.order_id}`)
   } catch (error: any) {
     console.error('[POD] Error:', error)
     alert(error.message || 'Order failed. Please try again.')

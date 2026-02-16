@@ -24,6 +24,14 @@
           :format-naira="formatNaira"
           @low-stock-click="handleLowStockClick"
         />
+
+        <div class="mt-6">
+          <OperationalKpiCards
+            :kpis="dashboard.operationalKpis.value"
+            :loading="dashboard.operationalLoading.value"
+            :format-naira="formatNaira"
+          />
+        </div>
       </div>
 
       <!-- Quick Actions -->
@@ -64,7 +72,8 @@ import { useUserStore } from '~/stores/user'
 import { useDashboard } from '~/composables/useDashboard'
 
 const userStore = useUserStore()
-const { stats, loading, showRevenue, formatNaira } = useDashboard()
+const dashboard = useDashboard()
+const { stats, loading, showRevenue, formatNaira } = dashboard
 
 definePageMeta({
   layout: 'admin',

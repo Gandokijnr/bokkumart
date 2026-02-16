@@ -14,6 +14,16 @@ export type VerificationQueueStats = {
   unverified_value: number
 }
 
+export type OperationalKpis = {
+  window_days: number
+  orders_today: number
+  orders_per_day: number
+  average_order_value: number
+  fulfillment_time_hours: number | null
+  cancellation_rate: number
+  stock_mismatch_rate: number
+}
+
 let ordersChannel: RealtimeChannel | null = null
 let inventoryChannel: RealtimeChannel | null = null
 let verificationOrdersChannel: RealtimeChannel | null = null
@@ -27,16 +37,47 @@ export const useDashboard = () => {
 
   const stats = useState<DashboardStats | null>('dashboard_stats', () => null)
   const verificationStats = useState<VerificationQueueStats | null>('verification_queue_stats', () => null)
+  const operationalKpis = useState<OperationalKpis | null>('operational_kpis', () => null)
   const loading = useState<boolean>('dashboard_stats_loading', () => false)
   const verificationLoading = useState<boolean>('verification_queue_stats_loading', () => false)
+  const operationalLoading = useState<boolean>('operational_kpis_loading', () => false)
   const error = useState<string | null>('dashboard_stats_error', () => null)
   const verificationError = useState<string | null>('verification_queue_stats_error', () => null)
+  const operationalError = useState<string | null>('operational_kpis_error', () => null)
 
   const scheduleRefresh = () => {
     if (dashboardRefreshTimer) clearTimeout(dashboardRefreshTimer)
     dashboardRefreshTimer = setTimeout(() => {
       fetchDashboardStats({ silent: true })
     }, 250)
+  }
+
+  const fetchOperationalKpis = async (options?: { silent?: boolean }) => {
+    const silent = options?.silent === true
+
+    if (!silent) operationalLoading.value = true
+    operationalError.value = null
+
+    try {
+      const { data: sessionData } = await supabase.auth.getSession()
+      const token = sessionData?.session?.access_token
+      if (!token) {
+        throw new Error('Missing session')
+      }
+
+      const res = await $fetch<{ success: boolean; kpis: OperationalKpis }>('/api/admin/operational-kpis', {
+        method: 'GET',
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      })
+
+      operationalKpis.value = (res as any)?.kpis || null
+    } catch (err: any) {
+      operationalError.value = err?.message || 'Failed to fetch operational KPIs'
+    } finally {
+      if (!silent) operationalLoading.value = false
+    }
   }
 
   const scheduleVerificationRefresh = () => {
@@ -188,13 +229,13 @@ export const useDashboard = () => {
 
   const startDashboard = async () => {
     await ensureUserReady()
-    await fetchDashboardStats()
+    await Promise.all([fetchDashboardStats(), fetchOperationalKpis()])
     subscribeToRealtime()
   }
 
   const startVerificationQueue = async () => {
     await ensureUserReady()
-    await Promise.all([fetchDashboardStats(), fetchVerificationQueueStats()])
+    await Promise.all([fetchDashboardStats(), fetchVerificationQueueStats(), fetchOperationalKpis()])
     subscribeToRealtime()
     subscribeToVerificationRealtime()
   }
@@ -217,12 +258,16 @@ export const useDashboard = () => {
   return {
     stats,
     verificationStats,
+    operationalKpis,
     loading,
     verificationLoading,
+    operationalLoading,
     error,
     verificationError,
+    operationalError,
     fetchDashboardStats,
     fetchVerificationQueueStats,
+    fetchOperationalKpis,
     subscribeToRealtime,
     subscribeToVerificationRealtime,
     unsubscribeFromRealtime,

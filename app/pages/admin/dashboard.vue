@@ -476,6 +476,12 @@ async function saveNote(orderId: string) {
           @low-stock-click="handleLowStockClick"
         />
 
+        <OperationalKpiCards
+          :kpis="dashboard.operationalKpis.value"
+          :loading="dashboard.operationalLoading.value"
+          :format-naira="dashboard.formatNaira"
+        />
+
         <!-- Recent Orders Preview -->
         <div class="bg-white rounded-xl shadow-sm border border-gray-200">
           <div class="px-6 py-4 border-b border-gray-200">

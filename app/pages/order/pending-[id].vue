@@ -468,13 +468,21 @@ async function handleCancelOrder() {
   cancelling.value = true
   
   try {
-    const { error } = await (supabase.from('orders').update as any)({
-      status: 'cancelled',
-      confirmation_status: 'cancelled_by_customer',
-      updated_at: new Date().toISOString()
-    }).eq('id', order.value.id)
+    const { data: sessionData } = await supabase.auth.getSession()
+    const token = sessionData?.session?.access_token
+    if (!token) {
+      throw new Error('Session expired. Please log in again.')
+    }
 
-    if (error) throw error
+    await $fetch('/api/orders/cancel', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${token}`
+      },
+      body: {
+        orderId: order.value.id
+      }
+    })
     
     order.value.status = 'cancelled'
     showCancelModal.value = false

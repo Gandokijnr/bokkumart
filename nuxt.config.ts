@@ -97,6 +97,8 @@ export default defineNuxtConfig({
   runtimeConfig: {
     paystackSecretKey: process.env.PAYSTACK_SECRET_KEY,
     supabaseServiceRoleKey: process.env.SUPABASE_SERVICE_ROLE_KEY,
+    orderPaymentTimeoutMinutes: Number(process.env.ORDER_PAYMENT_TIMEOUT_MINUTES || 15),
+    inventoryRecheckBeforePayment: process.env.INVENTORY_RECHECK_BEFORE_PAYMENT === 'true',
     public: {
       siteUrl: process.env.SITE_URL || 'http://localhost:3000',
       paystackPublicKey: process.env.PAYSTACK_PUBLIC_KEY
