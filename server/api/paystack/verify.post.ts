@@ -20,6 +20,10 @@ type PaystackVerifyResponse = {
     customer?: {
       email?: string
     }
+    metadata?: {
+      order_id?: string
+      user_id?: string
+    }
   }
 }
 
@@ -60,6 +64,19 @@ export default defineEventHandler(async (event) => {
     auth: { persistSession: false, autoRefreshToken: false }
   }) as unknown as ReturnType<typeof createClient<Database>>
 
+  const authHeader = event.node.req.headers['authorization']
+  const bearer = Array.isArray(authHeader) ? authHeader[0] : authHeader
+  const token =
+    typeof bearer === 'string' && bearer.startsWith('Bearer ')
+      ? bearer.slice('Bearer '.length)
+      : null
+
+  const caller = token ? await (admin as any).auth.getUser(token) : null
+  const callerUserId = caller?.data?.user?.id ? String(caller.data.user.id) : null
+  if (token && (!callerUserId || caller?.error)) {
+    throw createError({ statusCode: 401, statusMessage: 'Invalid session' })
+  }
+
   const verifyRes = await fetch(`https://api.paystack.co/transaction/verify/${encodeURIComponent(reference)}`, {
     method: 'GET',
     headers: {
@@ -81,9 +98,17 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 400, statusMessage: 'Invalid Paystack verify response' })
   }
 
+  if (tx.reference !== reference) {
+    throw createError({ statusCode: 400, statusMessage: 'Reference mismatch' })
+  }
+
+  if (tx.currency && String(tx.currency).toUpperCase() !== 'NGN') {
+    throw createError({ statusCode: 400, statusMessage: 'Unsupported currency' })
+  }
+
   const { data: orderRow, error: orderErr } = await (admin as any)
     .from('orders')
-    .select('id, status, total_amount, delivery_method, confirmation_code, metadata')
+    .select('id, status, total_amount, delivery_method, confirmation_code, metadata, user_id, paystack_transaction_id')
     .eq('paystack_reference', reference)
     .maybeSingle()
 
@@ -99,8 +124,36 @@ export default defineEventHandler(async (event) => {
     }
   }
 
+  const orderUserId = (orderRow as any).user_id ? String((orderRow as any).user_id) : null
+  if (callerUserId && orderUserId && callerUserId !== orderUserId) {
+    throw createError({ statusCode: 403, statusMessage: 'Forbidden' })
+  }
+
+  const metaUserId = tx.metadata?.user_id ? String(tx.metadata.user_id) : null
+  const metaOrderId = tx.metadata?.order_id ? String(tx.metadata.order_id) : null
+  if (orderUserId && metaUserId && metaUserId !== orderUserId) {
+    throw createError({ statusCode: 400, statusMessage: 'Transaction does not match order user' })
+  }
+  if (metaOrderId && String(orderRow.id) !== metaOrderId) {
+    throw createError({ statusCode: 400, statusMessage: 'Transaction does not match order' })
+  }
+
   if (String(orderRow.status) === 'paid') {
     return { ok: true, verified: true, order_id: orderRow.id }
+  }
+
+  if ((orderRow as any).paystack_transaction_id && String((orderRow as any).paystack_transaction_id) !== String(tx.id)) {
+    throw createError({ statusCode: 400, statusMessage: 'Order already linked to a different transaction' })
+  }
+
+  const { data: txUsed } = await (admin as any)
+    .from('orders')
+    .select('id')
+    .eq('paystack_transaction_id', String(tx.id))
+    .maybeSingle()
+
+  if (txUsed?.id && String(txUsed.id) !== String(orderRow.id)) {
+    throw createError({ statusCode: 400, statusMessage: 'Transaction already used' })
   }
 
   const isSuccess = String(tx.status) === 'success'
@@ -132,20 +185,26 @@ export default defineEventHandler(async (event) => {
     ...(isPickup && claimCode ? { pickup_claim_qr: qrPayload } : {})
   }
 
-  const { error: updateErr } = await (admin as any)
+  const { data: updated, error: updateErr } = await (admin as any)
     .from('orders')
     .update({
       status: 'paid',
       paystack_transaction_id: String(tx.id),
       paid_at: tx.paid_at || new Date().toISOString(),
       confirmation_code: isPickup ? claimCode : undefined,
-      metadata: mergedMetadata,
-      updated_at: new Date().toISOString()
+      metadata: mergedMetadata
     })
     .eq('id', orderRow.id)
+    .neq('status', 'paid')
+    .select('id')
+    .maybeSingle()
 
   if (updateErr) {
     throw createError({ statusCode: 500, statusMessage: updateErr.message })
+  }
+
+  if (!updated?.id) {
+    return { ok: true, verified: true, order_id: orderRow.id }
   }
 
   return { ok: true, verified: true, order_id: orderRow.id }
