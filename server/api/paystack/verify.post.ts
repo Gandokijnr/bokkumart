@@ -2,6 +2,26 @@ import { defineEventHandler, readBody, createError } from 'h3'
 import { createClient } from '@supabase/supabase-js'
 import type { Database } from '~/types/database.types'
 
+type RateEntry = { count: number; resetAt: number }
+const rateBucket = new Map<string, RateEntry>()
+
+function consumeRateLimit(key: string, limit: number, windowMs: number): void {
+  const now = Date.now()
+  const existing = rateBucket.get(key)
+
+  if (!existing || existing.resetAt <= now) {
+    rateBucket.set(key, { count: 1, resetAt: now + windowMs })
+    return
+  }
+
+  if (existing.count >= limit) {
+    throw createError({ statusCode: 429, statusMessage: 'Too many requests' })
+  }
+
+  existing.count += 1
+  rateBucket.set(key, existing)
+}
+
 type VerifyBody = {
   reference: string
 }
@@ -42,6 +62,14 @@ export default defineEventHandler(async (event) => {
   if (!reference) {
     throw createError({ statusCode: 400, statusMessage: 'reference is required' })
   }
+
+  const xff = event.node.req.headers['x-forwarded-for']
+  const ipFromXff = Array.isArray(xff) ? xff[0] : xff
+  const ip = String((ipFromXff || '').split(',')[0] || event.node.req.socket?.remoteAddress || 'unknown').trim()
+
+  const windowMs = 60_000
+  consumeRateLimit(`paystack_verify:ip:${ip}`, 60, windowMs)
+  consumeRateLimit(`paystack_verify:ref:${reference}`, 12, windowMs)
 
   const paystackSecret = config.paystackSecretKey || process.env.PAYSTACK_SECRET_KEY
   if (!paystackSecret) {

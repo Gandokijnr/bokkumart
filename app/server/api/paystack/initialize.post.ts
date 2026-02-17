@@ -96,13 +96,21 @@ export default defineEventHandler(async (event) => {
       })
     }
 
+    const userId = String((body as any)?.metadata?.user_id || '').trim()
+    if (!userId) {
+      throw createError({
+        statusCode: 400,
+        statusMessage: 'metadata.user_id is required'
+      })
+    }
+
     const admin = createClient(supabaseUrl, serviceRoleKey, {
       auth: { persistSession: false, autoRefreshToken: false }
     }) as unknown as ReturnType<typeof createClient<Database>>
 
     const { data: orderRow, error: orderErr } = await (admin as any)
       .from('orders')
-      .select('id, status, payment_method, items, store_id')
+      .select('id, status, payment_method, items, store_id, user_id')
       .eq('id', orderId)
       .single()
 
@@ -116,6 +124,10 @@ export default defineEventHandler(async (event) => {
 
     if (String(orderRow.status) !== 'pending') {
       throw createError({ statusCode: 400, statusMessage: `Order is not payable (status: ${orderRow.status})` })
+    }
+
+    if (String((orderRow as any).user_id || '') !== userId) {
+      throw createError({ statusCode: 403, statusMessage: 'Order does not belong to this user' })
     }
 
     // Optional stock recheck right before payment initialization

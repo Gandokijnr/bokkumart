@@ -74,6 +74,9 @@ async function verifyPayment() {
     return
   }
 
+  const { data: sessionData } = await supabase.auth.getSession()
+  const accessToken = sessionData?.session?.access_token
+
   try {
     // Server-side Paystack verification (works even if webhooks are delayed)
     try {
@@ -81,6 +84,7 @@ async function verifyPayment() {
         '/api/paystack/verify',
         {
           method: 'POST',
+          headers: accessToken ? { Authorization: `Bearer ${accessToken}` } : undefined,
           body: { reference: paymentRef }
         }
       )
@@ -134,6 +138,7 @@ async function verifyPayment() {
           '/api/paystack/verify',
           {
             method: 'POST',
+            headers: accessToken ? { Authorization: `Bearer ${accessToken}` } : undefined,
             body: { reference: paymentRef }
           }
         )
