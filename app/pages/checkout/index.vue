@@ -1214,10 +1214,7 @@ async function initiatePaystackPayment() {
     }
 
     if (response.authorization_url) {
-      window.open(response.authorization_url, '_blank')
-      setTimeout(() => {
-        navigateTo(`/checkout/success?order=${orderData?.id}`)
-      }, 2000)
+      window.location.href = response.authorization_url
     }
 
     if (paymentExpiresAt && orderData?.id && import.meta.client) {
