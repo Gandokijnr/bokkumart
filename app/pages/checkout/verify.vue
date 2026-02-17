@@ -75,6 +75,36 @@ async function verifyPayment() {
   }
 
   try {
+    // Server-side Paystack verification (works even if webhooks are delayed)
+    try {
+      const res = await $fetch<{ ok: boolean; verified: boolean; order_id?: string; reason?: string }>(
+        '/api/paystack/verify',
+        {
+          method: 'POST',
+          body: { reference: paymentRef }
+        }
+      )
+
+      if (res?.ok && res?.verified && res?.order_id) {
+        const { data: verifiedOrder } = await supabase
+          .from('orders')
+          .select('id, status, total_amount')
+          .eq('id', res.order_id)
+          .maybeSingle() as { data: { id: string; status: string; total_amount: number } | null }
+
+        if (verifiedOrder) {
+          verifying.value = false
+          success.value = true
+          message.value = `Your payment of ${formatPrice(verifiedOrder.total_amount)} has been confirmed!`
+          cartStore.retainCartFor48Hours()
+          setTimeout(() => navigateTo(`/checkout/success?order=${verifiedOrder.id}`), 1500)
+          return
+        }
+      }
+    } catch {
+      // Ignore and fallback to webhook/polling
+    }
+
     // Check for existing order first (webhook may have already processed)
     const { data: existingOrder } = await supabase
       .from('orders')
@@ -97,6 +127,35 @@ async function verifyPayment() {
 
     while (attempts < maxAttempts) {
       await new Promise(r => setTimeout(r, 2000))
+
+      // Attempt server-side verification again during polling window
+      try {
+        const res = await $fetch<{ ok: boolean; verified: boolean; order_id?: string }>(
+          '/api/paystack/verify',
+          {
+            method: 'POST',
+            body: { reference: paymentRef }
+          }
+        )
+        if (res?.ok && res?.verified && res?.order_id) {
+          const { data: verifiedOrder } = await supabase
+            .from('orders')
+            .select('id, status, total_amount')
+            .eq('id', res.order_id)
+            .maybeSingle() as { data: { id: string; status: string; total_amount: number } | null }
+
+          if (verifiedOrder) {
+            verifying.value = false
+            success.value = true
+            message.value = `Your payment of ${formatPrice(verifiedOrder.total_amount)} has been confirmed!`
+            cartStore.retainCartFor48Hours()
+            setTimeout(() => navigateTo(`/checkout/success?order=${verifiedOrder.id}`), 1500)
+            return
+          }
+        }
+      } catch {
+        // ignore
+      }
       
       const { data: checkOrder } = await supabase
         .from('orders')
