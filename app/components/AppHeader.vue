@@ -52,15 +52,15 @@
         <div class="col-span-12 order-last sm:col-span-6 sm:order-none">
           <button
             type="button"
-            class="group relative flex h-11 w-full items-center overflow-hidden rounded-xl border-2 border-gray-200 bg-gray-50 shadow-sm transition hover:border-gray-300 hover:shadow-md"
+            class="group relative flex h-11 w-full items-center overflow-hidden rounded-xl border-2 border-gray-200 bg-gray-50 shadow-sm transition hover:border-gray-300 hover:shadow-md bg-[url('/discountbanner.gif')] bg-cover bg-center"
             @click="navigateTo('/#deals')"
             aria-label="Advertisement"
           >
             <img
               src="/discountbanner.gif"
               alt="Advertisement"
-              class="h-full w-full object-cover"
-              loading="lazy"
+              class="block h-full w-full object-cover"
+              fetchpriority="high"
             />
             <div class="pointer-events-none absolute inset-0 bg-gradient-to-r from-black/35 via-black/10 to-transparent" />
             <div class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2">
