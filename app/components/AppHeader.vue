@@ -1,10 +1,10 @@
 <template>
-  <header class="sticky top-0 z-50 bg-white shadow-sm">
+  <header class="sticky top-0 z-50 bg-red-700 shadow-sm">
     <div class="sticky top-0 z-[60] md:static">
       <AnnounceBar />
     </div>
 
-    <div class="bg-slate-900 text-white">
+    <div class="bg-white text-red-700">
       <div class="mx-auto max-w-7xl px-4 sm:px-6">
         <div class="flex h-10 items-center justify-between gap-4">
           <div class="flex items-center gap-2 text-sm">
@@ -13,7 +13,7 @@
             <span class="font-semibold">{{ branchStore.activeBranchName }}</span>
             <button
               type="button"
-              class="ml-1 font-semibold text-amber-300 hover:text-amber-200 underline underline-offset-2"
+              class="ml-1 font-semibold text-black hover:text-black underline underline-offset-2"
               @click="handleBranchSwitch"
             >
               Change
@@ -44,42 +44,33 @@
             <span class="text-base font-bold text-white md:text-lg">HA</span>
           </div>
           <div class="leading-tight">
-            <div class="text-base font-bold text-gray-900 md:text-lg" :style="headingStyle">HomeAffairs</div>
-            <div class="hidden text-xs text-gray-600 sm:block">Premium Supermarket</div>
+            <div class="text-base font-bold text-white md:text-lg" :style="headingStyle">HomeAffairs</div>
+            <div class="hidden text-xs text-white sm:block">Premium Supermarket</div>
           </div>
         </button>
 
         <div class="col-span-12 order-last sm:col-span-6 sm:order-none">
-          <div class="relative">
-            <div class="absolute inset-y-0 left-0 flex items-center">
-              <select
-                v-model="scopedCategory"
-                class="h-11 max-w-[160px] rounded-l-xl border-2 border-gray-200 bg-gray-50 pl-3 pr-8 text-sm font-medium text-gray-700 focus:border-red-600 focus:outline-none"
-              >
-                <option value="all">All Categories</option>
-                <option value="prepared">Prepared Food</option>
-                <option value="hampers">Hampers</option>
-                <option value="groceries">Groceries</option>
-                <option value="liquor">Liquor</option>
-              </select>
-            </div>
-
-            <input
-              v-model="searchQuery"
-              type="search"
-              placeholder="Search for hampers, wine, rice..."
-              class="h-11 w-full rounded-xl border-2 border-gray-200 bg-gray-50 pl-[170px] pr-12 text-sm outline-none transition focus:border-red-600 focus:bg-white"
+          <button
+            type="button"
+            class="group relative flex h-11 w-full items-center overflow-hidden rounded-xl border-2 border-gray-200 bg-gray-50 shadow-sm transition hover:border-gray-300 hover:shadow-md"
+            @click="navigateTo('/#deals')"
+            aria-label="Advertisement"
+          >
+            <img
+              src="/discountbanner.gif"
+              alt="Advertisement"
+              class="h-full w-full object-cover"
+              loading="lazy"
             />
-
-            <button
-              type="button"
-              class="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-500 hover:text-gray-800"
-              @click="showGlobalSearch = true"
-              aria-label="Search"
-            >
-              Search
-            </button>
-          </div>
+            <div class="pointer-events-none absolute inset-0 bg-gradient-to-r from-black/35 via-black/10 to-transparent" />
+            <div class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2">
+              <!-- <div class="text-xs font-bold text-white">Promo Banner</div> -->
+              <!-- <div class="text-[11px] text-white/90">Animated image will appear here once uploaded</div> -->
+            </div>
+            <span class="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 rounded-lg bg-white/90 px-2.5 py-1 text-xs font-semibold text-gray-900 transition group-hover:bg-white">
+              View
+            </span>
+          </button>
         </div>
 
         <div class="col-span-6 sm:col-span-3 flex items-center justify-end gap-2">
@@ -334,8 +325,6 @@ const mobileMenuOpen = ref(false)
 const searchQuery = ref('')
 const searchInput = ref<HTMLInputElement | null>(null)
 const showStoreSwitcher = ref(false)
-
-const scopedCategory = ref<'all' | 'prepared' | 'hampers' | 'groceries' | 'liquor'>('all')
 
 // Search and branch switcher state
 const showGlobalSearch = ref(false)
