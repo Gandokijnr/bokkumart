@@ -179,20 +179,37 @@ const hasOutOfStockItems = computed(() => {
 })
 
 // Methods
-function handleUpdateQuantity(id: string, quantity: number) {
-  const result = cartStore.updateQuantity(id, quantity)
-  if (!result.success) {
-    alert(result.error)
+async function persistCart() {
+  try {
+    const userId = (user.value as any)?.id || (user.value as any)?.sub
+    if (!userId) return
+    await cartStore.saveToDatabase(supabase)
+  } catch {
+    // ignore
   }
 }
 
-function removeItem(id: string) {
-  cartStore.removeItem(id)
+async function handleUpdateQuantity(id: string, quantity: number) {
+  const result = cartStore.updateQuantity(id, quantity)
+  if (!result.success) {
+    alert(result.error)
+    return
+  }
+
+  await persistCart()
 }
 
-function clearCart() {
+async function removeItem(id: string) {
+  cartStore.removeItem(id)
+
+  await persistCart()
+}
+
+async function clearCart() {
   cartStore.clearCart()
   showClearConfirm.value = false
+
+  await persistCart()
 }
 
 function calculateDelivery() {
