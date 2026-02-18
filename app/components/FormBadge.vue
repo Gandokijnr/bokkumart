@@ -13,11 +13,14 @@
 </template>
 
 <script setup lang="ts">
-withDefaults(defineProps<{
-  color?: 'primary' | 'neutral'
-  variant?: 'soft' | 'solid'
-}>(), {
-  color: 'primary',
-  variant: 'soft'
-})
+withDefaults(
+  defineProps<{
+    color?: "primary" | "neutral";
+    variant?: "soft" | "solid";
+  }>(),
+  {
+    color: "primary",
+    variant: "soft",
+  },
+);
 </script>

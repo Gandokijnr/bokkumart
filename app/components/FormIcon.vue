@@ -50,19 +50,22 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed } from "vue";
 
-withDefaults(defineProps<{
-  name: string
-  color?: 'gray' | 'white'
-}>(), {
-  color: 'gray'
-})
+withDefaults(
+  defineProps<{
+    name: string;
+    color?: "gray" | "white";
+  }>(),
+  {
+    color: "gray",
+  },
+);
 
 const colorClass = computed(() => {
   return {
-    gray: 'text-gray-400',
-    white: 'text-white'
-  }
-})
+    gray: "text-gray-400",
+    white: "text-white",
+  };
+});
 </script>

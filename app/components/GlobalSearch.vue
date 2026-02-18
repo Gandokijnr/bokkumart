@@ -1,107 +1,116 @@
 <script setup lang="ts">
-import { useBranchStore } from '~/stores/useBranchStore'
-import { useCartStore } from '~/stores/useCartStore'
-import { useProducts } from '~/composables/useProducts'
+import { useBranchStore } from "~/stores/useBranchStore";
+import { useCartStore } from "~/stores/useCartStore";
+import { useProducts } from "~/composables/useProducts";
 
 const props = defineProps<{
-  modelValue: boolean
-}>()
+  modelValue: boolean;
+}>();
 
 const emit = defineEmits<{
-  'update:modelValue': [value: boolean]
-  'switchBranch': [branchId: string]
-}>()
+  "update:modelValue": [value: boolean];
+  switchBranch: [branchId: string];
+}>();
 
-const branchStore = useBranchStore()
-const cartStore = useCartStore()
-const { searchProductWithBranchFallback, formatPrice } = useProducts()
+const branchStore = useBranchStore();
+const cartStore = useCartStore();
+const { searchProductWithBranchFallback, formatPrice } = useProducts();
 
 // Search state
-const searchQuery = ref('')
-const isSearching = ref(false)
+const searchQuery = ref("");
+const isSearching = ref(false);
 const searchResults = ref<{
-  localProducts: any[]
+  localProducts: any[];
   unavailableAtCurrentBranch: Array<{
-    product: any
-    alternativeBranches: Array<{ branchId: string; branchName: string; quantity: number }>
-  }>
-}>({ localProducts: [], unavailableAtCurrentBranch: [] })
+    product: any;
+    alternativeBranches: Array<{
+      branchId: string;
+      branchName: string;
+      quantity: number;
+    }>;
+  }>;
+}>({ localProducts: [], unavailableAtCurrentBranch: [] });
 
 // Debounce search
-let searchTimeout: NodeJS.Timeout | null = null
+let searchTimeout: NodeJS.Timeout | null = null;
 
 const handleSearch = async () => {
   if (!searchQuery.value.trim()) {
-    searchResults.value = { localProducts: [], unavailableAtCurrentBranch: [] }
-    return
+    searchResults.value = { localProducts: [], unavailableAtCurrentBranch: [] };
+    return;
   }
 
-  isSearching.value = true
-  
+  isSearching.value = true;
+
   try {
-    const results = await searchProductWithBranchFallback(searchQuery.value.trim())
-    searchResults.value = results
+    const results = await searchProductWithBranchFallback(
+      searchQuery.value.trim(),
+    );
+    searchResults.value = results;
   } catch (err) {
-    console.error('Search error:', err)
+    console.error("Search error:", err);
   } finally {
-    isSearching.value = false
+    isSearching.value = false;
   }
-}
+};
 
 const onInput = () => {
-  if (searchTimeout) clearTimeout(searchTimeout)
-  searchTimeout = setTimeout(handleSearch, 300)
-}
+  if (searchTimeout) clearTimeout(searchTimeout);
+  searchTimeout = setTimeout(handleSearch, 300);
+};
 
 // Close modal
 const close = () => {
-  emit('update:modelValue', false)
-  searchQuery.value = ''
-  searchResults.value = { localProducts: [], unavailableAtCurrentBranch: [] }
-}
+  emit("update:modelValue", false);
+  searchQuery.value = "";
+  searchResults.value = { localProducts: [], unavailableAtCurrentBranch: [] };
+};
 
 // Handle branch switch from search results
 const switchToBranch = (branchId: string) => {
   // Check for cart conflicts
   if (cartStore.items.length > 0 && cartStore.currentStoreId !== branchId) {
-    emit('switchBranch', branchId)
-    close()
-    return
+    emit("switchBranch", branchId);
+    close();
+    return;
   }
-  
+
   // No conflict, switch directly
-  const result = branchStore.switchBranch(branchId)
+  const result = branchStore.switchBranch(branchId);
   if (result.success) {
     if (result.requiresCartClear && cartStore.items.length > 0) {
-      cartStore.clearCart()
+      cartStore.clearCart();
     }
-    close()
-    window.location.reload()
+    close();
+    window.location.reload();
   }
-}
+};
 
 // Handle escape key
 onMounted(() => {
   const handleKeydown = (e: KeyboardEvent) => {
-    if (e.key === 'Escape' && props.modelValue) {
-      close()
+    if (e.key === "Escape" && props.modelValue) {
+      close();
     }
-  }
-  window.addEventListener('keydown', handleKeydown)
+  };
+  window.addEventListener("keydown", handleKeydown);
   onUnmounted(() => {
-    window.removeEventListener('keydown', handleKeydown)
-  })
-})
+    window.removeEventListener("keydown", handleKeydown);
+  });
+});
 
 // Focus input when modal opens
-const searchInput = ref<HTMLInputElement>()
-watch(() => props.modelValue, (newVal) => {
-  if (newVal) {
-    nextTick(() => {
-      searchInput.value?.focus()
-    })
-  }
-})
+const searchInput = ref<HTMLInputElement>();
+watch(
+  () => props.modelValue,
+  (newVal) => {
+    if (newVal) {
+      nextTick(() => {
+        searchInput.value?.focus();
+      });
+    }
+  },
+);
 </script>
 
 <template>
@@ -114,26 +123,31 @@ watch(() => props.modelValue, (newVal) => {
       leave-from-class="opacity-100"
       leave-to-class="opacity-0"
     >
-      <div 
-        v-if="modelValue" 
+      <div
+        v-if="modelValue"
         class="fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm"
         @click.self="close"
       >
         <div class="mx-auto max-w-2xl pt-20 px-4">
-          <div 
+          <div
             class="bg-white rounded-2xl shadow-2xl overflow-hidden"
             @click.stop
           >
             <!-- Search Input -->
             <div class="p-4 border-b border-gray-200">
               <div class="relative">
-                <svg 
-                  class="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" 
-                  fill="none" 
-                  stroke="currentColor" 
+                <svg
+                  class="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400"
+                  fill="none"
+                  stroke="currentColor"
                   viewBox="0 0 24 24"
                 >
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                  />
                 </svg>
                 <input
                   ref="searchInput"
@@ -143,13 +157,29 @@ watch(() => props.modelValue, (newVal) => {
                   class="w-full rounded-xl border-2 border-gray-200 bg-gray-50 py-3.5 pl-12 pr-4 text-base outline-none transition focus:border-red-600 focus:bg-white"
                   @input="onInput"
                 />
-                <button 
+                <button
                   v-if="searchQuery"
-                  @click="searchQuery = ''; searchResults = { localProducts: [], unavailableAtCurrentBranch: [] }"
+                  @click="
+                    searchQuery = '';
+                    searchResults = {
+                      localProducts: [],
+                      unavailableAtCurrentBranch: [],
+                    };
+                  "
                   class="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
                 >
-                  <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                  <svg
+                    class="h-5 w-5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M6 18L18 6M6 6l12 12"
+                    />
                   </svg>
                 </button>
               </div>
@@ -159,18 +189,45 @@ watch(() => props.modelValue, (newVal) => {
             <div class="max-h-[60vh] overflow-y-auto">
               <!-- Loading State -->
               <div v-if="isSearching" class="p-8 text-center">
-                <svg class="h-8 w-8 animate-spin text-red-600 mx-auto" fill="none" viewBox="0 0 24 24">
-                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                <svg
+                  class="h-8 w-8 animate-spin text-red-600 mx-auto"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                >
+                  <circle
+                    class="opacity-25"
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    stroke-width="4"
+                  ></circle>
+                  <path
+                    class="opacity-75"
+                    fill="currentColor"
+                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                  ></path>
                 </svg>
                 <p class="mt-2 text-sm text-gray-600">Searching...</p>
               </div>
 
               <!-- Empty State -->
               <div v-else-if="!searchQuery" class="p-8 text-center">
-                <div class="mx-auto w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center mb-4">
-                  <svg class="h-8 w-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                <div
+                  class="mx-auto w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center mb-4"
+                >
+                  <svg
+                    class="h-8 w-8 text-gray-400"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                    />
                   </svg>
                 </div>
                 <p class="text-gray-600">Type to search for products</p>
@@ -180,10 +237,28 @@ watch(() => props.modelValue, (newVal) => {
               </div>
 
               <!-- No Results -->
-              <div v-else-if="searchResults.localProducts.length === 0 && searchResults.unavailableAtCurrentBranch.length === 0" class="p-8 text-center">
-                <div class="mx-auto w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center mb-4">
-                  <svg class="h-8 w-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              <div
+                v-else-if="
+                  searchResults.localProducts.length === 0 &&
+                  searchResults.unavailableAtCurrentBranch.length === 0
+                "
+                class="p-8 text-center"
+              >
+                <div
+                  class="mx-auto w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center mb-4"
+                >
+                  <svg
+                    class="h-8 w-8 text-gray-400"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                    />
                   </svg>
                 </div>
                 <p class="text-gray-900 font-medium">No products found</p>
@@ -196,7 +271,9 @@ watch(() => props.modelValue, (newVal) => {
               <div v-else>
                 <!-- Available at Current Branch -->
                 <div v-if="searchResults.localProducts.length > 0" class="p-4">
-                  <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">
+                  <h3
+                    class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3"
+                  >
                     Available at {{ branchStore.activeBranchName }}
                   </h3>
                   <div class="space-y-3">
@@ -204,7 +281,10 @@ watch(() => props.modelValue, (newVal) => {
                       v-for="product in searchResults.localProducts"
                       :key="product.id"
                       class="flex items-center gap-4 p-3 rounded-xl hover:bg-gray-50 transition-colors cursor-pointer group"
-                      @click="navigateTo(`/product/${product.id}`); close()"
+                      @click="
+                        navigateTo(`/product/${product.id}`);
+                        close();
+                      "
                     >
                       <img
                         :src="product.imageUrl || '/placeholder-product.png'"
@@ -212,16 +292,33 @@ watch(() => props.modelValue, (newVal) => {
                         class="w-16 h-16 rounded-lg object-cover bg-gray-100"
                       />
                       <div class="flex-1 min-w-0">
-                        <p class="font-medium text-gray-900 truncate group-hover:text-red-600 transition-colors">
+                        <p
+                          class="font-medium text-gray-900 truncate group-hover:text-red-600 transition-colors"
+                        >
                           {{ product.name }}
                         </p>
-                        <p class="text-sm text-gray-500">{{ formatPrice(product.price) }}</p>
-                        <p v-if="!product.isAvailable" class="text-xs text-red-500 mt-0.5">
+                        <p class="text-sm text-gray-500">
+                          {{ formatPrice(product.price) }}
+                        </p>
+                        <p
+                          v-if="!product.isAvailable"
+                          class="text-xs text-red-500 mt-0.5"
+                        >
                           Out of stock
                         </p>
                       </div>
-                      <svg class="h-5 w-5 text-gray-400 group-hover:text-red-600 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                      <svg
+                        class="h-5 w-5 text-gray-400 group-hover:text-red-600 transition-colors"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M9 5l7 7-7 7"
+                        />
                       </svg>
                     </div>
                   </div>
@@ -229,17 +326,32 @@ watch(() => props.modelValue, (newVal) => {
 
                 <!-- GLOBAL SEARCH EXCEPTION -->
                 <!-- Available at Other Branches -->
-                <div v-if="searchResults.unavailableAtCurrentBranch.length > 0" class="border-t border-gray-200">
+                <div
+                  v-if="searchResults.unavailableAtCurrentBranch.length > 0"
+                  class="border-t border-gray-200"
+                >
                   <div class="p-4">
                     <div class="flex items-center gap-2 mb-3">
-                      <svg class="h-4 w-4 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      <svg
+                        class="h-4 w-4 text-amber-500"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                        />
                       </svg>
-                      <h3 class="text-xs font-semibold text-amber-700 uppercase tracking-wider">
+                      <h3
+                        class="text-xs font-semibold text-amber-700 uppercase tracking-wider"
+                      >
                         Available at Other Stores
                       </h3>
                     </div>
-                    
+
                     <div class="space-y-4">
                       <div
                         v-for="item in searchResults.unavailableAtCurrentBranch"
@@ -248,7 +360,10 @@ watch(() => props.modelValue, (newVal) => {
                       >
                         <div class="flex items-start gap-3 mb-3">
                           <img
-                            :src="item.product.imageUrl || '/placeholder-product.png'"
+                            :src="
+                              item.product.imageUrl ||
+                              '/placeholder-product.png'
+                            "
                             :alt="item.product.name"
                             class="w-14 h-14 rounded-lg object-cover bg-gray-100 flex-shrink-0"
                           />
@@ -272,33 +387,70 @@ watch(() => props.modelValue, (newVal) => {
                           </p>
                           <div class="flex flex-wrap gap-2">
                             <button
-                              v-for="branch in item.alternativeBranches.slice(0, 3)"
+                              v-for="branch in item.alternativeBranches.slice(
+                                0,
+                                3,
+                              )"
                               :key="branch.branchId"
                               @click="switchToBranch(branch.branchId)"
                               class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white border border-amber-300 text-sm font-medium text-amber-700 hover:bg-amber-100 hover:border-amber-400 transition-colors"
                             >
-                              <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                              <svg
+                                class="h-3.5 w-3.5"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                              >
+                                <path
+                                  stroke-linecap="round"
+                                  stroke-linejoin="round"
+                                  stroke-width="2"
+                                  d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
+                                />
                               </svg>
                               {{ branch.branchName }}
-                              <span class="text-amber-600">({{ branch.quantity }} in stock)</span>
+                              <span class="text-amber-600"
+                                >({{ branch.quantity }} in stock)</span
+                              >
                             </button>
                           </div>
-                          
+
                           <!-- Tip Message -->
-                          <div class="mt-2 p-2 bg-blue-50 rounded-lg border border-blue-200">
-                            <p class="text-xs text-blue-700 flex items-start gap-1.5">
-                              <svg class="h-3.5 w-3.5 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                          <div
+                            class="mt-2 p-2 bg-blue-50 rounded-lg border border-blue-200"
+                          >
+                            <p
+                              class="text-xs text-blue-700 flex items-start gap-1.5"
+                            >
+                              <svg
+                                class="h-3.5 w-3.5 flex-shrink-0 mt-0.5"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                              >
+                                <path
+                                  stroke-linecap="round"
+                                  stroke-linejoin="round"
+                                  stroke-width="2"
+                                  d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                                />
                               </svg>
                               <span>
-                                This item is unavailable at {{ branchStore.activeBranchName }}, 
-                                but is in stock at our {{ item.alternativeBranches[0]?.branchName }} branch. 
-                                <button 
-                                  @click="switchToBranch(item.alternativeBranches[0]!.branchId)"
+                                This item is unavailable at
+                                {{ branchStore.activeBranchName }}, but is in
+                                stock at our
+                                {{ item.alternativeBranches[0]?.branchName }}
+                                branch.
+                                <button
+                                  @click="
+                                    switchToBranch(
+                                      item.alternativeBranches[0]!.branchId,
+                                    )
+                                  "
                                   class="font-semibold underline hover:no-underline"
                                 >
-                                  Switch to {{ item.alternativeBranches[0]?.branchName }}
+                                  Switch to
+                                  {{ item.alternativeBranches[0]?.branchName }}
                                 </button>
                               </span>
                             </p>
@@ -314,7 +466,12 @@ watch(() => props.modelValue, (newVal) => {
             <!-- Footer -->
             <div class="p-3 border-t border-gray-200 bg-gray-50 text-center">
               <p class="text-xs text-gray-500">
-                Press <kbd class="px-1.5 py-0.5 bg-white border border-gray-300 rounded text-gray-700 font-sans">ESC</kbd> to close
+                Press
+                <kbd
+                  class="px-1.5 py-0.5 bg-white border border-gray-300 rounded text-gray-700 font-sans"
+                  >ESC</kbd
+                >
+                to close
               </p>
             </div>
           </div>

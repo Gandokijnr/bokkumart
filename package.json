@@ -10,10 +10,11 @@
     "postinstall": "nuxt prepare"
   },
   "dependencies": {
+    "@nuxt/icon": "^1.15.0",
     "@nuxtjs/supabase": "^2.0.3",
     "@tailwindcss/vite": "^4.1.18",
     "@vite-pwa/nuxt": "^1.1.1",
-    "@nuxt/icon": "^1.15.0",
+    "lucide-vue-next": "^0.574.0",
     "nuxt": "^4.3.0",
     "pinia": "^3.0.4",
     "swiper": "^11.2.0",
@@ -23,6 +24,7 @@
   },
   "devDependencies": {
     "@iconify-json/heroicons": "^1.2.3",
-    "@iconify-json/mdi": "^1.2.3"
+    "@iconify-json/mdi": "^1.2.3",
+    "eslint": "^10.0.0"
   }
 }

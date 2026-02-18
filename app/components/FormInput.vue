@@ -4,12 +4,17 @@
       {{ label }}
     </label>
     <div class="relative">
-      <div v-if="$slots.leading" class="absolute left-3 top-1/2 -translate-y-1/2">
+      <div
+        v-if="$slots.leading"
+        class="absolute left-3 top-1/2 -translate-y-1/2"
+      >
         <slot name="leading" />
       </div>
       <input
         :value="modelValue"
-        @input="$emit('update:modelValue', ($event.target as HTMLInputElement).value)"
+        @input="
+          $emit('update:modelValue', ($event.target as HTMLInputElement).value)
+        "
         :type="type"
         :placeholder="placeholder"
         :disabled="disabled"
@@ -21,7 +26,7 @@
           'text-center': center,
           'h-14 text-2xl font-bold': size === 'otp',
           'py-3 text-base': size === 'lg',
-          'border-red-500 ring-2 ring-red-200': active
+          'border-red-500 ring-2 ring-red-200': active,
         }"
         @keydown="$emit('keydown', $event)"
         @paste="$emit('paste', $event)"
@@ -33,45 +38,56 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, watch } from 'vue'
+import { ref, onMounted, watch } from "vue";
 
-const props = withDefaults(defineProps<{
-  modelValue: string
-  type?: string
-  placeholder?: string
-  size?: 'default' | 'lg' | 'otp'
-  disabled?: boolean
-  maxlength?: number
-  inputmode?: 'text' | 'search' | 'email' | 'tel' | 'url' | 'none' | 'numeric' | 'decimal'
-  label?: string
-  help?: string
-  center?: boolean
-  active?: boolean
-  autofocus?: boolean
-}>(), {
-  type: 'text',
-  size: 'default',
-  disabled: false,
-  center: false,
-  active: false,
-  autofocus: false
-})
+const props = withDefaults(
+  defineProps<{
+    modelValue: string;
+    type?: string;
+    placeholder?: string;
+    size?: "default" | "lg" | "otp";
+    disabled?: boolean;
+    maxlength?: number;
+    inputmode?:
+      | "text"
+      | "search"
+      | "email"
+      | "tel"
+      | "url"
+      | "none"
+      | "numeric"
+      | "decimal";
+    label?: string;
+    help?: string;
+    center?: boolean;
+    active?: boolean;
+    autofocus?: boolean;
+  }>(),
+  {
+    type: "text",
+    size: "default",
+    disabled: false,
+    center: false,
+    active: false,
+    autofocus: false,
+  },
+);
 
 const emit = defineEmits<{
-  'update:modelValue': [value: string]
-  keydown: [event: KeyboardEvent]
-  paste: [event: ClipboardEvent]
-}>()
+  "update:modelValue": [value: string];
+  keydown: [event: KeyboardEvent];
+  paste: [event: ClipboardEvent];
+}>();
 
-const inputRef = ref<HTMLInputElement>()
+const inputRef = ref<HTMLInputElement>();
 
 defineExpose({
-  focus: () => inputRef.value?.focus()
-})
+  focus: () => inputRef.value?.focus(),
+});
 
 onMounted(() => {
   if (props.autofocus) {
-    inputRef.value?.focus()
+    inputRef.value?.focus();
   }
-})
+});
 </script>

@@ -30,8 +30,14 @@
       <!-- Product Details -->
       <div class="flex flex-1 flex-col justify-between">
         <div>
-          <h3 class="line-clamp-2 text-sm font-semibold text-gray-900 sm:text-base">{{ item.name }}</h3>
-          <p class="mt-1 text-xs text-gray-500 sm:text-sm">{{ formatPrice(item.price) }} per unit</p>
+          <h3
+            class="line-clamp-2 text-sm font-semibold text-gray-900 sm:text-base"
+          >
+            {{ item.name }}
+          </h3>
+          <p class="mt-1 text-xs text-gray-500 sm:text-sm">
+            {{ formatPrice(item.price) }} per unit
+          </p>
         </div>
 
         <div class="mt-3 flex items-center justify-between gap-2 sm:mt-4">
@@ -43,11 +49,23 @@
               :disabled="item.quantity <= 1"
               aria-label="Decrease quantity"
             >
-              <svg class="h-4 w-4 sm:h-5 sm:w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4" />
+              <svg
+                class="h-4 w-4 sm:h-5 sm:w-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M20 12H4"
+                />
               </svg>
             </button>
-            <span class="flex h-10 w-10 items-center justify-center text-sm font-semibold text-gray-900 sm:h-11 sm:w-11 sm:text-base">
+            <span
+              class="flex h-10 w-10 items-center justify-center text-sm font-semibold text-gray-900 sm:h-11 sm:w-11 sm:text-base"
+            >
               {{ item.quantity }}
             </span>
             <button
@@ -56,8 +74,18 @@
               :disabled="item.quantity >= item.max_quantity"
               aria-label="Increase quantity"
             >
-              <svg class="h-4 w-4 sm:h-5 sm:w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+              <svg
+                class="h-4 w-4 sm:h-5 sm:w-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M12 4v16m8-8H4"
+                />
               </svg>
             </button>
           </div>
@@ -75,8 +103,18 @@
         class="absolute right-3 top-3 flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full text-gray-400 transition-colors hover:bg-red-50 hover:text-red-500 sm:static sm:h-10 sm:w-10"
         aria-label="Remove item"
       >
-        <svg class="h-4 w-4 sm:h-5 sm:w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+        <svg
+          class="h-4 w-4 sm:h-5 sm:w-5"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+          />
         </svg>
       </button>
     </div>
@@ -85,40 +123,40 @@
 
 <script setup lang="ts">
 interface CartItem {
-  id: string
-  name: string
-  price: number
-  quantity: number
-  max_quantity: number
-  image_url?: string
+  id: string;
+  name: string;
+  price: number;
+  quantity: number;
+  max_quantity: number;
+  image_url?: string;
 }
 
 const props = defineProps<{
-  item: CartItem
-}>()
+  item: CartItem;
+}>();
 
 const emit = defineEmits<{
-  updateQuantity: [id: string, quantity: number]
-  remove: [id: string]
-}>()
+  updateQuantity: [id: string, quantity: number];
+  remove: [id: string];
+}>();
 
 function formatPrice(price: number): string {
-  return '₦' + price.toLocaleString('en-NG')
+  return "₦" + price.toLocaleString("en-NG");
 }
 
 function decreaseQuantity() {
   if (props.item.quantity > 1) {
-    emit('updateQuantity', props.item.id, props.item.quantity - 1)
+    emit("updateQuantity", props.item.id, props.item.quantity - 1);
   }
 }
 
 function increaseQuantity() {
   if (props.item.quantity < props.item.max_quantity) {
-    emit('updateQuantity', props.item.id, props.item.quantity + 1)
+    emit("updateQuantity", props.item.id, props.item.quantity + 1);
   }
 }
 
 function remove() {
-  emit('remove', props.item.id)
+  emit("remove", props.item.id);
 }
 </script>

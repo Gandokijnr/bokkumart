@@ -5,7 +5,9 @@
     </label>
     <textarea
       :value="modelValue"
-      @input="$emit('update:modelValue', ($event.target as HTMLTextAreaElement).value)"
+      @input="
+        $emit('update:modelValue', ($event.target as HTMLTextAreaElement).value)
+      "
       :placeholder="placeholder"
       :disabled="disabled"
       :rows="rows"
@@ -15,18 +17,21 @@
 </template>
 
 <script setup lang="ts">
-withDefaults(defineProps<{
-  modelValue: string
-  label?: string
-  placeholder?: string
-  rows?: number
-  disabled?: boolean
-}>(), {
-  rows: 4,
-  disabled: false
-})
+withDefaults(
+  defineProps<{
+    modelValue: string;
+    label?: string;
+    placeholder?: string;
+    rows?: number;
+    disabled?: boolean;
+  }>(),
+  {
+    rows: 4,
+    disabled: false,
+  },
+);
 
 defineEmits<{
-  'update:modelValue': [value: string]
-}>()
+  "update:modelValue": [value: string];
+}>();
 </script>
