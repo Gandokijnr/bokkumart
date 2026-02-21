@@ -835,15 +835,18 @@
           <label
             class="flex cursor-pointer items-center gap-4 rounded-xl border-2 p-4 transition-all"
             :class="
-              paymentMethod === 'paystack'
-                ? 'border-red-600 bg-red-50'
-                : 'border-gray-200 hover:border-gray-300'
+              !canPayOnline
+                ? 'border-gray-200 bg-gray-50 opacity-60 cursor-not-allowed'
+                : paymentMethod === 'paystack'
+                  ? 'border-red-600 bg-red-50'
+                  : 'border-gray-200 hover:border-gray-300'
             "
           >
             <input
               type="radio"
               value="paystack"
               v-model="paymentMethod"
+              :disabled="!canPayOnline"
               class="h-4 w-4 text-red-600"
             />
             <div class="flex-1">
@@ -861,6 +864,9 @@
                   </p>
                   <p class="text-xs text-gray-600">
                     Credit Card, Bank Transfer, USSD
+                  </p>
+                  <p v-if="!canPayOnline" class="text-xs text-gray-600 mt-1">
+                    Online payment is unavailable for this branch.
                   </p>
                 </div>
                 <span
@@ -916,13 +922,27 @@
 
         <!-- Pay Button -->
         <div class="space-y-3">
+          <div
+            v-if="paymentMethod === 'paystack' && !canPayOnline"
+            class="rounded-xl border-2 border-gray-200 bg-gray-50 p-4"
+          >
+            <p class="font-bold text-gray-900">Online payment unavailable</p>
+            <p class="mt-1 text-sm text-gray-600">
+              This branch is not configured for Paystack routing yet.
+              <span v-if="fulfillmentMode === 'pickup'">
+                Please switch to Delivery or pick a different branch.
+              </span>
+              <span v-else> You can still use Pay on Delivery. </span>
+            </p>
+          </div>
+
           <button
             @click="
               paymentMethod === 'paystack'
                 ? initiatePaystackPayment()
                 : initiatePODOrder()
             "
-            :disabled="processingPayment"
+            :disabled="!canSubmitPayment"
             class="w-full rounded-xl bg-red-600 py-4 text-sm font-bold text-white hover:bg-red-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-all"
           >
             <span
@@ -1230,6 +1250,7 @@ interface Store {
   distance: number | null;
   isOpen: boolean;
   pickupInstructions?: string;
+  paystackSubaccountCode?: string | null;
 }
 
 const stores = ref<Store[]>([]);
@@ -1271,6 +1292,29 @@ watch(fulfillmentMode, (mode) => {
 
 const selectedStore = computed(() => {
   return stores.value.find((s) => s.id === selectedStoreId.value);
+});
+
+const canPayOnline = computed(() => {
+  return !!selectedStore.value?.paystackSubaccountCode;
+});
+
+watch(
+  canPayOnline,
+  (ok) => {
+    if (ok) return;
+    if (paymentMethod.value !== "paystack") return;
+    if (fulfillmentMode.value === "pickup") return;
+    if (canUsePOD.value) {
+      paymentMethod.value = "pod";
+    }
+  },
+  { immediate: true },
+);
+
+const canSubmitPayment = computed(() => {
+  if (processingPayment.value) return false;
+  if (paymentMethod.value === "paystack") return canPayOnline.value;
+  return true;
 });
 
 const sortedStores = computed(() => {
@@ -1390,7 +1434,7 @@ async function loadStores() {
   let query = supabase
     .from("stores")
     .select(
-      "id, name, address, operating_hours, is_flagship, latitude, longitude, pickup_instructions",
+      "id, name, address, operating_hours, is_flagship, latitude, longitude, pickup_instructions, paystack_subaccount_code",
     )
     .eq("is_active", true);
 
@@ -1411,6 +1455,7 @@ async function loadStores() {
       isOpen: isStoreOpen(),
       pickupInstructions:
         s.pickup_instructions || getDefaultPickupInstructions(s.name),
+      paystackSubaccountCode: s.paystack_subaccount_code || null,
     }));
 
     const firstStore = stores.value[0];
