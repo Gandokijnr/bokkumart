@@ -77,7 +77,7 @@
           </div>
 
           <div
-            class="relative overflow-hidden rounded-3xl bg-gradient-to-r from-rose-700 to-red-600 p-6 text-white"
+            class="relative overflow-hidden rounded-3xl bg-gradient-red-600 p-6 text-white"
           >
             <div
               class="absolute -right-6 -top-6 h-24 w-24 rounded-full bg-white/10 blur-xl"
