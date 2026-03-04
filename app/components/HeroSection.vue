@@ -23,9 +23,7 @@
                   :class="activeSlide.backgroundClass"
                 />
 
-                <div
-                  class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent sm:bg-gradient-to-r sm:from-black/70 sm:to-transparent"
-                />
+                <div class="absolute inset-0 bg-black/90 sm:bg-black/70" />
 
                 <div class="relative z-10">
                   <p
@@ -77,7 +75,7 @@
           </div>
 
           <div
-            class="relative overflow-hidden rounded-3xl bg-gradient-red-600 p-6 text-white"
+            class="relative overflow-hidden rounded-3xl bg-red-600 p-6 text-white"
           >
             <div
               class="absolute -right-6 -top-6 h-24 w-24 rounded-full bg-white/10 blur-xl"
@@ -125,15 +123,9 @@
               :src="card.image"
               class="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
             />
-            <div
-              v-else
-              class="absolute inset-0 bg-gradient-to-br"
-              :class="card.bg"
-            />
+            <div v-else class="absolute inset-0" :class="card.bg" />
 
-            <div
-              class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent"
-            />
+            <div class="absolute inset-0 bg-black/80" />
 
             <div class="absolute inset-0 flex flex-col justify-end p-5">
               <span
@@ -173,7 +165,7 @@ const sideCardData = {
     tag: "Seasonal",
     // title: 'Valentine Hampers',
     // desc: 'Curated gift bundles',
-    bg: "from-rose-600 to-red-900",
+    bg: "bg-rose-600",
     image: "/discount.gif",
     href: "/#hampers",
   },
@@ -181,7 +173,7 @@ const sideCardData = {
     tag: "New",
     // title: 'Prepared Food',
     // desc: 'Ready-to-eat meals',
-    bg: "from-slate-800 to-slate-950",
+    bg: "bg-slate-800",
     image: "/fruitjuice.gif",
     href: "/#prepared",
   },
@@ -194,8 +186,7 @@ const slides = [
     // title: 'Shop Smarter. Live Better.',
     // subtitle: 'Items too heavy to carry? Order next time and get FREE delivery on your first order of NGN 20,000',
     image: "/buycott.png",
-    backgroundClass:
-      "bg-gradient-to-br from-red-700 via-rose-600 to-orange-500",
+    backgroundClass: "bg-red-700",
     ctaHref: "/#deals",
   },
   {
@@ -204,8 +195,7 @@ const slides = [
     // title: 'Flash Sales Every Day',
     // subtitle: 'Save more on selected essentials. Limited-time offers—grab them while they last.',
     image: "/blackfriday.png",
-    backgroundClass:
-      "bg-gradient-to-br from-slate-900 via-slate-800 to-slate-700",
+    backgroundClass: "bg-slate-900",
     ctaHref: "/#deals",
   },
   {
@@ -214,8 +204,7 @@ const slides = [
     title: "Same-day Delivery in Lagos",
     subtitle: "Choose delivery or pickup whatever fits your schedule.",
     image: "/fruitbasket.png",
-    backgroundClass:
-      "bg-gradient-to-br from-emerald-700 via-teal-600 to-cyan-500",
+    backgroundClass: "bg-emerald-700",
     ctaHref: "/#prepared",
   },
 ];

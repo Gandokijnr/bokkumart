@@ -39,9 +39,7 @@
         </div>
 
         <!-- How it works -->
-        <div
-          class="rounded-3xl border-2 border-gray-200 bg-gradient-to-br from-gray-50 to-white p-6 md:p-8"
-        >
+        <div class="rounded-3xl border-2 border-gray-200 bg-gray-50 p-6 md:p-8">
           <h3 class="text-lg font-bold text-gray-900 sm:text-xl">
             How It Works
           </h3>

@@ -131,7 +131,7 @@ export default defineEventHandler(async (event) => {
       });
     }
 
-    if (String(orderRow.payment_method) !== "online") {
+    if (String(orderRow.payment_method) !== "paystack") {
       throw createError({
         statusCode: 400,
         statusMessage: "Order is not an online-payment order",
@@ -180,6 +180,60 @@ export default defineEventHandler(async (event) => {
       });
     }
 
+    const { data: storeRow, error: storeErr } = await (admin as any)
+      .from("stores")
+      .select(
+        "id, paystack_subaccount_code, platform_percentage, fixed_commission",
+      )
+      .eq("id", String(orderRow.store_id))
+      .single();
+
+    if (storeErr || !storeRow) {
+      throw createError({
+        statusCode: 400,
+        statusMessage: storeErr?.message || "Store not found",
+      });
+    }
+
+    const subaccountCode = storeRow.paystack_subaccount_code
+      ? String(storeRow.paystack_subaccount_code)
+      : null;
+
+    if (!subaccountCode) {
+      throw createError({
+        statusCode: 400,
+        statusMessage: "This store is not configured for online payments",
+      });
+    }
+
+    const toFiniteNumberOrNull = (v: any): number | null => {
+      const n = Number(v);
+      return Number.isFinite(n) ? n : null;
+    };
+
+    const platformPercentage = toFiniteNumberOrNull(
+      (storeRow as any).platform_percentage,
+    );
+
+    const fixedCommissionNaira = toFiniteNumberOrNull(
+      (storeRow as any).fixed_commission,
+    );
+
+    const amountKobo = Number(body.amount || 0);
+    const fixedCommissionKobo = fixedCommissionNaira
+      ? Math.max(0, Math.round(fixedCommissionNaira * 100))
+      : 0;
+
+    const percentageCommissionKobo =
+      platformPercentage !== null
+        ? Math.max(0, Math.round((amountKobo * platformPercentage) / 100))
+        : 0;
+
+    const transactionChargeKobo = Math.min(
+      amountKobo,
+      Math.max(fixedCommissionKobo, percentageCommissionKobo),
+    );
+
     // Optional stock recheck right before payment initialization
     if ((config as any).inventoryRecheckBeforePayment) {
       const items = Array.isArray(orderRow.items) ? orderRow.items : [];
@@ -226,8 +280,12 @@ export default defineEventHandler(async (event) => {
     }
 
     // Build callback URL
-    const siteUrl = config.public.siteUrl || "http://localhost:3000";
-    const callbackUrl = body.callback_url || `${siteUrl}/checkout/verify`;
+    const siteUrlRaw = config.public.siteUrl || "http://localhost:3000";
+    const siteUrl = String(siteUrlRaw).replace(/\/+$/, "");
+
+    const callbackUrl = body.callback_url
+      ? new URL(String(body.callback_url), siteUrl).toString()
+      : `${siteUrl}/checkout/verify`;
 
     // Prepare Paystack payload
     const payload = {
@@ -235,8 +293,19 @@ export default defineEventHandler(async (event) => {
       amount: body.amount,
       currency: "NGN",
       callback_url: callbackUrl,
+      subaccount: subaccountCode,
+      bearer: "account",
+      transaction_charge: transactionChargeKobo,
       metadata: {
         ...body.metadata,
+        routing: {
+          store_id: String(orderRow.store_id),
+          subaccount: subaccountCode,
+          bearer: "account",
+          transaction_charge_kobo: transactionChargeKobo,
+          platform_percentage: platformPercentage,
+          fixed_commission_naira: fixedCommissionNaira,
+        },
         custom_fields: [
           {
             display_name: "Store",

@@ -1711,7 +1711,10 @@ async function initiatePaystackPayment() {
             pickup_store_id: selectedStoreId.value || null,
           };
 
-    const { data: orderData }: { data: { id: string } | null } = await (supabase
+    const {
+      data: orderData,
+      error: orderCreateErr,
+    }: { data: { id: string } | null; error: any } = await (supabase
       .from("orders")
       .insert({
         user_id: userId,
@@ -1729,7 +1732,7 @@ async function initiatePaystackPayment() {
         subtotal: cartStore.cartSubtotal,
         delivery_fee: currentDeliveryFee.value,
         total_amount: finalTotal.value,
-        payment_method: "online",
+        payment_method: "paystack",
         delivery_details: orderDeliveryDetails as any,
         metadata: {
           payment_expires_at: paymentExpiresAt,
@@ -1739,6 +1742,19 @@ async function initiatePaystackPayment() {
       } as any)
       .select("id")
       .single() as any);
+
+    if (orderCreateErr) {
+      console.error("[Checkout] Failed to create order:", orderCreateErr);
+      const code = (orderCreateErr as any)?.code;
+      throw new Error(
+        `${orderCreateErr.message || "Failed to create order"}${code ? ` (code: ${code})` : ""}`,
+      );
+    }
+
+    if (!orderData?.id) {
+      console.error("[Checkout] Order create returned no id:", orderData);
+      throw new Error("Failed to create order");
+    }
 
     // Optional: recheck stock right before payment init (server will also enforce)
     const shouldRecheck = !!(useRuntimeConfig() as any)

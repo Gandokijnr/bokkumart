@@ -6,7 +6,7 @@
         <div class="sm:col-span-2 lg:col-span-1">
           <a href="#" class="inline-flex items-center gap-2.5">
             <div
-              class="flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br from-red-600 to-red-700 shadow-lg"
+              class="flex h-11 w-11 items-center justify-center rounded-xl bg-red-600 shadow-lg"
             >
               <span class="text-base font-bold text-white">HA</span>
             </div>

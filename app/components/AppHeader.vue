@@ -46,7 +46,7 @@
           class="col-span-6 sm:col-span-3 flex items-center gap-2.5 md:gap-3"
         >
           <div
-            class="flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br from-red-600 to-red-700 shadow-md md:h-12 md:w-12"
+            class="flex h-11 w-11 items-center justify-center rounded-xl bg-red-600 shadow-md md:h-12 md:w-12"
           >
             <span class="text-base font-bold text-white md:text-lg">HA</span>
           </div>
@@ -76,9 +76,7 @@
               class="block h-full w-full object-cover"
               fetchpriority="high"
             />
-            <div
-              class="pointer-events-none absolute inset-0 bg-gradient-to-r from-black/35 via-black/10 to-transparent"
-            />
+            <div class="pointer-events-none absolute inset-0 bg-black/35" />
             <div
               class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2"
             >

@@ -126,14 +126,18 @@ export default defineEventHandler(async (event) => {
       });
     }
 
-    const platformPercentage =
-      typeof storeRow.platform_percentage === "number"
-        ? Number(storeRow.platform_percentage)
-        : null;
-    const fixedCommissionNaira =
-      typeof storeRow.fixed_commission === "number"
-        ? Number(storeRow.fixed_commission)
-        : null;
+    const toFiniteNumberOrNull = (v: any): number | null => {
+      const n = Number(v);
+      return Number.isFinite(n) ? n : null;
+    };
+
+    const platformPercentage = toFiniteNumberOrNull(
+      (storeRow as any).platform_percentage,
+    );
+
+    const fixedCommissionNaira = toFiniteNumberOrNull(
+      (storeRow as any).fixed_commission,
+    );
 
     const amountKobo = Number(body.amount || 0);
     const fixedCommissionKobo = fixedCommissionNaira
@@ -150,8 +154,12 @@ export default defineEventHandler(async (event) => {
     );
 
     // Build callback URL
-    const siteUrl = config.public.siteUrl || "http://localhost:3000";
-    const callbackUrl = body.callback_url || `${siteUrl}/checkout/verify`;
+    const siteUrlRaw = config.public.siteUrl || "http://localhost:3000";
+    const siteUrl = String(siteUrlRaw).replace(/\/+$/, "");
+
+    const callbackUrl = body.callback_url
+      ? new URL(String(body.callback_url), siteUrl).toString()
+      : `${siteUrl}/checkout/verify`;
 
     // Prepare Paystack payload
     const payload = {

@@ -6,7 +6,7 @@
     >
       <NuxtLink to="/" class="flex items-center gap-2">
         <div
-          class="w-8 h-8 bg-gradient-to-br from-red-600 to-red-700 rounded-lg flex items-center justify-center shadow-sm"
+          class="w-8 h-8 bg-red-600 rounded-lg flex items-center justify-center shadow-sm"
         >
           <span class="text-sm font-bold text-white">HA</span>
         </div>
@@ -76,7 +76,7 @@
       <div class="hidden lg:block p-6 border-b border-gray-200">
         <NuxtLink to="/" class="flex items-center gap-3 group">
           <div
-            class="w-10 h-10 bg-gradient-to-br from-red-600 to-red-700 rounded-xl flex items-center justify-center shadow-md group-hover:shadow-lg transition-shadow"
+            class="w-10 h-10 bg-red-600 rounded-xl flex items-center justify-center shadow-md group-hover:shadow-lg transition-shadow"
           >
             <span class="text-base font-bold text-white">HA</span>
           </div>
@@ -88,12 +88,10 @@
       </div>
 
       <!-- User Info Card -->
-      <div
-        class="p-4 border-b border-gray-200 bg-gradient-to-br from-gray-50 to-white"
-      >
+      <div class="p-4 border-b border-gray-200 bg-gray-50">
         <div class="flex items-center gap-3">
           <div
-            class="w-12 h-12 rounded-full bg-gradient-to-br from-red-500 to-red-600 flex items-center justify-center shadow-md ring-2 ring-red-100"
+            class="w-12 h-12 rounded-full bg-red-500 flex items-center justify-center shadow-md ring-2 ring-red-100"
           >
             <span class="text-lg font-bold text-white">{{ userInitials }}</span>
           </div>
@@ -152,7 +150,7 @@
           class="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 group relative"
           :class="[
             isActive(item.to)
-              ? 'bg-gradient-to-r from-red-500 to-red-600 text-white shadow-md'
+              ? 'bg-red-500 text-white shadow-md'
               : 'text-gray-700 hover:bg-gray-50 hover:text-red-600',
           ]"
         >
@@ -193,7 +191,7 @@
       <!-- Session Info (for staff/admin) -->
       <div
         v-if="userStore.hasAdminAccess"
-        class="px-4 py-3 border-t border-gray-200 bg-gradient-to-br from-gray-50 to-white"
+        class="px-4 py-3 border-t border-gray-200 bg-gray-50"
       >
         <div class="flex items-center gap-2 text-xs text-gray-600">
           <svg

@@ -45,10 +45,16 @@ interface PaystackWebhookEvent {
   };
 }
 
+type PaystackVerifyResponse = {
+  status: boolean;
+  message: string;
+  data?: any;
+};
+
 function generateClaimCode(): string {
   const alphabet = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
   let out = "";
-  for (let i = 0; i < 6; i++)
+  for (let i = 0; i < 4; i++)
     out += alphabet[Math.floor(Math.random() * alphabet.length)];
   return out;
 }
@@ -178,7 +184,7 @@ export default defineEventHandler(async (event) => {
       throw createError({ statusCode: 404, statusMessage: "Order not found" });
     }
 
-    if (String((existingOrder as any).payment_method) !== "online") {
+    if (String((existingOrder as any).payment_method) !== "paystack") {
       throw createError({
         statusCode: 400,
         statusMessage: "Order is not an online-payment order",
@@ -221,22 +227,71 @@ export default defineEventHandler(async (event) => {
       ...(isPickup && claimCode ? { pickup_claim_qr: qrPayload } : {}),
     };
 
-    const { error: updateError } = await (
-      (supabase as any).from("orders") as any
-    )
+    const paymentSplitLog = {
+      paystack_reference: String(data.reference),
+      paystack_transaction_id: String(data.id),
+      store_id: (data.metadata as any)?.store_id || null,
+      subaccount: (data.metadata as any)?.routing?.subaccount || null,
+      bearer: (data.metadata as any)?.routing?.bearer || null,
+      transaction_charge_kobo:
+        Number(
+          (data.metadata as any)?.routing?.transaction_charge_kobo ?? NaN,
+        ) || null,
+      platform_percentage:
+        Number((data.metadata as any)?.routing?.platform_percentage ?? NaN) ||
+        null,
+      fixed_commission_naira:
+        Number(
+          (data.metadata as any)?.routing?.fixed_commission_naira ?? NaN,
+        ) || null,
+      paid_at: data.paid_at || null,
+    };
+
+    let feesKobo: number | null = null;
+    try {
+      const verifyRes = await fetch(
+        `https://api.paystack.co/transaction/verify/${encodeURIComponent(String(data.reference))}`,
+        {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${paystackSecret}`,
+          },
+        },
+      );
+      const verifyJson = (await verifyRes.json()) as PaystackVerifyResponse;
+      const fee = Number((verifyJson as any)?.data?.fees ?? NaN);
+      feesKobo = Number.isFinite(fee) ? fee : null;
+    } catch {
+      // best-effort
+    }
+
+    const normalizedPaymentSplitLog = {
+      ...paymentSplitLog,
+      transaction_charge_kobo: paymentSplitLog.transaction_charge_kobo || 0,
+      platform_percentage: paymentSplitLog.platform_percentage || 0,
+      fixed_commission_naira: paymentSplitLog.fixed_commission_naira || 0,
+      fees_kobo: feesKobo,
+      platform_net_kobo:
+        feesKobo !== null
+          ? Math.max(
+              0,
+              (paymentSplitLog.transaction_charge_kobo || 0) - feesKobo,
+            )
+          : null,
+    };
+
+    const { error: updateError } = await (supabase as any)
+      .from("orders")
       .update({
         status: "paid",
-        paystack_reference: currentRef ? undefined : data.reference,
-        paystack_transaction_id: data.id.toString(),
+        paystack_reference: data.reference,
+        paystack_transaction_id: String(data.id),
         paid_at: data.paid_at,
-        service_fee:
-          typeof data.metadata.service_fee === "number"
-            ? data.metadata.service_fee
-            : undefined,
-        confirmation_code: isPickup ? claimCode : undefined,
+        confirmation_code: isPickup ? claimCode : null,
+        payment_split_log: normalizedPaymentSplitLog,
         metadata: mergedMetadata,
       })
-      .eq("id", (existingOrder as any).id);
+      .eq("id", orderId);
 
     if (updateError) {
       console.error("Error updating order:", updateError);
