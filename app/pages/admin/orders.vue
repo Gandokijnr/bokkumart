@@ -134,7 +134,7 @@
           <div
             v-for="order in getOrdersByStatus(column.status)"
             :key="order.id"
-            class="relative cursor-pointer rounded-lg bg-white p-3 shadow-sm transition-shadow hover:shadow-md"
+            class="relative cursor-pointer rounded-lg bg-white p-3 shadow-sm transition-shadow hover:shadow-md overflow-hidden"
             :class="{
               'border-l-4 border-red-500': order.fraudRisk?.isHighRisk,
               'ring-2 ring-emerald-300':
@@ -514,12 +514,6 @@
                 {{ selectedOrder.store_delivery_mode }}
               </span>
             </p>
-            <p
-              v-if="selectedOrder.store_pickup_gate"
-              class="text-sm text-gray-500 mt-1"
-            >
-              Pickup Gate: {{ selectedOrder.store_pickup_gate }}
-            </p>
             <p class="text-gray-700 mt-2">
               {{ selectedOrder.delivery_method }}
               <span
@@ -632,6 +626,7 @@ import type { RealtimeChannel } from "@supabase/supabase-js";
 import { ref, computed, onMounted, onUnmounted } from "vue";
 import { useSupabaseClient } from "#imports";
 import type { Database } from "~/types/database.types";
+import { useUserStore } from "~/stores/user";
 import {
   getStatusLabel,
   type FulfillmentType,
@@ -645,6 +640,11 @@ definePageMeta({
 
 const supabase = useSupabaseClient();
 const toast = useToast();
+const userStore = useUserStore();
+
+// Get current user role
+const currentUserRole = computed(() => userStore.profile?.role || "customer");
+const currentUserStoreId = computed(() => userStore.profile?.store_id);
 
 const orders = ref<any[]>([]);
 const stores = ref<any[]>([]);
@@ -1172,12 +1172,13 @@ const getProgressPercentage = (status: string) => {
 };
 
 const fetchOrders = async () => {
-  const { data, error } = await supabase
+  // Build base query
+  let query = supabase
     .from("orders")
     .select(
       `
       *,
-      stores!store_id(name, delivery_mode, metadata)
+      stores!store_id(name, delivery_mode)
     `,
     )
     .in("status", [
@@ -1190,6 +1191,15 @@ const fetchOrders = async () => {
       "arrived",
     ])
     .order("created_at", { ascending: true });
+
+  // Apply role-based filtering
+  if (currentUserRole.value === "branch_manager" && currentUserStoreId.value) {
+    // Branch managers only see orders for their assigned store
+    query = query.eq("store_id", currentUserStoreId.value);
+  }
+  // Super admins see all orders (no additional filter)
+
+  const { data, error } = await query;
 
   if (error) {
     console.error("Error fetching orders:", error);
@@ -1209,7 +1219,7 @@ const fetchOrders = async () => {
   if (storeIds.length > 0) {
     const { data: storesData } = (await supabase
       .from("stores")
-      .select("id, name, delivery_mode, metadata")
+      .select("id, name, delivery_mode")
       .in("id", storeIds)) as any;
     for (const s of storesData || []) {
       storeMap[s.id] = s;
@@ -1233,7 +1243,6 @@ const fetchOrders = async () => {
     ...order,
     store_name: storeMap[order.store_id]?.name || order.stores?.name,
     store_delivery_mode: storeMap[order.store_id]?.delivery_mode,
-    store_pickup_gate: storeMap[order.store_id]?.metadata?.pickupGate,
     customer_name: order.contact_name || profileMap[order.user_id]?.full_name,
     customer_phone:
       order.contact_phone || profileMap[order.user_id]?.phone_number,
