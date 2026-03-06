@@ -365,6 +365,18 @@
                     <p class="mt-1 font-medium text-red-600">
                       {{ formatCurrency(order.total_amount) }}
                     </p>
+                    <div
+                      v-if="
+                        order.delivery_method === 'pickup' &&
+                        order.confirmation_code
+                      "
+                      class="mt-2 inline-flex items-center gap-2 rounded-lg bg-gray-50 px-3 py-1 text-xs font-medium text-gray-700"
+                    >
+                      <span class="text-gray-500">Confirmation Code:</span>
+                      <span class="font-bold tracking-wider text-gray-900">{{
+                        order.confirmation_code
+                      }}</span>
+                    </div>
                     <p
                       v-if="order.updated_at !== order.created_at"
                       class="mt-1 text-xs text-gray-400"
@@ -993,8 +1005,9 @@ const loyaltyProgress = computed(() => {
     { name: "Platinum", min: 50000, max: 100000 },
   ];
 
+  const fallbackTier = tiers[tiers.length - 1]!;
   const currentTier =
-    tiers.find((t) => points >= t.min && points < t.max) || tiers[3];
+    tiers.find((t) => points >= t.min && points < t.max) ?? fallbackTier;
   const nextTier = tiers.find((t) => t.min > points);
 
   const progressInTier = points - currentTier.min;
@@ -1008,7 +1021,7 @@ const loyaltyProgress = computed(() => {
     progressPercentage,
     pointsToNextTier: nextTier ? nextTier.max - points : 0,
     nextTier: nextTier?.name || "Max",
-    currentTier: currentTier?.name || "Bronze",
+    currentTier: currentTier.name,
   };
 });
 
