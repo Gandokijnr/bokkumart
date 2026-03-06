@@ -107,7 +107,11 @@
               </div>
               <div class="mt-4">
                 <div class="flex justify-between text-xs">
-                  <span class="text-gray-500">Progress to Free Delivery</span>
+                  <span class="text-gray-500">{{
+                    loyaltyProgress.nextTier === "Max"
+                      ? loyaltyProgress.currentTier + " Tier"
+                      : "Progress to " + loyaltyProgress.nextTier
+                  }}</span>
                   <span class="font-medium text-yellow-600"
                     >{{ loyaltyProgress.progressPercentage }}%</span
                   >
@@ -973,24 +977,38 @@ const profileCompletion = computed(() => {
 });
 
 const loyaltyTier = computed(() => {
-  if (profileCompletion.value >= 90) return "Platinum";
-  if (profileCompletion.value >= 70) return "Gold";
-  if (profileCompletion.value >= 50) return "Silver";
+  const points = profile.value?.loyalty_points || 0;
+  if (points >= 50000) return "Platinum";
+  if (points >= 25000) return "Gold";
+  if (points >= 10000) return "Silver";
   return "Bronze";
 });
 
 const loyaltyProgress = computed(() => {
+  const points = profile.value?.loyalty_points || 0;
+  const tiers = [
+    { name: "Bronze", min: 0, max: 10000 },
+    { name: "Silver", min: 10000, max: 25000 },
+    { name: "Gold", min: 25000, max: 50000 },
+    { name: "Platinum", min: 50000, max: 100000 },
+  ];
+
+  const currentTier =
+    tiers.find((t) => points >= t.min && points < t.max) || tiers[3];
+  const nextTier = tiers.find((t) => t.min > points);
+
+  const progressInTier = points - currentTier.min;
+  const tierRange = currentTier.max - currentTier.min;
+  const progressPercentage = Math.min(
+    100,
+    Math.round((progressInTier / tierRange) * 100),
+  );
+
   return {
-    progressPercentage: profileCompletion.value,
-    pointsToNextTier: Math.max(0, 100 - profileCompletion.value) * 500,
-    nextTier:
-      profileCompletion.value >= 90
-        ? "Max"
-        : profileCompletion.value >= 70
-          ? "Platinum"
-          : profileCompletion.value >= 50
-            ? "Gold"
-            : "Silver",
+    progressPercentage,
+    pointsToNextTier: nextTier ? nextTier.max - points : 0,
+    nextTier: nextTier?.name || "Max",
+    currentTier: currentTier?.name || "Bronze",
   };
 });
 

@@ -499,6 +499,33 @@
             </div>
           </div>
 
+          <!-- Pickup Time Selection -->
+          <div
+            v-if="selectedStore"
+            class="rounded-xl border-2 border-gray-200 bg-white p-5"
+          >
+            <label class="block text-sm font-medium text-gray-700 mb-2">
+              Select Pickup Time <span class="text-red-600">*</span>
+            </label>
+            <select
+              v-model="selectedPickupTime"
+              class="w-full rounded-xl border-2 border-gray-200 px-4 py-3 text-sm focus:border-red-600 focus:outline-none"
+            >
+              <option value="">Choose a time...</option>
+              <option
+                v-for="time in availablePickupTimes"
+                :key="time.value"
+                :value="time.value"
+              >
+                {{ time.label }}
+              </option>
+            </select>
+            <p class="mt-2 text-xs text-gray-500">
+              Store hours: 8:00 AM - 9:00 PM. Orders are ready within 30 minutes
+              of your selected time.
+            </p>
+          </div>
+
           <!-- Pickup Instructions Block -->
           <div
             v-if="selectedStore && selectedStore.pickupInstructions"
@@ -684,85 +711,6 @@
           <p class="mt-2 text-sm text-gray-600">Choose your payment method</p>
         </div>
 
-        <!-- Pre-payment Incentive Alert -->
-        <div
-          v-if="
-            showPODIncentive &&
-            currentDeliveryFee > 0 &&
-            paymentMethod === 'pod'
-          "
-          class="rounded-xl border-2 border-amber-200 bg-amber-50 p-4"
-        >
-          <div class="flex items-start gap-3">
-            <div
-              class="flex h-10 w-10 items-center justify-center rounded-full bg-amber-100 flex-shrink-0"
-            >
-              <svg
-                class="h-5 w-5 text-amber-600"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                />
-              </svg>
-            </div>
-            <div class="flex-1">
-              <p class="font-bold text-amber-900">Save ₦500 on delivery!</p>
-              <p class="text-sm text-amber-800 mt-1">
-                Pay online now and get
-                <span class="font-bold text-red-600">₦500 off</span> your
-                delivery fee!
-              </p>
-            </div>
-            <button
-              @click="paymentMethod = 'paystack'"
-              class="px-3 py-1.5 rounded-lg bg-red-600 text-white text-xs font-bold hover:bg-red-700"
-            >
-              Switch to Pay Online
-            </button>
-          </div>
-        </div>
-
-        <!-- Risk Scoring Alert - POD Hidden -->
-        <div
-          v-if="!canUsePOD"
-          class="rounded-xl border-2 border-gray-200 bg-gray-50 p-4"
-        >
-          <div class="flex items-start gap-3">
-            <div
-              class="flex h-10 w-10 items-center justify-center rounded-full bg-gray-200 flex-shrink-0"
-            >
-              <svg
-                class="h-5 w-5 text-gray-600"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                />
-              </svg>
-            </div>
-            <div>
-              <p class="font-bold text-gray-900">Pay on Delivery Unavailable</p>
-              <p class="text-sm text-gray-600 mt-1">
-                Due to your cancellation history ({{
-                  Math.round(userCancellationRate * 100)
-                }}%), Pay on Delivery is temporarily unavailable. Please use
-                online payment.
-              </p>
-            </div>
-          </div>
-        </div>
-
         <div
           v-if="fulfillmentMode === 'pickup'"
           class="rounded-xl border-2 border-amber-200 bg-amber-50 p-4"
@@ -816,12 +764,109 @@
               <span class="font-bold">-₦500</span>
             </div>
 
+            <!-- Loyalty Points Discount -->
+            <div
+              v-if="pointsToRedeem > 0"
+              class="flex justify-between text-sm text-purple-600"
+            >
+              <span class="font-medium"
+                >Loyalty Points ({{ pointsToRedeem }} pts)</span
+              >
+              <span class="font-bold"
+                >-{{ formatPrice(pointsRedemptionValue) }}</span
+              >
+            </div>
+
             <div class="border-t pt-3">
               <div class="flex justify-between items-center">
                 <span class="text-base font-bold text-gray-900">Total</span>
                 <span class="text-2xl font-bold text-red-600">{{
                   formatPrice(finalTotal)
                 }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Loyalty Points Redemption -->
+        <div
+          v-if="availableLoyaltyPoints > 0 && step === 3"
+          class="rounded-xl border-2 border-purple-200 bg-purple-50 p-5"
+        >
+          <div class="flex items-start gap-3">
+            <div
+              class="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-purple-500 text-white"
+            >
+              🏆
+            </div>
+            <div class="flex-1">
+              <div class="flex items-center justify-between">
+                <div>
+                  <p class="font-bold text-purple-900">
+                    Loyalty Points Available
+                  </p>
+                  <p class="text-sm text-purple-700">
+                    You have
+                    <span class="font-bold">{{ availableLoyaltyPoints }}</span>
+                    points
+                    <span class="text-xs"
+                      >(worth
+                      {{ formatPrice(availableLoyaltyPoints * 10) }})</span
+                    >
+                  </p>
+                </div>
+              </div>
+
+              <div v-if="pointsToRedeem === 0" class="mt-3">
+                <p class="text-xs text-purple-600 mb-2">
+                  Redeem points for instant discount (1 pt = ₦10)
+                </p>
+                <div class="flex gap-2">
+                  <button
+                    @click="
+                      pointsToRedeem = Math.min(
+                        availableLoyaltyPoints,
+                        Math.floor(finalTotal / 10),
+                      )
+                    "
+                    class="rounded-lg bg-purple-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-purple-700"
+                  >
+                    Use Max ({{
+                      Math.min(
+                        availableLoyaltyPoints,
+                        Math.floor(finalTotal / 10),
+                      )
+                    }}
+                    pts)
+                  </button>
+                  <button
+                    @click="
+                      pointsToRedeem = Math.min(100, availableLoyaltyPoints)
+                    "
+                    class="rounded-lg border border-purple-300 bg-white px-3 py-1.5 text-xs font-medium text-purple-700 hover:bg-purple-100"
+                  >
+                    Use 100 pts
+                  </button>
+                </div>
+              </div>
+
+              <div v-else class="mt-3 rounded-lg bg-white p-3">
+                <div class="flex items-center justify-between">
+                  <div>
+                    <p class="text-sm font-medium text-purple-900">
+                      {{ pointsToRedeem }} points applied
+                    </p>
+                    <p class="text-xs text-purple-600">
+                      Saving {{ formatPrice(pointsRedemptionValue) }}
+                    </p>
+                  </div>
+                  <button
+                    @click="pointsToRedeem = 0"
+                    class="rounded-lg border border-purple-300 px-3 py-1.5 text-xs font-medium text-purple-700 hover:bg-purple-50"
+                  >
+                    Remove
+                  </button>
+                </div>
               </div>
             </div>
           </div>
@@ -879,7 +924,8 @@
             </div>
           </label>
 
-          <!-- POD Option -->
+          <!--
+          POD/COD Option (temporarily disabled)
           <label
             v-if="canUsePOD && fulfillmentMode !== 'pickup'"
             class="flex cursor-pointer items-center gap-4 rounded-xl border-2 p-4 transition-all"
@@ -918,6 +964,7 @@
               </div>
             </div>
           </label>
+          -->
         </div>
 
         <!-- Pay Button -->
@@ -932,19 +979,23 @@
               <span v-if="fulfillmentMode === 'pickup'">
                 Please switch to Delivery or pick a different branch.
               </span>
-              <span v-else> You can still use Pay on Delivery. </span>
+              <span v-else> Please pick a different branch. </span>
             </p>
           </div>
 
           <button
+            @click="initiatePaystackPayment()"
+            :disabled="!canSubmitPayment"
+            class="w-full rounded-xl bg-red-600 py-4 text-sm font-bold text-white hover:bg-red-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-all"
+          >
+            <!--
+            POD/COD Button behavior (temporarily disabled)
             @click="
               paymentMethod === 'paystack'
                 ? initiatePaystackPayment()
                 : initiatePODOrder()
             "
-            :disabled="!canSubmitPayment"
-            class="w-full rounded-xl bg-red-600 py-4 text-sm font-bold text-white hover:bg-red-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-all"
-          >
+            -->
             <span
               v-if="processingPayment"
               class="flex items-center justify-center gap-2"
@@ -964,18 +1015,24 @@
                   d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                 ></path>
               </svg>
+              Processing...
+              <!--
               {{
                 paymentMethod === "pod"
                   ? "Confirming Order..."
                   : "Processing..."
               }}
+              -->
             </span>
             <span v-else>
+              {{ `Pay ${formatPrice(finalTotal)} with Paystack` }}
+              <!--
               {{
                 paymentMethod === "pod"
                   ? "Confirm Pay on Delivery Order"
                   : `Pay ${formatPrice(finalTotal)} with Paystack`
               }}
+              -->
             </span>
           </button>
 
@@ -996,11 +1053,14 @@
                   d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
                 />
               </svg>
+              Secure Payment
+              <!--
               {{
                 paymentMethod === "pod"
                   ? "Phone verification required"
                   : "Secure Payment"
               }}
+              -->
             </span>
           </div>
         </div>
@@ -1203,6 +1263,7 @@ const step = ref(1);
 const fulfillmentMode = ref<"delivery" | "pickup" | null>(null);
 const selectedArea = ref("");
 const selectedStoreId = ref<string | null>(null);
+const selectedPickupTime = ref<string | null>(null);
 const currentDeliveryFee = ref(0);
 
 const loadingStores = ref(false);
@@ -1218,8 +1279,10 @@ const storeChangeWarnings = ref<
 
 const paymentMethod = ref<"paystack" | "pod">("paystack");
 const showPODIncentive = ref(true);
-const canUsePOD = ref(true);
-const userCancellationRate = ref(0);
+
+// POD/COD state (temporarily disabled)
+// const canUsePOD = ref(true);
+// const userCancellationRate = ref(0);
 
 const userLocation = ref<{ lat: number; lng: number } | null>(null);
 const pendingStore = ref<{ id: string; name: string } | null>(null);
@@ -1274,20 +1337,22 @@ const serviceFee = computed(() => {
     ? 500
     : Math.round(cartStore.cartSubtotal * 0.025);
 });
+
+// Loyalty Points State
+const availableLoyaltyPoints = ref(0);
+const pointsToRedeem = ref(0);
+const pointsRedemptionValue = computed(() => pointsToRedeem.value * 10); // 1 point = ₦10
+
 const finalTotal = computed(() => {
   const base =
     cartStore.cartSubtotal + currentDeliveryFee.value + serviceFee.value;
-  return fulfillmentMode.value === "delivery" &&
+  const onlineDiscount =
+    fulfillmentMode.value === "delivery" &&
     paymentMethod.value === "paystack" &&
     currentDeliveryFee.value > 0
-    ? base - 500
-    : base;
-});
-
-watch(fulfillmentMode, (mode) => {
-  if (mode === "pickup" && paymentMethod.value === "pod") {
-    paymentMethod.value = "paystack";
-  }
+      ? 500
+      : 0;
+  return Math.max(0, base - onlineDiscount - pointsRedemptionValue.value);
 });
 
 const selectedStore = computed(() => {
@@ -1298,23 +1363,9 @@ const canPayOnline = computed(() => {
   return !!selectedStore.value?.paystackSubaccountCode;
 });
 
-watch(
-  canPayOnline,
-  (ok) => {
-    if (ok) return;
-    if (paymentMethod.value !== "paystack") return;
-    if (fulfillmentMode.value === "pickup") return;
-    if (canUsePOD.value) {
-      paymentMethod.value = "pod";
-    }
-  },
-  { immediate: true },
-);
-
 const canSubmitPayment = computed(() => {
   if (processingPayment.value) return false;
-  if (paymentMethod.value === "paystack") return canPayOnline.value;
-  return true;
+  return canPayOnline.value;
 });
 
 const sortedStores = computed(() => {
@@ -1331,9 +1382,34 @@ const pickupStoresVisible = computed(() => {
   return sortedStores.value.filter((s) => s.id !== selectedStoreId.value);
 });
 
+// Generate available pickup time slots
+const availablePickupTimes = computed(() => {
+  const times: { value: string; label: string }[] = [];
+  const now = new Date();
+  const currentHour = now.getHours();
+
+  // Store hours: 8 AM - 9 PM
+  const startHour = Math.max(8, currentHour + 1); // Start from next hour
+  const endHour = 21;
+
+  for (let hour = startHour; hour < endHour; hour++) {
+    const timeStr = `${hour.toString().padStart(2, "0")}:00`;
+    const label =
+      hour < 12
+        ? `${hour}:00 AM`
+        : hour === 12
+          ? `12:00 PM`
+          : `${hour - 12}:00 PM`;
+    times.push({ value: timeStr, label });
+  }
+
+  return times;
+});
+
 const canProceedStep1 = computed(() => {
   if (!fulfillmentMode.value) return false;
-  if (fulfillmentMode.value === "pickup") return !!selectedStoreId.value;
+  if (fulfillmentMode.value === "pickup")
+    return !!selectedStoreId.value && !!selectedPickupTime.value;
   return !!selectedArea.value;
 });
 
@@ -1732,8 +1808,12 @@ async function initiatePaystackPayment() {
         subtotal: cartStore.cartSubtotal,
         delivery_fee: currentDeliveryFee.value,
         total_amount: finalTotal.value,
+        points_redeemed: pointsToRedeem.value,
+        points_discount_amount: pointsRedemptionValue.value,
         payment_method: "paystack",
         delivery_details: orderDeliveryDetails as any,
+        pickup_time:
+          fulfillmentMode.value === "pickup" ? selectedPickupTime.value : null,
         metadata: {
           payment_expires_at: paymentExpiresAt,
           service_fee: serviceFee.value,
@@ -1858,202 +1938,173 @@ onMounted(async () => {
   if (user.value?.id) {
     const { data } = await supabase
       .from("profiles")
-      .select("full_name, phone_number")
+      .select("full_name, phone_number, loyalty_points")
       .eq("id", user.value.id)
       .single();
     if (data) {
       userDetails.value.fullName = (data as any).full_name || "";
       userDetails.value.phone = (data as any).phone_number || "";
+      availableLoyaltyPoints.value = (data as any).loyalty_points || 0;
     }
-
-    // Check user cancellation rate for POD eligibility
-    await checkUserCancellationRate();
   }
 });
 
-async function checkUserCancellationRate() {
-  if (!user.value?.id) return;
-
-  // Fetch user's order history
-  const { data: orders } = await supabase
-    .from("orders")
-    .select("status, payment_method")
-    .eq("user_id", user.value.id);
-
-  if (orders && orders.length > 0) {
-    const podOrders = orders.filter((o: any) => o.payment_method === "pod");
-    const cancelledPodOrders = podOrders.filter(
-      (o: any) => o.status === "cancelled",
-    );
-
-    if (podOrders.length > 0) {
-      userCancellationRate.value = cancelledPodOrders.length / podOrders.length;
-      // Hide POD if cancellation rate > 20%
-      canUsePOD.value = userCancellationRate.value <= 0.2;
-    }
-  }
-}
-
-async function initiatePODOrder() {
-  console.log("[POD] Starting order initiation...");
-  console.log("[POD] User state:", {
-    id: user.value?.id,
-    loading: userLoading.value,
-  });
-
-  // Wait for user to load if it's still undefined
-  if (userLoading.value) {
-    console.log("[POD] Waiting for user to load...");
-    await new Promise((resolve) => {
-      const unwatch = watch(user, (newUser) => {
-        if (newUser !== undefined) {
-          unwatch();
-          resolve(newUser);
-        }
-      });
-      // Timeout after 5 seconds
-      setTimeout(() => {
-        unwatch();
-        resolve(null);
-      }, 5000);
-    });
-  }
-
-  // User ID is in the 'sub' field (JWT subject), not 'id'
-
-  if (fulfillmentMode.value === "pickup") {
-    alert("Store Pickup requires upfront payment. Please select Pay Online.");
-    paymentMethod.value = "paystack";
-    return;
-  }
-  const userId = user.value?.id || user.value?.sub;
-  if (!userId) {
-    console.error("[POD] User not logged in", user.value);
-    alert("Please log in to place an order");
-    return;
-  }
-  console.log("[POD] User authenticated:", userId);
-
-  if (!cartStore.items.length) {
-    console.error("[POD] Cart is empty");
-    alert("Your cart is empty");
-    return;
-  }
-
-  if (!userDetails.value.fullName || !userDetails.value.phone) {
-    console.error("[POD] Missing contact details");
-    alert("Please fill in your name and phone number");
-    return;
-  }
-
-  if (fulfillmentMode.value === "delivery" && !selectedArea.value) {
-    console.error("[POD] No delivery area selected");
-    alert("Please select a delivery area");
-    return;
-  }
-
-  processingPayment.value = true;
-  showPaymentModal.value = true;
-
-  try {
-    // Server-authoritative stock validation (prevents stale client stock)
-    const { data: sessionData } = await supabase.auth.getSession();
-    const accessToken = sessionData?.session?.access_token;
-    if (!accessToken) {
-      throw new Error("Session expired. Please log in again.");
-    }
-
-    const validation: { ok: boolean; issues?: any[] } = await $fetch(
-      "/api/orders/validate-cart-stock",
-      {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-        },
-        body: {
-          store_id: cartStore.currentStoreId,
-          items: cartStore.items.map((i) => ({
-            product_id: i.product_id,
-            quantity: i.quantity,
-          })),
-        },
-      },
-    );
-
-    if (!validation?.ok) {
-      throw new Error(
-        "Some items are no longer available. Please refresh your cart.",
-      );
-    }
-
-    console.log("[POD] Reserving stock...");
-    const reserved = await cartStore.createReservation(supabase);
-    if (!reserved) {
-      alert("Some items are no longer available");
-      processingPayment.value = false;
-      showPaymentModal.value = false;
-      return;
-    }
-    console.log("[POD] Stock reserved successfully");
-
-    console.log("[POD] Creating order...");
-
-    const orderItems = cartStore.items.map((item) => ({
-      product_id: item.product_id,
-      name: item.name,
-      quantity: item.quantity,
-      unit_price: item.price,
-      total_price: item.price * item.quantity,
-      options: item.options || {},
-    }));
-
-    const createRes: { success: boolean; order_id: string } = await $fetch(
-      "/api/orders/create-pod",
-      {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-        },
-        body: {
-          store_id: cartStore.currentStoreId,
-          delivery_method: fulfillmentMode.value,
-          delivery_zone: selectedArea.value,
-          contact_name: userDetails.value.fullName,
-          contact_phone: userDetails.value.phone,
-          items: orderItems,
-          subtotal: cartStore.cartSubtotal,
-          delivery_fee: currentDeliveryFee.value,
-          service_fee: serviceFee.value,
-          total_amount: finalTotal.value,
-        },
-      },
-    );
-
-    console.log("[POD] Order created:", createRes?.order_id);
-
-    // Show confirmation that staff will call
-    showToast(
-      "Order placed! Our team will call you shortly to confirm.",
-      "success",
-    );
-
-    // Clear cart after successful order creation
-    cartStore.retainCartFor48Hours();
-
-    // Redirect to pending order page
-    console.log("[POD] Redirecting to pending page...");
-    navigateTo(`/order/pending-${createRes?.order_id}`);
-  } catch (error: any) {
-    console.error("[POD] Error:", error);
-    const message = getUserFacingErrorMessage(
-      error,
-      "Order failed. Please try again.",
-    );
-    alert(message);
-    processingPayment.value = false;
-    showPaymentModal.value = false;
-  }
-}
+// POD/COD logic (temporarily disabled)
+// async function checkUserCancellationRate() {
+//   if (!user.value?.id) return;
+//
+//   const { data: orders } = await supabase
+//     .from("orders")
+//     .select("status, payment_method")
+//     .eq("user_id", user.value.id);
+//
+//   if (orders && orders.length > 0) {
+//     const podOrders = orders.filter((o: any) => o.payment_method === "pod");
+//     const cancelledPodOrders = podOrders.filter(
+//       (o: any) => o.status === "cancelled",
+//     );
+//
+//     if (podOrders.length > 0) {
+//       userCancellationRate.value = cancelledPodOrders.length / podOrders.length;
+//       canUsePOD.value = userCancellationRate.value <= 0.2;
+//     }
+//   }
+// }
+//
+// async function initiatePODOrder() {
+//   console.log("[POD] Starting order initiation...");
+//
+//   if (userLoading.value) {
+//     await new Promise((resolve) => {
+//       const unwatch = watch(user, (newUser) => {
+//         if (newUser !== undefined) {
+//           unwatch();
+//           resolve(newUser);
+//         }
+//       });
+//       setTimeout(() => {
+//         unwatch();
+//         resolve(null);
+//       }, 5000);
+//     });
+//   }
+//
+//   if (fulfillmentMode.value === "pickup") {
+//     alert("Store Pickup requires upfront payment. Please select Pay Online.");
+//     paymentMethod.value = "paystack";
+//     return;
+//   }
+//
+//   const userId = user.value?.id || user.value?.sub;
+//   if (!userId) {
+//     alert("Please log in to place an order");
+//     return;
+//   }
+//
+//   if (!cartStore.items.length) {
+//     alert("Your cart is empty");
+//     return;
+//   }
+//
+//   if (!userDetails.value.fullName || !userDetails.value.phone) {
+//     alert("Please fill in your name and phone number");
+//     return;
+//   }
+//
+//   if (fulfillmentMode.value === "delivery" && !selectedArea.value) {
+//     alert("Please select a delivery area");
+//     return;
+//   }
+//
+//   processingPayment.value = true;
+//   showPaymentModal.value = true;
+//
+//   try {
+//     const { data: sessionData } = await supabase.auth.getSession();
+//     const accessToken = sessionData?.session?.access_token;
+//     if (!accessToken) {
+//       throw new Error("Session expired. Please log in again.");
+//     }
+//
+//     const validation: { ok: boolean; issues?: any[] } = await $fetch(
+//       "/api/orders/validate-cart-stock",
+//       {
+//         method: "POST",
+//         headers: {
+//           Authorization: `Bearer ${accessToken}`,
+//         },
+//         body: {
+//           store_id: cartStore.currentStoreId,
+//           items: cartStore.items.map((i) => ({
+//             product_id: i.product_id,
+//             quantity: i.quantity,
+//           })),
+//         },
+//       },
+//     );
+//
+//     if (!validation?.ok) {
+//       throw new Error(
+//         "Some items are no longer available. Please refresh your cart.",
+//       );
+//     }
+//
+//     const reserved = await cartStore.createReservation(supabase);
+//     if (!reserved) {
+//       alert("Some items are no longer available");
+//       processingPayment.value = false;
+//       showPaymentModal.value = false;
+//       return;
+//     }
+//
+//     const orderItems = cartStore.items.map((item) => ({
+//       product_id: item.product_id,
+//       name: item.name,
+//       quantity: item.quantity,
+//       unit_price: item.price,
+//       total_price: item.price * item.quantity,
+//       options: item.options || {},
+//     }));
+//
+//     const createRes: { success: boolean; order_id: string } = await $fetch(
+//       "/api/orders/create-pod",
+//       {
+//         method: "POST",
+//         headers: {
+//           Authorization: `Bearer ${accessToken}`,
+//         },
+//         body: {
+//           store_id: cartStore.currentStoreId,
+//           delivery_method: fulfillmentMode.value,
+//           delivery_zone: selectedArea.value,
+//           contact_name: userDetails.value.fullName,
+//           contact_phone: userDetails.value.phone,
+//           items: orderItems,
+//           subtotal: cartStore.cartSubtotal,
+//           delivery_fee: currentDeliveryFee.value,
+//           service_fee: serviceFee.value,
+//           total_amount: finalTotal.value,
+//         },
+//       },
+//     );
+//
+//     showToast(
+//       "Order placed! Our team will call you shortly to confirm.",
+//       "success",
+//     );
+//
+//     cartStore.retainCartFor48Hours();
+//     navigateTo(`/order/pending-${createRes?.order_id}`);
+//   } catch (error: any) {
+//     const message = getUserFacingErrorMessage(
+//       error,
+//       "Order failed. Please try again.",
+//     );
+//     alert(message);
+//     processingPayment.value = false;
+//     showPaymentModal.value = false;
+//   }
+// }
 
 definePageMeta({ middleware: ["auth"] });
 

@@ -23,7 +23,7 @@
                   :class="activeSlide.backgroundClass"
                 />
 
-                <div class="absolute inset-0 bg-black/90 sm:bg-black/70" />
+                <div class="absolute inset-0 bg-black/10 sm:bg-black/30" />
 
                 <div class="relative z-10">
                   <p
@@ -75,7 +75,7 @@
           </div>
 
           <div
-            class="relative overflow-hidden rounded-3xl bg-red-600 p-6 text-white"
+            class="relative overflow-hidden rounded-3xl bg-red-700 p-6 text-white"
           >
             <div
               class="absolute -right-6 -top-6 h-24 w-24 rounded-full bg-white/10 blur-xl"
@@ -125,7 +125,7 @@
             />
             <div v-else class="absolute inset-0" :class="card.bg" />
 
-            <div class="absolute inset-0 bg-black/80" />
+            <div class="absolute inset-0 bg-black/30" />
 
             <div class="absolute inset-0 flex flex-col justify-end p-5">
               <span

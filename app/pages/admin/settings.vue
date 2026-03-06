@@ -299,6 +299,39 @@
         <div class="grid gap-4 md:grid-cols-2">
           <div>
             <label class="mb-1 block text-sm font-medium text-gray-700"
+              >Delivery Mode</label
+            >
+            <select
+              v-model="selectedStore.delivery_mode"
+              class="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-red-500 focus:outline-none"
+            >
+              <option value="manual">Manual (Staff assigns riders)</option>
+              <option value="automatic">Automatic (Auto-assign riders)</option>
+            </select>
+            <p class="mt-1 text-xs text-gray-500">
+              {{
+                selectedStore.delivery_mode === "automatic"
+                  ? "Riders will be automatically assigned based on proximity"
+                  : "Staff will manually assign riders to orders"
+              }}
+            </p>
+          </div>
+          <div>
+            <label class="mb-1 block text-sm font-medium text-gray-700"
+              >Pickup Gate/Door</label
+            >
+            <input
+              v-model="selectedStore.metadata.pickupGate"
+              type="text"
+              placeholder="e.g. Gate 1, South Entrance"
+              class="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-red-500 focus:outline-none"
+            />
+            <p class="mt-1 text-xs text-gray-500">
+              Where riders should pick up orders
+            </p>
+          </div>
+          <div>
+            <label class="mb-1 block text-sm font-medium text-gray-700"
               >Base Delivery Fee (₦)</label
             >
             <input
@@ -742,6 +775,7 @@ const saveDeliverySettings = async () => {
   const { error } = await (supabase as any)
     .from("stores")
     .update({
+      delivery_mode: selectedStore.value?.delivery_mode,
       metadata: {
         ...selectedStore.value?.metadata,
         deliverySettings: settings.value,

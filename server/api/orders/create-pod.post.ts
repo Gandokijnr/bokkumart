@@ -1,3 +1,16 @@
+import { defineEventHandler, createError } from "h3";
+
+export default defineEventHandler(async () => {
+  throw createError({
+    statusCode: 410,
+    statusMessage:
+      "Pay on Delivery is temporarily disabled. Please pay online.",
+  });
+});
+
+/*
+POD/COD implementation (temporarily disabled)
+
 import { defineEventHandler, readBody, createError } from 'h3'
 import { createClient } from '@supabase/supabase-js'
 import type { Database } from '~/types/database.types'
@@ -183,3 +196,4 @@ export default defineEventHandler(async (event) => {
 
   return { success: true, order_id: orderRow?.id }
 })
+*/
