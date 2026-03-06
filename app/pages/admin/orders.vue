@@ -1001,13 +1001,19 @@ const verifyCollection = async () => {
 
   verifyingCollection.value = true;
   try {
+    // Refresh session to ensure we have a valid token
+    const { error: refreshError } = await supabase.auth.refreshSession();
+    if (refreshError) {
+      console.warn("Session refresh failed, attempting with current session");
+    }
+
     const { data: sessionData, error: sessionError } =
       await supabase.auth.getSession();
     if (sessionError) throw sessionError;
 
     const accessToken = sessionData?.session?.access_token;
     if (!accessToken) {
-      throw new Error("You must be logged in to verify collection");
+      throw new Error("Your session has expired. Please log in again.");
     }
 
     await $fetch("/api/admin/verify-collection", {
@@ -1263,13 +1269,19 @@ const updateStatus = async (order: any, newStatus: string) => {
 
   let updateError: any = null;
   try {
+    // Refresh session to ensure we have a valid token
+    const { error: refreshError } = await supabase.auth.refreshSession();
+    if (refreshError) {
+      console.warn("Session refresh failed, attempting with current session");
+    }
+
     const { data: sessionData, error: sessionError } =
       await supabase.auth.getSession();
     if (sessionError) throw sessionError;
 
     const accessToken = sessionData?.session?.access_token;
     if (!accessToken) {
-      throw new Error("You must be logged in to update an order");
+      throw new Error("Your session has expired. Please log in again.");
     }
 
     await $fetch("/api/admin/update-order-status", {
