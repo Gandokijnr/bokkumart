@@ -1813,7 +1813,11 @@ async function initiatePaystackPayment() {
         payment_method: "paystack",
         delivery_details: orderDeliveryDetails as any,
         pickup_time:
-          fulfillmentMode.value === "pickup" ? selectedPickupTime.value : null,
+          fulfillmentMode.value === "pickup" && selectedPickupTime.value
+            ? new Date(
+                `${new Date().toISOString().split("T")[0]}T${selectedPickupTime.value}:00`,
+              ).toISOString()
+            : null,
         metadata: {
           payment_expires_at: paymentExpiresAt,
           service_fee: serviceFee.value,
