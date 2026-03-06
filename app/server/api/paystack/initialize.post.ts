@@ -287,6 +287,13 @@ export default defineEventHandler(async (event) => {
       ? new URL(String(body.callback_url), siteUrl).toString()
       : `${siteUrl}/checkout/verify`;
 
+    const customerName = String(
+      (body as any)?.metadata?.customer_name || "",
+    ).trim();
+    const customerPhone = String(
+      (body as any)?.metadata?.customer_phone || "",
+    ).trim();
+
     // Prepare Paystack payload
     const payload = {
       email: body.email,
@@ -317,6 +324,24 @@ export default defineEventHandler(async (event) => {
             variable_name: "delivery_method",
             value: body.metadata.delivery_method,
           },
+          ...(customerName
+            ? [
+                {
+                  display_name: "Customer Name",
+                  variable_name: "customer_name",
+                  value: customerName,
+                },
+              ]
+            : []),
+          ...(customerPhone
+            ? [
+                {
+                  display_name: "Customer Phone",
+                  variable_name: "customer_phone",
+                  value: customerPhone,
+                },
+              ]
+            : []),
         ],
       },
     };

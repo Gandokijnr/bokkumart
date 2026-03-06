@@ -1,0 +1,79 @@
+import { defineEventHandler, createError, type H3Event } from "h3";
+import { createClient } from "@supabase/supabase-js";
+
+export default defineEventHandler(async (event: H3Event) => {
+  // Skip for non-admin routes
+  const path = event.path || "";
+  if (!path.startsWith("/api/admin") && !path.startsWith("/admin")) {
+    return;
+  }
+
+  const config = useRuntimeConfig();
+
+  const supabaseUrl =
+    ((config.public as any)?.supabase?.url as string | undefined) ||
+    (process.env.SUPABASE_URL as string | undefined);
+
+  const serviceRoleKey =
+    (config.supabaseServiceRoleKey as string | undefined) ||
+    (process.env.SUPABASE_SERVICE_ROLE_KEY as string | undefined);
+
+  if (!supabaseUrl || !serviceRoleKey) {
+    throw createError({
+      statusCode: 500,
+      statusMessage: "Server not configured for authentication",
+    });
+  }
+
+  // Extract Bearer token
+  const authHeader = event.node.req.headers["authorization"];
+  const bearer = Array.isArray(authHeader) ? authHeader[0] : authHeader;
+  const token =
+    typeof bearer === "string" && bearer.startsWith("Bearer ")
+      ? bearer.slice("Bearer ".length)
+      : null;
+
+  if (!token) {
+    throw createError({
+      statusCode: 401,
+      statusMessage: "Missing Authorization Bearer token",
+    });
+  }
+
+  // Verify token with Supabase
+  const supabase = createClient(supabaseUrl, serviceRoleKey, {
+    auth: { persistSession: false, autoRefreshToken: false },
+  });
+
+  const { data: userData, error: userError } =
+    await supabase.auth.getUser(token);
+  if (userError || !userData?.user) {
+    throw createError({
+      statusCode: 401,
+      statusMessage: "Invalid or expired token",
+    });
+  }
+
+  // Get user profile with role
+  const { data: profile, error: profileError } = await (supabase as any)
+    .from("profiles")
+    .select("role, store_id, managed_store_ids")
+    .eq("id", userData.user.id)
+    .single();
+
+  if (profileError) {
+    throw createError({
+      statusCode: 500,
+      statusMessage: profileError.message,
+    });
+  }
+
+  // Set user context for downstream middleware and routes
+  event.context.user = {
+    id: userData.user.id,
+    email: userData.user.email,
+    role: profile?.role || "customer",
+    store_id: profile?.store_id,
+    managed_store_ids: profile?.managed_store_ids,
+  };
+});

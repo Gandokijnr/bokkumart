@@ -504,26 +504,99 @@
             v-if="selectedStore"
             class="rounded-xl border-2 border-gray-200 bg-white p-5"
           >
-            <label class="block text-sm font-medium text-gray-700 mb-2">
-              Select Pickup Time <span class="text-red-600">*</span>
-            </label>
-            <select
-              v-model="selectedPickupTime"
-              class="w-full rounded-xl border-2 border-gray-200 px-4 py-3 text-sm focus:border-red-600 focus:outline-none"
-            >
-              <option value="">Choose a time...</option>
-              <option
-                v-for="time in availablePickupTimes"
-                :key="time.value"
-                :value="time.value"
+            <div class="flex items-start justify-between gap-3">
+              <div>
+                <p class="text-sm font-medium text-gray-900">
+                  Pickup time <span class="text-red-600">*</span>
+                </p>
+                <p class="mt-1 text-xs text-gray-500">
+                  Choose a time slot. We typically prepare orders within 30
+                  minutes.
+                </p>
+              </div>
+
+              <div
+                v-if="selectedPickupTime"
+                class="shrink-0 rounded-full bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-700"
               >
-                {{ time.label }}
-              </option>
-            </select>
-            <p class="mt-2 text-xs text-gray-500">
-              Store hours: 8:00 AM - 9:00 PM. Orders are ready within 30 minutes
-              of your selected time.
-            </p>
+                Selected
+              </div>
+            </div>
+
+            <div
+              v-if="!availablePickupTimes || availablePickupTimes.length === 0"
+              class="mt-4"
+            >
+              <div class="rounded-xl border border-gray-200 bg-gray-50 p-4">
+                <p class="text-sm font-medium text-gray-900">
+                  No pickup times available
+                </p>
+                <p class="mt-1 text-xs text-gray-600">
+                  Please select a different branch or try again later.
+                </p>
+              </div>
+            </div>
+
+            <fieldset v-else class="mt-4">
+              <legend class="sr-only">Select pickup time</legend>
+              <div class="grid grid-cols-2 gap-3 sm:grid-cols-3">
+                <label
+                  v-for="(time, index) in availablePickupTimes"
+                  :key="time.value"
+                  :for="`pickup-time-${time.value}`"
+                  class="cursor-pointer"
+                >
+                  <input
+                    class="sr-only peer"
+                    type="radio"
+                    name="pickup_time"
+                    :id="`pickup-time-${time.value}`"
+                    :value="time.value"
+                    v-model="selectedPickupTime"
+                  />
+                  <div
+                    class="rounded-xl border-2 border-gray-200 bg-white px-3 py-3 text-left transition-colors peer-checked:border-red-600 peer-checked:bg-red-50 hover:border-gray-300"
+                  >
+                    <div class="flex items-center justify-between gap-2">
+                      <p class="text-sm font-medium text-gray-900">
+                        {{ time.label }}
+                      </p>
+                      <span
+                        v-if="index === 0"
+                        class="rounded-full bg-blue-50 px-2 py-0.5 text-[10px] font-semibold text-blue-700"
+                      >
+                        Recommended
+                      </span>
+                    </div>
+                    <p class="mt-1 text-[11px] text-gray-500">
+                      Ready in ~30 mins
+                    </p>
+                  </div>
+                </label>
+              </div>
+            </fieldset>
+
+            <div class="mt-4 rounded-xl border border-gray-200 bg-gray-50 p-4">
+              <div class="flex items-start gap-2">
+                <svg
+                  class="h-4 w-4 text-gray-500 mt-0.5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                  />
+                </svg>
+                <p class="text-xs text-gray-600">
+                  Store hours: 8:00 AM - 9:00 PM. If you're running late, you
+                  can still pick up later the same day.
+                </p>
+              </div>
+            </div>
           </div>
 
           <!-- Pickup Instructions Block -->
@@ -1874,6 +1947,8 @@ async function initiatePaystackPayment() {
           metadata: {
             order_id: orderData?.id,
             user_id: userId,
+            customer_name: userDetails.value.fullName,
+            customer_phone: userDetails.value.phone,
             store_id: cartStore.currentStoreId,
             items: cartStore.items.map((item) => ({
               product_id: item.product_id,
