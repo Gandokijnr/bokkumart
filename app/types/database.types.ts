@@ -30,6 +30,10 @@ export interface Database {
           store_id: string | null;
           managed_store_ids: string[] | null;
           driver_status: "offline" | "available" | "on_delivery";
+          referral_code: string | null;
+          referred_by: string | null;
+          first_order_discount_used: boolean;
+          push_notifications_enabled: boolean;
           created_at: string;
           updated_at: string;
         };
@@ -50,6 +54,10 @@ export interface Database {
           store_id?: string | null;
           managed_store_ids?: string[] | null;
           driver_status?: "offline" | "available" | "on_delivery";
+          referral_code?: string | null;
+          referred_by?: string | null;
+          first_order_discount_used?: boolean;
+          push_notifications_enabled?: boolean;
           created_at?: string;
           updated_at?: string;
         };
@@ -70,6 +78,10 @@ export interface Database {
           store_id?: string | null;
           managed_store_ids?: string[] | null;
           driver_status?: "offline" | "available" | "on_delivery";
+          referral_code?: string | null;
+          referred_by?: string | null;
+          first_order_discount_used?: boolean;
+          push_notifications_enabled?: boolean;
           created_at?: string;
           updated_at?: string;
         };
@@ -129,6 +141,8 @@ export interface Database {
             | "processing"
             | "paid"
             | "confirmed"
+            | "ready_for_pos"
+            | "completed_in_pos"
             | "assigned"
             | "picked_up"
             | "arrived"
@@ -137,6 +151,7 @@ export interface Database {
             | "refunded";
           delivery_method: "pickup" | "delivery";
           delivery_details: Json | null;
+          pickup_time: string | null;
           paystack_reference: string | null;
           paystack_transaction_id: string | null;
           payment_split_log: Json | null;
@@ -153,6 +168,9 @@ export interface Database {
           payment_method: "online" | "pod";
           nearest_landmark: string | null;
           driver_notes: string | null;
+          pos_receipt_number: string | null;
+          pos_processed_by: string | null;
+          pos_processed_at: string | null;
         };
         Insert: {
           id?: string;
@@ -175,6 +193,7 @@ export interface Database {
             | "refunded";
           delivery_method: "pickup" | "delivery";
           delivery_details?: Json | null;
+          pickup_time?: string | null;
           paystack_reference?: string | null;
           paystack_transaction_id?: string | null;
           payment_split_log?: Json | null;
@@ -191,6 +210,9 @@ export interface Database {
           payment_method?: "online" | "pod";
           nearest_landmark?: string | null;
           driver_notes?: string | null;
+          pos_receipt_number?: string | null;
+          pos_processed_by?: string | null;
+          pos_processed_at?: string | null;
         };
         Update: {
           id?: string;
@@ -213,6 +235,7 @@ export interface Database {
             | "refunded";
           delivery_method?: "pickup" | "delivery";
           delivery_details?: Json | null;
+          pickup_time?: string | null;
           paystack_reference?: string | null;
           paystack_transaction_id?: string | null;
           payment_split_log?: Json | null;
@@ -229,6 +252,9 @@ export interface Database {
           payment_method?: "online" | "pod";
           nearest_landmark?: string | null;
           driver_notes?: string | null;
+          pos_receipt_number?: string | null;
+          pos_processed_by?: string | null;
+          pos_processed_at?: string | null;
         };
       };
       order_items: {
@@ -339,6 +365,8 @@ export interface Database {
           name: string;
           description: string | null;
           sku: string | null;
+          barcode: string | null;
+          retailman_product_id: string | null;
           category_id: string | null;
           price: number;
           cost_price: number | null;
@@ -354,6 +382,8 @@ export interface Database {
           name: string;
           description?: string | null;
           sku?: string | null;
+          barcode?: string | null;
+          retailman_product_id?: string | null;
           category_id?: string | null;
           price?: number;
           cost_price?: number | null;
@@ -369,6 +399,8 @@ export interface Database {
           name?: string;
           description?: string | null;
           sku?: string | null;
+          barcode?: string | null;
+          retailman_product_id?: string | null;
           category_id?: string | null;
           price?: number;
           cost_price?: number | null;
@@ -404,6 +436,9 @@ export interface Database {
           paystack_settlement_account_number: string | null;
           is_active: boolean;
           is_flagship: boolean;
+          is_pilot_branch: boolean;
+          pilot_mode_enabled: boolean;
+          delivery_mode: "manual" | "automatic" | null;
           features: Json;
           created_at: string;
           updated_at: string;
@@ -431,6 +466,9 @@ export interface Database {
           paystack_settlement_account_number?: string | null;
           is_active?: boolean;
           is_flagship?: boolean;
+          is_pilot_branch?: boolean;
+          pilot_mode_enabled?: boolean;
+          delivery_mode?: "manual" | "automatic" | null;
           features?: Json;
           created_at?: string;
           updated_at?: string;
@@ -458,6 +496,9 @@ export interface Database {
           paystack_settlement_account_number?: string | null;
           is_active?: boolean;
           is_flagship?: boolean;
+          is_pilot_branch?: boolean;
+          pilot_mode_enabled?: boolean;
+          delivery_mode?: "manual" | "automatic" | null;
           features?: Json;
           created_at?: string;
           updated_at?: string;
@@ -474,6 +515,9 @@ export interface Database {
           digital_buffer: number;
           is_visible: boolean;
           store_price: number | null;
+          aisle: string | null;
+          shelf: string | null;
+          section: string | null;
           created_at: string;
           updated_at: string;
         };
@@ -486,6 +530,9 @@ export interface Database {
           digital_buffer?: number;
           is_visible?: boolean;
           store_price?: number | null;
+          aisle?: string | null;
+          shelf?: string | null;
+          section?: string | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -499,6 +546,9 @@ export interface Database {
           digital_buffer?: number;
           is_visible?: boolean;
           store_price?: number | null;
+          aisle?: string | null;
+          shelf?: string | null;
+          section?: string | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -605,6 +655,7 @@ export interface Database {
         Row: {
           id: string;
           order_id: string;
+          store_id: string;
           rider_name: string;
           rider_phone: string | null;
           rider_vehicle_type: string;
@@ -629,6 +680,7 @@ export interface Database {
         Insert: {
           id?: string;
           order_id: string;
+          store_id: string;
           rider_name: string;
           rider_phone?: string | null;
           rider_vehicle_type?: string;
@@ -653,6 +705,7 @@ export interface Database {
         Update: {
           id?: string;
           order_id?: string;
+          store_id?: string;
           rider_name?: string;
           rider_phone?: string | null;
           rider_vehicle_type?: string;
@@ -898,6 +951,97 @@ export interface Database {
           new_value?: Json | null;
           description?: string;
           metadata?: Json;
+          created_at?: string;
+        };
+      };
+      promo_codes: {
+        Row: {
+          id: string;
+          code: string;
+          description: string | null;
+          discount_type: "percentage" | "fixed_amount";
+          discount_value: number;
+          min_order_amount: number | null;
+          max_discount: number | null;
+          usage_limit: number | null;
+          usage_count: number;
+          valid_from: string;
+          valid_until: string | null;
+          is_active: boolean;
+          created_by: string;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          code: string;
+          description?: string | null;
+          discount_type: "percentage" | "fixed_amount";
+          discount_value: number;
+          min_order_amount?: number | null;
+          max_discount?: number | null;
+          usage_limit?: number | null;
+          usage_count?: number;
+          valid_from?: string;
+          valid_until?: string | null;
+          is_active?: boolean;
+          created_by: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          code?: string;
+          description?: string | null;
+          discount_type?: "percentage" | "fixed_amount";
+          discount_value?: number;
+          min_order_amount?: number | null;
+          max_discount?: number | null;
+          usage_limit?: number | null;
+          usage_count?: number;
+          valid_from?: string;
+          valid_until?: string | null;
+          is_active?: boolean;
+          created_by?: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+      };
+      push_notifications: {
+        Row: {
+          id: string;
+          user_id: string;
+          title: string;
+          body: string;
+          type: string;
+          data: Json | null;
+          is_read: boolean;
+          sent_at: string;
+          read_at: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          title: string;
+          body: string;
+          type?: string;
+          data?: Json | null;
+          is_read?: boolean;
+          sent_at?: string;
+          read_at?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          title?: string;
+          body?: string;
+          type?: string;
+          data?: Json | null;
+          is_read?: boolean;
+          sent_at?: string;
+          read_at?: string | null;
           created_at?: string;
         };
       };

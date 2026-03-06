@@ -7,7 +7,14 @@
     "dev": "nuxt dev",
     "generate": "nuxt generate",
     "preview": "nuxt preview",
-    "postinstall": "nuxt prepare"
+    "postinstall": "nuxt prepare",
+    "db:tables": "npx tsx scripts/db.ts list",
+    "db:describe": "npx tsx scripts/db.ts describe",
+    "db:create-table": "npx tsx scripts/db.ts create",
+    "db:query": "npx tsx scripts/db.ts query",
+    "db:sql": "npx tsx scripts/db.ts sql",
+    "db:branch:new": "npx tsx scripts/db.ts new-branch",
+    "db:help": "npx tsx scripts/db.ts --help"
   },
   "dependencies": {
     "@nuxt/icon": "^1.15.0",

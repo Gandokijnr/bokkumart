@@ -1,49 +1,59 @@
 // Pinia Store for User Management with Role-Based Access Control
-import { defineStore } from 'pinia'
-import type { User } from '@supabase/supabase-js'
-import type { Database } from '~/types/database.types'
+import { defineStore } from "pinia";
+import type { User } from "@supabase/supabase-js";
+import type { Database } from "~/types/database.types";
 
-export type UserRole = 'customer' | 'staff' | 'branch_manager' | 'super_admin' | 'driver'
+export type UserRole =
+  | "customer"
+  | "staff"
+  | "branch_manager"
+  | "super_admin"
+  | "driver";
 
-type StoreRow = Database['public']['Tables']['stores']['Row']
-type ManagedStore = Pick<StoreRow, 'id' | 'name'>
+type StoreRow = Database["public"]["Tables"]["stores"]["Row"];
+type ManagedStore = Pick<StoreRow, "id" | "name">;
 
 interface UserProfile {
-  id: string
-  full_name: string | null
-  phone_number: string | null
-  role: UserRole
-  store_id: string | null
-  managed_store_ids: string[] | null
-  created_at: string
-  updated_at: string
+  id: string;
+  full_name: string | null;
+  phone_number: string | null;
+  role: UserRole;
+  store_id: string | null;
+  managed_store_ids: string[] | null;
+  loyalty_points: number;
+  created_at: string;
+  updated_at: string;
 }
 
 interface UserState {
-  user: User | null
-  profile: UserProfile | null
-  managedStores: ManagedStore[]
-  loading: boolean
-  error: string | null
-  lastActivityAt: number | null
-  sessionTimeoutMs: number
-  impersonatingRole: UserRole | null // For super admin "view as" feature
+  user: User | null;
+  profile: UserProfile | null;
+  managedStores: ManagedStore[];
+  loading: boolean;
+  error: string | null;
+  lastActivityAt: number | null;
+  sessionTimeoutMs: number;
+  impersonatingRole: UserRole | null; // For super admin "view as" feature
 }
 
 interface NavItem {
-  label: string
-  icon: string
-  to: string
-  roles: UserRole[]
-  badge?: string
+  label: string;
+  icon: string;
+  to: string;
+  roles: UserRole[];
+  badge?: string;
 }
 
- const computeEffectiveRole = (state: UserState): UserRole => {
-   const jwtRole = ((state.user as any)?.app_metadata?.role as UserRole | undefined) || undefined
-   return state.impersonatingRole || state.profile?.role || jwtRole || 'customer'
- }
+const computeEffectiveRole = (state: UserState): UserRole => {
+  const jwtRole =
+    ((state.user as any)?.app_metadata?.role as UserRole | undefined) ||
+    undefined;
+  return (
+    state.impersonatingRole || state.profile?.role || jwtRole || "customer"
+  );
+};
 
-export const useUserStore = defineStore('user', {
+export const useUserStore = defineStore("user", {
   state: (): UserState => ({
     user: null,
     profile: null,
@@ -52,7 +62,7 @@ export const useUserStore = defineStore('user', {
     error: null,
     lastActivityAt: null,
     sessionTimeoutMs: 24 * 60 * 60 * 1000, // Default 24 hours
-    impersonatingRole: null
+    impersonatingRole: null,
   }),
 
   getters: {
@@ -62,199 +72,367 @@ export const useUserStore = defineStore('user', {
     // Role checks
     isAuthenticated: (state) => !!state.user,
 
-    isSuperAdmin: (state) => state.profile?.role === 'super_admin',
+    isSuperAdmin: (state) => state.profile?.role === "super_admin",
 
     isAdmin(): boolean {
-      return this.isSuperAdmin
+      return this.isSuperAdmin;
     },
 
-    isBranchManager: (state) => state.profile?.role === 'branch_manager',
+    isBranchManager: (state) => state.profile?.role === "branch_manager",
 
     isManager(): boolean {
-      return this.isBranchManager
+      return this.isBranchManager;
     },
 
-    isStaff: (state) => state.profile?.role === 'staff',
+    isStaff: (state) => state.profile?.role === "staff",
 
-    isCustomer: (state) => !state.profile?.role || state.profile?.role === 'customer',
+    isCustomer: (state) =>
+      !state.profile?.role || state.profile?.role === "customer",
 
     // Check if user has a valid role assigned
     hasRole: (state) => !!state.profile?.role,
 
     // Has access to admin routes
     hasAdminAccess: (state): boolean => {
-      const role = computeEffectiveRole(state)
-      const adminRoles: UserRole[] = ['super_admin', 'branch_manager', 'staff']
-      return adminRoles.includes(role as UserRole)
+      const role = computeEffectiveRole(state);
+      const adminRoles: UserRole[] = ["super_admin", "branch_manager", "staff"];
+      return adminRoles.includes(role as UserRole);
     },
 
     // Has access to staff management
     hasStaffManagementAccess: (state) => {
-      const role = computeEffectiveRole(state)
-      return role === 'super_admin'
+      const role = computeEffectiveRole(state);
+      return role === "super_admin";
     },
 
     // Has staff-level access (includes all admin roles)
     hasStaffAccess: (state): boolean => {
-      const role = computeEffectiveRole(state)
-      const staffRoles: UserRole[] = ['super_admin', 'branch_manager', 'staff']
-      return staffRoles.includes(role as UserRole)
+      const role = computeEffectiveRole(state);
+      const staffRoles: UserRole[] = ["super_admin", "branch_manager", "staff"];
+      return staffRoles.includes(role as UserRole);
     },
 
     // User display info
     displayName: (state) => {
-      return state.profile?.full_name || state.user?.email || 'Guest'
+      return state.profile?.full_name || state.user?.email || "Guest";
     },
 
-    userRole: (state): UserRole => state.profile?.role || 'customer',
+    userRole: (state): UserRole => state.profile?.role || "customer",
 
     // Get managed store names
     managedStoreNames: (state) => {
-      if (state.managedStores.length === 0) return 'No Stores Assigned'
-      if (state.managedStores.length === 1) return state.managedStores[0]?.name || 'Unnamed Store'
-      return state.managedStores.map((s) => s.name || 'Unnamed Store').join(', ')
+      if (state.managedStores.length === 0) return "No Stores Assigned";
+      if (state.managedStores.length === 1)
+        return state.managedStores[0]?.name || "Unnamed Store";
+      return state.managedStores
+        .map((s) => s.name || "Unnamed Store")
+        .join(", ");
     },
 
     // Navigation items based on role
     navigationItems: (state): NavItem[] => {
-      const role = computeEffectiveRole(state)
-      const items: NavItem[] = []
+      const role = computeEffectiveRole(state);
+      const items: NavItem[] = [];
 
       // Super Admin Navigation
-      if (role === 'super_admin') {
+      if (role === "super_admin") {
         items.push(
-          { label: 'Global Dashboard', icon: '🌐', to: '/admin/global-dashboard', roles: ['super_admin'] },
-          { label: 'All Orders', icon: '📦', to: '/admin/orders', roles: ['super_admin'] },
-          { label: 'Dispatch', icon: '🛵', to: '/admin/dispatch', roles: ['super_admin'] },
-          { label: 'Drivers', icon: '🚗', to: '/admin/drivers', roles: ['super_admin'] },
-          { label: 'Branch Performance', icon: '📊', to: '/admin/analytics', roles: ['super_admin'] },
-          { label: 'Staff Management', icon: '👥', to: '/admin/staff-management', roles: ['super_admin'] },
-          { label: 'Inventory Settings', icon: '⚙️', to: '/admin/inventory', roles: ['super_admin'] },
-          { label: 'Audit Logs', icon: '📋', to: '/admin/audit-logs', roles: ['super_admin'] }
-        )
+          {
+            label: "Global Dashboard",
+            icon: "🌐",
+            to: "/admin/global-dashboard",
+            roles: ["super_admin"],
+          },
+          {
+            label: "All Orders",
+            icon: "📦",
+            to: "/admin/orders",
+            roles: ["super_admin"],
+          },
+          {
+            label: "Dispatch",
+            icon: "🛵",
+            to: "/admin/dispatch",
+            roles: ["super_admin"],
+          },
+          {
+            label: "Drivers",
+            icon: "🚗",
+            to: "/admin/drivers",
+            roles: ["super_admin"],
+          },
+          {
+            label: "Branch Performance",
+            icon: "📊",
+            to: "/admin/analytics",
+            roles: ["super_admin"],
+          },
+          {
+            label: "Staff Management",
+            icon: "👥",
+            to: "/admin/staff-management",
+            roles: ["super_admin"],
+          },
+          {
+            label: "Inventory Settings",
+            icon: "⚙️",
+            to: "/admin/inventory",
+            roles: ["super_admin"],
+          },
+          {
+            label: "Audit Logs",
+            icon: "📋",
+            to: "/admin/audit-logs",
+            roles: ["super_admin"],
+          },
+        );
       }
 
       // Branch Manager Navigation
-      else if (role === 'branch_manager') {
+      else if (role === "branch_manager") {
         items.push(
-          { label: 'My Dashboard', icon: '🏪', to: '/admin/branch-dashboard', roles: ['branch_manager'] },
-          { label: 'My Store Orders', icon: '📦', to: '/admin/orders', roles: ['branch_manager'] },
-          { label: 'Dispatch', icon: '🛵', to: '/admin/dispatch', roles: ['branch_manager'] },
-          { label: 'Drivers', icon: '🚗', to: '/admin/drivers', roles: ['branch_manager'] },
-          { label: 'Manage Inventory', icon: '�', to: '/admin/branch-inventory', roles: ['branch_manager'] },
-          { label: 'Daily Sales Report', icon: '💰', to: '/admin/sales', roles: ['branch_manager'] },
-          { label: 'My Activity Log', icon: '📝', to: '/admin/my-audit-logs', roles: ['branch_manager'] }
-        )
+          {
+            label: "My Dashboard",
+            icon: "🏪",
+            to: "/admin/branch-dashboard",
+            roles: ["branch_manager"],
+          },
+          {
+            label: "My Store Orders",
+            icon: "📦",
+            to: "/admin/orders",
+            roles: ["branch_manager"],
+          },
+          {
+            label: "Picking Dashboard",
+            icon: "📋",
+            to: "/admin/picking",
+            roles: ["branch_manager"],
+          },
+          {
+            label: "Dispatch",
+            icon: "🛵",
+            to: "/admin/dispatch",
+            roles: ["branch_manager"],
+          },
+          {
+            label: "Drivers",
+            icon: "🚗",
+            to: "/admin/drivers",
+            roles: ["branch_manager"],
+          },
+          {
+            label: "Manage Inventory",
+            icon: "📦",
+            to: "/admin/branch-inventory",
+            roles: ["branch_manager"],
+          },
+          {
+            label: "Daily Sales Report",
+            icon: "💰",
+            to: "/admin/sales",
+            roles: ["branch_manager"],
+          },
+          {
+            label: "My Activity Log",
+            icon: "📝",
+            to: "/admin/my-audit-logs",
+            roles: ["branch_manager"],
+          },
+        );
       }
 
       // Staff Navigation
-      else if (role === 'staff') {
+      else if (role === "staff") {
         items.push(
-          { label: 'Dashboard', icon: '📊', to: '/admin/dashboard', roles: ['staff'] },
-          { label: 'Verification Queue', icon: '📞', to: '/admin/verification-queue', roles: ['staff'] },
-          { label: 'Orders', icon: '📦', to: '/admin/orders', roles: ['staff'] },
-          { label: 'Dispatch', icon: '🛵', to: '/admin/dispatch', roles: ['staff'] },
-          { label: 'Inventory', icon: '📦', to: '/admin/inventory', roles: ['staff'] }
-        )
+          {
+            label: "Dashboard",
+            icon: "📊",
+            to: "/admin/dashboard",
+            roles: ["staff"],
+          },
+          {
+            label: "Verification Queue",
+            icon: "📞",
+            to: "/admin/verification-queue",
+            roles: ["staff"],
+          },
+          {
+            label: "Picking Dashboard",
+            icon: "📋",
+            to: "/admin/picking",
+            roles: ["staff"],
+          },
+          {
+            label: "Orders",
+            icon: "📦",
+            to: "/admin/orders",
+            roles: ["staff"],
+          },
+          {
+            label: "Dispatch",
+            icon: "🛵",
+            to: "/admin/dispatch",
+            roles: ["staff"],
+          },
+          {
+            label: "Inventory",
+            icon: "📦",
+            to: "/admin/inventory",
+            roles: ["staff"],
+          },
+        );
       }
 
       // Driver Navigation
-      else if (role === 'driver') {
+      else if (role === "driver") {
         items.push(
-          { label: 'Driver', icon: '🚗', to: '/driver/dashboard', roles: ['driver'] },
-          { label: 'My Deliveries', icon: '🛵', to: '/driver/deliveries', roles: ['driver'] },
-          { label: 'Route Map', icon: '📍', to: '/driver/routes', roles: ['driver'] },
-          { label: 'Completed Tasks', icon: '✅', to: '/driver/completed', roles: ['driver'] },
-          { label: 'SOS / Support', icon: '🆘', to: '/driver/support', roles: ['driver'] }
-        )
+          {
+            label: "Driver",
+            icon: "🚗",
+            to: "/driver/dashboard",
+            roles: ["driver"],
+          },
+          {
+            label: "My Deliveries",
+            icon: "🛵",
+            to: "/driver/deliveries",
+            roles: ["driver"],
+          },
+          {
+            label: "Route Map",
+            icon: "📍",
+            to: "/driver/routes",
+            roles: ["driver"],
+          },
+          {
+            label: "Completed Tasks",
+            icon: "✅",
+            to: "/driver/completed",
+            roles: ["driver"],
+          },
+          {
+            label: "SOS / Support",
+            icon: "🆘",
+            to: "/driver/support",
+            roles: ["driver"],
+          },
+        );
       }
 
       // Customer Navigation
       else {
         items.push(
-          { label: '/', icon: '🏪', to: '/', roles: ['customer'] },
-          { label: 'My Orders', icon: '📦', to: '/my-orders', roles: ['customer'] },
-          { label: 'Loyalty Points', icon: '⭐', to: '/loyalty', roles: ['customer'] },
-          { label: 'Saved Addresses', icon: '📍', to: '/addresses', roles: ['customer'] }
-        )
+          { label: "/", icon: "🏪", to: "/", roles: ["customer"] },
+          {
+            label: "My Orders",
+            icon: "📦",
+            to: "/my-orders",
+            roles: ["customer"],
+          },
+          {
+            label: "Loyalty Points",
+            icon: "⭐",
+            to: "/loyalty",
+            roles: ["customer"],
+          },
+          {
+            label: "Saved Addresses",
+            icon: "📍",
+            to: "/addresses",
+            roles: ["customer"],
+          },
+        );
       }
 
-      return items
+      return items;
     },
 
     // Filtered navigation for current user
     userNavigation(): NavItem[] {
-      const role = this.effectiveRole
-      return this.navigationItems.filter((item: NavItem) => item.roles.includes(role))
+      const role = this.effectiveRole;
+      return this.navigationItems.filter((item: NavItem) =>
+        item.roles.includes(role),
+      );
     },
 
     // Session timeout check
     isSessionExpired: (state) => {
-      if (!state.lastActivityAt) return false
+      if (!state.lastActivityAt) return false;
 
-      const now = Date.now()
-      const inactiveTime = now - state.lastActivityAt
+      const now = Date.now();
+      const inactiveTime = now - state.lastActivityAt;
 
       // Admin/staff: 30 minutes, others: 24 hours
-      const role = state.profile?.role
-      const timeout = ['admin', 'staff', 'manager', 'super_admin', 'branch_manager'].includes(role || '')
+      const role = state.profile?.role;
+      const timeout = [
+        "admin",
+        "staff",
+        "manager",
+        "super_admin",
+        "branch_manager",
+      ].includes(role || "")
         ? 30 * 60 * 1000 // 30 minutes
-        : 24 * 60 * 60 * 1000 // 24 hours
+        : 24 * 60 * 60 * 1000; // 24 hours
 
-      return inactiveTime > timeout
-    }
+      return inactiveTime > timeout;
+    },
   },
 
   actions: {
     // Initialize store - call on app mount
     async initialize() {
-      const supabase = useSupabaseClient<Database>()
+      const supabase = useSupabaseClient<Database>();
 
       // Get current session
-      const { data: { session } } = await supabase.auth.getSession()
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
 
       if (session?.user) {
-        this.user = session.user
-        await this.fetchProfile()
-        this.updateActivity()
-        this.setupSessionTimeout()
+        this.user = session.user;
+        await this.fetchProfile();
+        this.updateActivity();
+        this.setupSessionTimeout();
       }
 
       // Listen for auth changes
       supabase.auth.onAuthStateChange(async (event, session) => {
-        if (event === 'SIGNED_IN' && session?.user) {
-          this.user = session.user
-          await this.fetchProfile()
-          this.updateActivity()
-          this.setupSessionTimeout()
-        } else if (event === 'SIGNED_OUT') {
-          this.clearUser()
+        if (event === "SIGNED_IN" && session?.user) {
+          this.user = session.user;
+          await this.fetchProfile();
+          this.updateActivity();
+          this.setupSessionTimeout();
+        } else if (event === "SIGNED_OUT") {
+          this.clearUser();
         }
-      })
+      });
     },
 
     // Fetch user profile from Supabase
     async fetchProfile() {
       if (!this.user?.id && !(this.user as any)?.sub) {
-        return
+        return;
       }
 
-      const userId = this.user?.id || (this.user as any)?.sub
+      const userId = this.user?.id || (this.user as any)?.sub;
 
-      this.loading = true
-      this.error = null
+      this.loading = true;
+      this.error = null;
 
       try {
-        const supabase = useSupabaseClient<Database>()
+        const supabase = useSupabaseClient<Database>();
 
         const { data, error } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', userId)
-          .single()
+          .from("profiles")
+          .select("*")
+          .eq("id", userId)
+          .single();
 
         if (error) {
-          const jwtRole = ((this.user as any)?.app_metadata?.role as UserRole | undefined) || undefined
+          const jwtRole =
+            ((this.user as any)?.app_metadata?.role as UserRole | undefined) ||
+            undefined;
           if (jwtRole) {
             this.profile = {
               id: userId,
@@ -263,174 +441,191 @@ export const useUserStore = defineStore('user', {
               role: jwtRole,
               store_id: null,
               managed_store_ids: null,
+              loyalty_points: 0,
               created_at: new Date().toISOString(),
-              updated_at: new Date().toISOString()
-            }
-            return
+              updated_at: new Date().toISOString(),
+            };
+            return;
           }
-          throw error
+          throw error;
         }
 
-        const profile = data as unknown as UserProfile | null
-        this.profile = profile
+        const profile = data as unknown as UserProfile | null;
+        this.profile = profile;
 
         // Fetch managed stores if branch manager
-        const managedStoreIds = profile?.managed_store_ids || []
+        const managedStoreIds = profile?.managed_store_ids || [];
         if (managedStoreIds.length > 0) {
           const { data: storesData } = await supabase
-            .from('stores')
-            .select('id,name')
-            .in('id', managedStoreIds)
+            .from("stores")
+            .select("id,name")
+            .in("id", managedStoreIds);
 
-          this.managedStores = (storesData || []) as ManagedStore[]
+          this.managedStores = (storesData || []) as ManagedStore[];
         }
 
         // Set shorter timeout for staff/admin
-        const role = this.profile?.role
-        if (['admin', 'staff', 'manager', 'super_admin', 'branch_manager'].includes(role || '')) {
-          this.sessionTimeoutMs = 30 * 60 * 1000 // 30 minutes
+        const role = this.profile?.role;
+        if (
+          [
+            "admin",
+            "staff",
+            "manager",
+            "super_admin",
+            "branch_manager",
+          ].includes(role || "")
+        ) {
+          this.sessionTimeoutMs = 30 * 60 * 1000; // 30 minutes
         } else {
-          this.sessionTimeoutMs = 24 * 60 * 60 * 1000 // 24 hours
+          this.sessionTimeoutMs = 24 * 60 * 60 * 1000; // 24 hours
         }
-
       } catch (err: any) {
-        this.error = err.message
+        this.error = err.message;
       } finally {
-        this.loading = false
+        this.loading = false;
       }
     },
 
     // Update last activity timestamp
     updateActivity() {
-      this.lastActivityAt = Date.now()
+      this.lastActivityAt = Date.now();
     },
 
     // Setup session timeout monitoring
     setupSessionTimeout() {
       // Only for staff/admin roles
-      if (!this.hasAdminAccess) return
+      if (!this.hasAdminAccess) return;
 
       // Check every minute
       setInterval(() => {
         if (this.isSessionExpired) {
-          this.handleSessionTimeout()
+          this.handleSessionTimeout();
         }
-      }, 60000)
+      }, 60000);
 
       // Track user activity
-      const events = ['mousedown', 'keydown', 'scroll', 'touchstart']
-      const updateActivity = () => this.updateActivity()
+      const events = ["mousedown", "keydown", "scroll", "touchstart"];
+      const updateActivity = () => this.updateActivity();
 
-      events.forEach(event => {
-        window.addEventListener(event, updateActivity, { passive: true })
-      })
+      events.forEach((event) => {
+        window.addEventListener(event, updateActivity, { passive: true });
+      });
 
       // Cleanup on sign out
       return () => {
-        events.forEach(event => {
-          window.removeEventListener(event, updateActivity)
-        })
-      }
+        events.forEach((event) => {
+          window.removeEventListener(event, updateActivity);
+        });
+      };
     },
 
     // Handle session timeout
     async handleSessionTimeout() {
-      const toast = useToast()
+      const toast = useToast();
 
       toast.add({
-        title: 'Session Expired',
-        description: 'For security, you have been logged out due to inactivity.',
-        color: 'red'
-      } as any)
+        title: "Session Expired",
+        description:
+          "For security, you have been logged out due to inactivity.",
+        color: "red",
+      } as any);
 
-      await this.signOut()
-      navigateTo('/auth')
+      await this.signOut();
+      navigateTo("/auth");
     },
 
     // Sign out
     async signOut() {
-      const supabase = useSupabaseClient()
-      await supabase.auth.signOut()
-      this.clearUser()
+      const supabase = useSupabaseClient();
+      await supabase.auth.signOut();
+      this.clearUser();
     },
 
     // Clear user data
     clearUser() {
-      this.user = null
-      this.profile = null
-      this.managedStores = []
-      this.error = null
-      this.lastActivityAt = null
-      this.impersonatingRole = null
+      this.user = null;
+      this.profile = null;
+      this.managedStores = [];
+      this.error = null;
+      this.lastActivityAt = null;
+      this.impersonatingRole = null;
     },
 
     // Redirect after login based on role
     handleRedirectAfterLogin() {
-      const role = this.profile?.role || 'customer'
+      const role = this.profile?.role || "customer";
 
       // Role-based redirect
-      if (role === 'super_admin') {
-        navigateTo('/admin/global-dashboard')
-      } else if (role === 'branch_manager') {
-        navigateTo('/admin/branch-dashboard')
-      } else if (role === 'staff') {
-        navigateTo('/admin/dashboard')
-      } else if (role === 'driver') {
-        navigateTo('/driver/dashboard')
+      if (role === "super_admin") {
+        navigateTo("/admin/global-dashboard");
+      } else if (role === "branch_manager") {
+        navigateTo("/admin/branch-dashboard");
+      } else if (role === "staff") {
+        navigateTo("/admin/dashboard");
+      } else if (role === "driver") {
+        navigateTo("/driver/dashboard");
       } else {
-        navigateTo('/')
+        navigateTo("/");
       }
     },
 
     // Check if user can access a route
     canAccess(route: string): boolean {
       // Public routes
-      if (route === '/' || route.startsWith('/auth') || route.startsWith('/product') || route.startsWith('/')) {
-        return true
+      if (
+        route === "/" ||
+        route.startsWith("/auth") ||
+        route.startsWith("/product") ||
+        route.startsWith("/")
+      ) {
+        return true;
       }
 
       // Must be authenticated for protected routes
-      if (!this.isAuthenticated) return false
+      if (!this.isAuthenticated) return false;
 
       // Super admin can access everything
-      if (this.isSuperAdmin) return true
+      if (this.isSuperAdmin) return true;
 
       // Staff management routes - super admin only
-      if (route.startsWith('/admin/staff-management') || route.startsWith('/admin/global-dashboard')) {
-        return this.isSuperAdmin
+      if (
+        route.startsWith("/admin/staff-management") ||
+        route.startsWith("/admin/global-dashboard")
+      ) {
+        return this.isSuperAdmin;
       }
 
       // Admin routes - all admin roles
-      if (route.startsWith('/admin')) {
-        return this.hasAdminAccess
+      if (route.startsWith("/admin")) {
+        return this.hasAdminAccess;
       }
 
       // Customer routes (orders, profile, etc.)
-      return true
+      return true;
     },
 
     // Super Admin Impersonation Feature
     impersonateRole(role: UserRole) {
-      if (!this.isSuperAdmin) return
-      this.impersonatingRole = role
+      if (!this.isSuperAdmin) return;
+      this.impersonatingRole = role;
 
-      const toast = useToast()
+      const toast = useToast();
       toast.add({
-        title: 'Viewing As',
+        title: "Viewing As",
         description: `You are now viewing the interface as: ${role}`,
-        color: 'blue'
-      } as any)
+        color: "blue",
+      } as any);
     },
 
     stopImpersonation() {
-      this.impersonatingRole = null
+      this.impersonatingRole = null;
 
-      const toast = useToast()
+      const toast = useToast();
       toast.add({
-        title: 'Impersonation Stopped',
-        description: 'You are back to super admin view',
-        color: 'green'
-      } as any)
-    }
-  }
-})
+        title: "Impersonation Stopped",
+        description: "You are back to super admin view",
+        color: "green",
+      } as any);
+    },
+  },
+});

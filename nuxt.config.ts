@@ -2,27 +2,24 @@
 import tailwindcss from "@tailwindcss/vite";
 
 export default defineNuxtConfig({
-  compatibilityDate: '2025-07-15',
+  compatibilityDate: "2025-07-15",
   devtools: { enabled: true },
   ssr: true,
-  css: ['~/assets/css/main.css'],
+  css: ["~/assets/css/main.css"],
 
-  modules: [
-    '@nuxtjs/supabase',
-    '@nuxt/icon',
-    '@vite-pwa/nuxt',
-  ],
+  modules: ["@nuxtjs/supabase", "@nuxt/icon", "@vite-pwa/nuxt"],
 
   pwa: {
-    registerType: 'autoUpdate',
+    registerType: "autoUpdate",
     workbox: {
       cleanupOutdatedCaches: true,
       runtimeCaching: [
         {
-          urlPattern: /^https:\/\/.+\.supabase\.co\/storage\/v1\/object\/public\/.*/i,
-          handler: 'CacheFirst',
+          urlPattern:
+            /^https:\/\/.+\.supabase\.co\/storage\/v1\/object\/public\/.*/i,
+          handler: "CacheFirst",
           options: {
-            cacheName: 'supabase-images',
+            cacheName: "supabase-images",
             expiration: {
               maxEntries: 100,
               maxAgeSeconds: 30 * 24 * 60 * 60, // 30 days
@@ -34,9 +31,9 @@ export default defineNuxtConfig({
         },
         {
           urlPattern: /\.(?:png|jpg|jpeg|svg|gif|webp|avif)$/i,
-          handler: 'CacheFirst',
+          handler: "CacheFirst",
           options: {
-            cacheName: 'product-images',
+            cacheName: "product-images",
             expiration: {
               maxEntries: 200,
               maxAgeSeconds: 60 * 24 * 60 * 60, // 60 days
@@ -48,9 +45,9 @@ export default defineNuxtConfig({
         },
         {
           urlPattern: /^https:\/\/.*\/api\/.*/i,
-          handler: 'NetworkFirst',
+          handler: "NetworkFirst",
           options: {
-            cacheName: 'api-cache',
+            cacheName: "api-cache",
             expiration: {
               maxEntries: 50,
               maxAgeSeconds: 5 * 60, // 5 minutes
@@ -64,13 +61,13 @@ export default defineNuxtConfig({
       installPrompt: false,
     },
     manifest: {
-      name: 'HomeAffairs',
-      short_name: 'HomeAffairs',
-      description: 'Your local grocery delivery service',
-      theme_color: '#dc2626',
-      background_color: '#ffffff',
-      display: 'standalone',
-      orientation: 'portrait',
+      name: "HomeAffairs",
+      short_name: "HomeAffairs",
+      description: "Your local grocery delivery service",
+      theme_color: "#dc2626",
+      background_color: "#ffffff",
+      display: "standalone",
+      orientation: "portrait",
     },
   },
 
@@ -78,36 +75,37 @@ export default defineNuxtConfig({
     url: process.env.SUPABASE_URL,
     key: process.env.SUPABASE_KEY,
     redirectOptions: {
-      login: '/auth',
-      callback: '/confirm',
-      include: ['/checkout', '/profile'],
-      exclude: ['/auth', '/'],
-      saveRedirectToCookie: true
+      login: "/auth",
+      callback: "/confirm",
+      include: ["/checkout", "/profile"],
+      exclude: ["/auth", "/"],
+      saveRedirectToCookie: true,
     },
     clientOptions: {
       auth: {
-        flowType: 'pkce',
+        flowType: "pkce",
         detectSessionInUrl: true,
         persistSession: true,
         autoRefreshToken: true,
-      }
-    }
+      },
+    },
   },
 
   runtimeConfig: {
     paystackSecretKey: process.env.PAYSTACK_SECRET_KEY,
     supabaseServiceRoleKey: process.env.SUPABASE_SERVICE_ROLE_KEY,
-    orderPaymentTimeoutMinutes: Number(process.env.ORDER_PAYMENT_TIMEOUT_MINUTES || 15),
-    inventoryRecheckBeforePayment: process.env.INVENTORY_RECHECK_BEFORE_PAYMENT === 'true',
+    orderPaymentTimeoutMinutes: Number(
+      process.env.ORDER_PAYMENT_TIMEOUT_MINUTES || 15,
+    ),
+    inventoryRecheckBeforePayment:
+      process.env.INVENTORY_RECHECK_BEFORE_PAYMENT === "true",
     public: {
-      siteUrl: process.env.SITE_URL || 'http://localhost:3000',
-      paystackPublicKey: process.env.PAYSTACK_PUBLIC_KEY
-    }
+      siteUrl: process.env.SITE_URL || "http://localhost:3000",
+      paystackPublicKey: process.env.PAYSTACK_PUBLIC_KEY,
+    },
   },
 
   vite: {
-    plugins: [
-      tailwindcss() as any,
-    ],
+    plugins: [tailwindcss() as any],
   },
-})
+});

@@ -76,7 +76,7 @@
               class="block h-full w-full object-cover"
               fetchpriority="high"
             />
-            <div class="pointer-events-none absolute inset-0 bg-black/35" />
+            <div class="pointer-events-none absolute inset-0 bg-black/10" />
             <div
               class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2"
             >

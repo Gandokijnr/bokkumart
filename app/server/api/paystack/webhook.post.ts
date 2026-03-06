@@ -301,6 +301,56 @@ export default defineEventHandler(async (event) => {
       });
     }
 
+    // Deduct loyalty points if points were redeemed for this order
+    try {
+      const { data: orderData } = await (supabase as any)
+        .from("orders")
+        .select("user_id, points_redeemed")
+        .eq("id", orderId)
+        .single();
+
+      const pointsRedeemed = Number(orderData?.points_redeemed || 0);
+      const userId = orderData?.user_id;
+
+      if (pointsRedeemed > 0 && userId) {
+        // Get current loyalty points
+        const { data: profileData } = await (supabase as any)
+          .from("profiles")
+          .select("loyalty_points")
+          .eq("id", userId)
+          .single();
+
+        const currentPoints = Number(profileData?.loyalty_points || 0);
+        const newPoints = Math.max(0, currentPoints - pointsRedeemed);
+
+        // Update user's loyalty points
+        await (supabase as any)
+          .from("profiles")
+          .update({
+            loyalty_points: newPoints,
+            updated_at: new Date().toISOString(),
+          })
+          .eq("id", userId);
+
+        // Log the redemption transaction
+        await (supabase as any).from("loyalty_transactions").insert({
+          user_id: userId,
+          order_id: orderId,
+          points: pointsRedeemed,
+          type: "redeemed",
+          description: `Redeemed ${pointsRedeemed} points for order discount`,
+          created_at: new Date().toISOString(),
+        });
+
+        console.log(
+          `[Loyalty] Deducted ${pointsRedeemed} points from user ${userId} for order ${orderId}`,
+        );
+      }
+    } catch (e) {
+      console.error("[Loyalty] Failed to deduct points:", e);
+      // Don't fail the webhook if loyalty deduction fails
+    }
+
     // Return success response to Paystack
     return {
       received: true,
