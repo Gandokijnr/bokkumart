@@ -5,6 +5,8 @@ import type { Database } from "~/types/database.types";
 interface PaystackInitializeRequest {
   email: string;
   amount: number; // in kobo (Naira * 100)
+  service_fee_kobo?: number; // Service fee for platform
+  callback_url?: string;
   metadata: {
     order_id?: string;
     user_id: string;
@@ -29,8 +31,8 @@ interface PaystackInitializeRequest {
     service_fee?: number;
     pickup_store_id?: string | null;
     payment_expires_at?: string | null;
+    [key: string]: any;
   };
-  callback_url?: string;
 }
 
 interface PaystackResponse {
@@ -206,32 +208,11 @@ export default defineEventHandler(async (event) => {
       });
     }
 
-    const toFiniteNumberOrNull = (v: any): number | null => {
-      const n = Number(v);
-      return Number.isFinite(n) ? n : null;
-    };
-
-    const platformPercentage = toFiniteNumberOrNull(
-      (storeRow as any).platform_percentage,
-    );
-
-    const fixedCommissionNaira = toFiniteNumberOrNull(
-      (storeRow as any).fixed_commission,
-    );
-
-    const amountKobo = Number(body.amount || 0);
-    const fixedCommissionKobo = fixedCommissionNaira
-      ? Math.max(0, Math.round(fixedCommissionNaira * 100))
-      : 0;
-
-    const percentageCommissionKobo =
-      platformPercentage !== null
-        ? Math.max(0, Math.round((amountKobo * platformPercentage) / 100))
-        : 0;
-
-    const transactionChargeKobo = Math.min(
-      amountKobo,
-      Math.max(fixedCommissionKobo, percentageCommissionKobo),
+    // Platform commission is 0% - Store receives payment minus service fee
+    // Service fee is deducted via transaction_charge and kept by platform
+    const serviceFeeKobo = Math.max(
+      0,
+      Math.round(Number((body as any).service_fee_kobo || 0)),
     );
 
     // Optional stock recheck right before payment initialization
@@ -294,7 +275,7 @@ export default defineEventHandler(async (event) => {
       (body as any)?.metadata?.customer_phone || "",
     ).trim();
 
-    // Prepare Paystack payload
+    // Prepare Paystack payload with service fee split
     const payload = {
       email: body.email,
       amount: body.amount,
@@ -302,16 +283,17 @@ export default defineEventHandler(async (event) => {
       callback_url: callbackUrl,
       subaccount: subaccountCode,
       bearer: "account",
-      transaction_charge: transactionChargeKobo,
+      transaction_charge: serviceFeeKobo, // Platform keeps service fee
       metadata: {
         ...body.metadata,
         routing: {
           store_id: String(orderRow.store_id),
           subaccount: subaccountCode,
           bearer: "account",
-          transaction_charge_kobo: transactionChargeKobo,
-          platform_percentage: platformPercentage,
-          fixed_commission_naira: fixedCommissionNaira,
+          transaction_charge_kobo: serviceFeeKobo,
+          platform_keeps_kobo: serviceFeeKobo,
+          store_receives_kobo: Math.max(0, body.amount - serviceFeeKobo),
+          note: "Service fee deducted for platform, rest goes to store",
         },
         custom_fields: [
           {

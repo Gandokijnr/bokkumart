@@ -257,9 +257,8 @@ export default defineEventHandler(async (event) => {
   }
 
   const isPickup = String(orderRow.delivery_method) === "pickup";
-  const claimCode = isPickup
-    ? orderRow.confirmation_code || generateClaimCode()
-    : null;
+  // Generate confirmation code for ALL orders
+  const claimCode = orderRow.confirmation_code || generateClaimCode();
   const qrPayload =
     isPickup && claimCode
       ? JSON.stringify({ order_id: orderRow.id, claim_code: claimCode })
@@ -294,7 +293,7 @@ export default defineEventHandler(async (event) => {
       status: "confirmed",
       paystack_transaction_id: String(tx.id),
       paid_at: tx.paid_at || new Date().toISOString(),
-      confirmation_code: isPickup ? claimCode : undefined,
+      confirmation_code: claimCode, // All orders get a confirmation code
       payment_split_log: paymentSplitLog,
       metadata: mergedMetadata,
     })

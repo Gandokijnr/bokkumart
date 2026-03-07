@@ -38,6 +38,14 @@ type CreatePodBody = {
   total_amount: number
 }
 
+function generateClaimCode(): string {
+  const alphabet = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'
+  let out = ''
+  for (let i = 0; i < 4; i++)
+    out += alphabet[Math.floor(Math.random() * alphabet.length)]
+  return out
+}
+
 function normalizePhone(phone: string) {
   return String(phone || '').trim()
 }
@@ -172,6 +180,7 @@ export default defineEventHandler(async (event) => {
     delivery_fee: Number((body as any)?.delivery_fee || 0),
     total_amount: Number((body as any)?.total_amount || 0),
     payment_method: 'pod',
+    confirmation_code: generateClaimCode(),
     nearest_landmark: null,
     driver_notes: null,
     metadata: {

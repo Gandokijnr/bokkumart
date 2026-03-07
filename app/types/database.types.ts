@@ -166,6 +166,14 @@ export interface Database {
           arrived_at: string | null;
           confirmation_code: string | null;
           payment_method: "online" | "pod";
+          channel: "platform" | "in_store";
+          payment_status:
+            | "pending"
+            | "paid"
+            | "failed"
+            | "cancelled"
+            | "expired"
+            | "refunded";
           nearest_landmark: string | null;
           driver_notes: string | null;
           pos_receipt_number: string | null;
@@ -208,6 +216,14 @@ export interface Database {
           arrived_at?: string | null;
           confirmation_code?: string | null;
           payment_method?: "online" | "pod";
+          channel?: "platform" | "in_store";
+          payment_status?:
+            | "pending"
+            | "paid"
+            | "failed"
+            | "cancelled"
+            | "expired"
+            | "refunded";
           nearest_landmark?: string | null;
           driver_notes?: string | null;
           pos_receipt_number?: string | null;
@@ -250,6 +266,14 @@ export interface Database {
           arrived_at?: string | null;
           confirmation_code?: string | null;
           payment_method?: "online" | "pod";
+          channel?: "platform" | "in_store";
+          payment_status?:
+            | "pending"
+            | "paid"
+            | "failed"
+            | "cancelled"
+            | "expired"
+            | "refunded";
           nearest_landmark?: string | null;
           driver_notes?: string | null;
           pos_receipt_number?: string | null;
@@ -1043,6 +1067,100 @@ export interface Database {
           sent_at?: string;
           read_at?: string | null;
           created_at?: string;
+        };
+      };
+      platform_revenue: {
+        Row: {
+          id: string;
+          month: number;
+          year: number;
+          total_orders: number;
+          gross_sales: number;
+          platform_percentage: number;
+          platform_fee: number;
+          delivery_fees_excluded: number | null;
+          generated_at: string;
+          status: "pending" | "locked" | "paid" | "disputed";
+          invoice_number: string | null;
+          invoice_generated_at: string | null;
+          invoice_pdf_url: string | null;
+          notes: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          month: number;
+          year: number;
+          total_orders?: number;
+          gross_sales?: number;
+          platform_percentage?: number;
+          platform_fee?: number;
+          delivery_fees_excluded?: number | null;
+          generated_at?: string;
+          status?: "pending" | "locked" | "paid" | "disputed";
+          invoice_number?: string | null;
+          invoice_generated_at?: string | null;
+          invoice_pdf_url?: string | null;
+          notes?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          month?: number;
+          year?: number;
+          total_orders?: number;
+          gross_sales?: number;
+          platform_percentage?: number;
+          platform_fee?: number;
+          delivery_fees_excluded?: number | null;
+          generated_at?: string;
+          status?: "pending" | "locked" | "paid" | "disputed";
+          invoice_number?: string | null;
+          invoice_generated_at?: string | null;
+          invoice_pdf_url?: string | null;
+          notes?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+      };
+      platform_revenue_breakdown: {
+        Row: {
+          id: string;
+          platform_revenue_id: string;
+          store_id: string;
+          store_name: string | null;
+          order_count: number;
+          gross_sales: number;
+          platform_fee: number;
+          delivery_fees: number | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          platform_revenue_id: string;
+          store_id: string;
+          store_name?: string | null;
+          order_count?: number;
+          gross_sales?: number;
+          platform_fee?: number;
+          delivery_fees?: number | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          platform_revenue_id?: string;
+          store_id?: string;
+          store_name?: string | null;
+          order_count?: number;
+          gross_sales?: number;
+          platform_fee?: number;
+          delivery_fees?: number | null;
+          created_at?: string;
+          updated_at?: string;
         };
       };
     };

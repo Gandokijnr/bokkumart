@@ -38,6 +38,8 @@ interface PaystackWebhookEvent {
       service_fee?: number;
       pickup_store_id?: string | null;
       payment_expires_at?: string | null;
+      customer_name?: string;
+      customer_phone?: string;
     };
     customer: {
       id: number;
@@ -170,9 +172,8 @@ export default defineEventHandler(async (event) => {
     }
 
     const isPickup = data.metadata.delivery_method === "pickup";
-    const claimCode = isPickup
-      ? (existingOrder as any)?.confirmation_code || generateClaimCode()
-      : null;
+    // Generate confirmation code for ALL orders (not just pickup)
+    const claimCode = generateClaimCode();
     const qrPayload =
       isPickup && claimCode
         ? JSON.stringify({
@@ -188,24 +189,12 @@ export default defineEventHandler(async (event) => {
         customer_email: data.customer.email,
         ip_address: data.ip_address,
         currency: data.currency,
+        platform: "homeaffairs-digital",
         ...(isPickup && claimCode ? { pickup_claim_qr: qrPayload } : {}),
       };
 
-      const paymentSplitLog = {
-        paystack_reference: data.reference,
-        paystack_transaction_id: String(data.id),
-        store_id: data.metadata.store_id,
-        subaccount: (data.metadata as any)?.routing?.subaccount || null,
-        bearer: (data.metadata as any)?.routing?.bearer || null,
-        transaction_charge_kobo:
-          (data.metadata as any)?.routing?.transaction_charge_kobo || null,
-        platform_percentage:
-          (data.metadata as any)?.routing?.platform_percentage ?? null,
-        fixed_commission_naira:
-          (data.metadata as any)?.routing?.fixed_commission_naira ?? null,
-        paid_at: data.paid_at,
-      };
-
+      // Note: platform no longer tracks per-transaction commission
+      // Revenue is calculated monthly via platform_revenue table
       const { error: updateError } = await (
         (supabase as any).from("orders") as any
       )
@@ -219,8 +208,9 @@ export default defineEventHandler(async (event) => {
             typeof data.metadata.service_fee === "number"
               ? data.metadata.service_fee
               : undefined,
-          confirmation_code: isPickup ? claimCode : undefined,
-          payment_split_log: paymentSplitLog,
+          confirmation_code: claimCode, // All orders get a confirmation code
+          channel: "platform",
+          payment_status: "paid",
           metadata: mergedMetadata,
         })
         .eq("id", (existingOrder as any).id);
@@ -245,7 +235,11 @@ export default defineEventHandler(async (event) => {
             : 0,
         total_amount: data.amount / 100,
         status: "confirmed",
+        channel: "platform",
+        payment_status: "paid",
         delivery_method: data.metadata.delivery_method,
+        contact_name: data.metadata.customer_name,
+        contact_phone: data.metadata.customer_phone,
         delivery_details: {
           ...data.metadata.delivery_details,
           ...(isPickup && {
@@ -256,26 +250,13 @@ export default defineEventHandler(async (event) => {
         paystack_transaction_id: data.id.toString(),
         paid_at: data.paid_at,
         payment_method: "online",
-        confirmation_code: isPickup ? claimCode : null,
-        payment_split_log: {
-          paystack_reference: data.reference,
-          paystack_transaction_id: String(data.id),
-          store_id: data.metadata.store_id,
-          subaccount: (data.metadata as any)?.routing?.subaccount || null,
-          bearer: (data.metadata as any)?.routing?.bearer || null,
-          transaction_charge_kobo:
-            (data.metadata as any)?.routing?.transaction_charge_kobo || null,
-          platform_percentage:
-            (data.metadata as any)?.routing?.platform_percentage ?? null,
-          fixed_commission_naira:
-            (data.metadata as any)?.routing?.fixed_commission_naira ?? null,
-          paid_at: data.paid_at,
-        },
+        confirmation_code: claimCode, // All orders get a confirmation code
         metadata: {
           payment_channel: data.channel,
           customer_email: data.customer.email,
           ip_address: data.ip_address,
           currency: data.currency,
+          platform: "homeaffairs-digital",
           ...(isPickup && claimCode ? { pickup_claim_qr: qrPayload } : {}),
         },
       };

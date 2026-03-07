@@ -1433,6 +1433,9 @@ const selectedStore = computed(() => {
 });
 
 const canPayOnline = computed(() => {
+  // Delivery mode always allows online payment (platform handles it)
+  if (fulfillmentMode.value === "delivery") return true;
+  // Pickup mode requires the selected store to have Paystack configured
   return !!selectedStore.value?.paystackSubaccountCode;
 });
 
@@ -1884,6 +1887,8 @@ async function initiatePaystackPayment() {
         points_redeemed: pointsToRedeem.value,
         points_discount_amount: pointsRedemptionValue.value,
         payment_method: "paystack",
+        contact_name: userDetails.value.fullName,
+        contact_phone: userDetails.value.phone,
         delivery_details: orderDeliveryDetails as any,
         pickup_time:
           fulfillmentMode.value === "pickup" && selectedPickupTime.value
@@ -1938,12 +1943,18 @@ async function initiatePaystackPayment() {
       }
     }
 
+    // Customer pays full amount including service fee
+    // Service fee will be deducted and sent to platform via transaction_charge
+    const customerTotalAmount = finalTotal.value;
+    const serviceFeeKobo = Math.round(serviceFee.value * 100);
+
     const response: { authorization_url: string; reference?: string } =
       await $fetch("/api/paystack/initialize", {
         method: "POST",
         body: {
           email: userEmail,
-          amount: Math.round(finalTotal.value * 100),
+          amount: Math.round(customerTotalAmount * 100), // Full amount customer pays
+          service_fee_kobo: serviceFeeKobo, // Amount platform keeps
           metadata: {
             order_id: orderData?.id,
             user_id: userId,
@@ -1972,6 +1983,8 @@ async function initiatePaystackPayment() {
             subtotal: cartStore.cartSubtotal,
             delivery_fee: currentDeliveryFee.value,
             service_fee: serviceFee.value,
+            store_receives: customerTotalAmount - serviceFee.value, // Amount after service fee
+            total_paid_by_customer: customerTotalAmount,
             pickup_store_id:
               fulfillmentMode.value === "pickup" ? selectedStoreId.value : null,
             payment_expires_at: paymentExpiresAt,

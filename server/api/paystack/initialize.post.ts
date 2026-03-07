@@ -5,6 +5,7 @@ import type { Database } from "~/types/database.types";
 interface PaystackInitializeRequest {
   email: string;
   amount: number; // in kobo (Naira * 100)
+  service_fee_kobo?: number; // Service fee for platform (excluded from store payment)
   metadata: {
     order_id?: string;
     user_id: string;
@@ -102,9 +103,7 @@ export default defineEventHandler(async (event) => {
 
     const { data: storeRow, error: storeErr } = await (admin as any)
       .from("stores")
-      .select(
-        "id, paystack_subaccount_code, platform_percentage, fixed_commission",
-      )
+      .select("id, paystack_subaccount_code")
       .eq("id", storeId)
       .single();
 
@@ -126,32 +125,14 @@ export default defineEventHandler(async (event) => {
       });
     }
 
-    const toFiniteNumberOrNull = (v: any): number | null => {
-      const n = Number(v);
-      return Number.isFinite(n) ? n : null;
-    };
-
-    const platformPercentage = toFiniteNumberOrNull(
-      (storeRow as any).platform_percentage,
+    const serviceFeeKobo = Math.max(
+      0,
+      Math.round(Number(body.service_fee_kobo || 0)),
     );
 
-    const fixedCommissionNaira = toFiniteNumberOrNull(
-      (storeRow as any).fixed_commission,
-    );
-
-    const amountKobo = Number(body.amount || 0);
-    const fixedCommissionKobo = fixedCommissionNaira
-      ? Math.max(0, Math.round(fixedCommissionNaira * 100))
-      : 0;
-    const percentageCommissionKobo =
-      platformPercentage !== null
-        ? Math.max(0, Math.round((amountKobo * platformPercentage) / 100))
-        : 0;
-
-    const transactionChargeKobo = Math.min(
-      amountKobo,
-      Math.max(fixedCommissionKobo, percentageCommissionKobo),
-    );
+    // Note: Platform collects service fee via transaction_charge
+    // Store receives: amount - service_fee_kobo
+    // Platform receives: service_fee_kobo
 
     // Build callback URL
     const siteUrlRaw = config.public.siteUrl || "http://localhost:3000";
@@ -161,7 +142,8 @@ export default defineEventHandler(async (event) => {
       ? new URL(String(body.callback_url), siteUrl).toString()
       : `${siteUrl}/checkout/verify`;
 
-    // Prepare Paystack payload
+    // Prepare Paystack payload with service fee split
+    // transaction_charge is deducted from subaccount and sent to platform
     const payload = {
       email: body.email,
       amount: body.amount,
@@ -169,16 +151,18 @@ export default defineEventHandler(async (event) => {
       callback_url: callbackUrl,
       subaccount: subaccountCode,
       bearer: "account",
-      transaction_charge: transactionChargeKobo,
+      transaction_charge: serviceFeeKobo, // Platform keeps this amount
       metadata: {
         ...body.metadata,
+        platform: "homeaffairs-digital",
         routing: {
           store_id: storeId,
           subaccount: subaccountCode,
           bearer: "account",
-          transaction_charge_kobo: transactionChargeKobo,
-          platform_percentage: platformPercentage,
-          fixed_commission_naira: fixedCommissionNaira,
+          transaction_charge_kobo: serviceFeeKobo,
+          platform_keeps: serviceFeeKobo,
+          store_receives_kobo: Math.max(0, body.amount - serviceFeeKobo),
+          note: "Service fee deducted for platform, rest goes to store",
         },
         custom_fields: [
           {

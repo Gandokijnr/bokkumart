@@ -284,6 +284,12 @@ const navItems = ref<NavItem[]>([
     requiredRoles: ["super_admin"],
   },
   {
+    label: "Platform Revenue",
+    to: "/admin/platform-revenue",
+    icon: "currencyDollar",
+    requiredRoles: ["super_admin"],
+  },
+  {
     label: "Staff Management",
     to: "/admin/staff-management",
     icon: "users",

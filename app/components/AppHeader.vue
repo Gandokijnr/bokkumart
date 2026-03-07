@@ -41,8 +41,8 @@
 
     <div class="mx-auto max-w-7xl">
       <div class="grid grid-cols-12 items-center gap-3 px-4 py-4 md:px-6">
-        <button
-          @click="navigateTo('/')"
+        <NuxtLink
+          to="/"
           class="col-span-6 sm:col-span-3 flex items-center gap-2.5 md:gap-3"
         >
           <div
@@ -61,13 +61,12 @@
               Premium Supermarket
             </div>
           </div>
-        </button>
+        </NuxtLink>
 
         <div class="col-span-12 order-last sm:col-span-6 sm:order-none">
-          <button
-            type="button"
+          <NuxtLink
+            to="/#deals"
             class="group relative flex h-11 w-full items-center overflow-hidden rounded-xl border-2 border-gray-200 bg-gray-50 shadow-sm transition hover:border-gray-300 hover:shadow-md bg-[url('/discountbanner.gif')] bg-cover bg-center"
-            @click="navigateTo('/#deals')"
             aria-label="Advertisement"
           >
             <img
@@ -88,7 +87,7 @@
             >
               View
             </span>
-          </button>
+          </NuxtLink>
         </div>
 
         <div
@@ -115,10 +114,9 @@
             </svg>
           </button>
 
-          <button
-            @click="navigateTo('/cart')"
+          <NuxtLink
+            to="/cart"
             class="relative flex h-10 w-10 items-center justify-center rounded-xl border border-gray-200 bg-white text-gray-700 shadow-sm transition-all hover:border-gray-300 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-red-600 focus:ring-offset-1"
-            type="button"
             aria-label="Shopping cart"
           >
             <svg
@@ -141,12 +139,11 @@
                 >{{ cartCount }}</span
               >
             </ClientOnly>
-          </button>
+          </NuxtLink>
 
-          <button
-            @click="navigateTo('/profile')"
+          <NuxtLink
+            to="/profile"
             class="hidden h-10 w-10 items-center justify-center rounded-xl border border-gray-200 bg-white text-gray-700 shadow-sm transition-all hover:border-gray-300 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-red-600 focus:ring-offset-1 sm:flex"
-            type="button"
             aria-label="Account"
           >
             <svg
@@ -162,14 +159,13 @@
                 d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
               />
             </svg>
-          </button>
+          </NuxtLink>
 
           <ClientOnly>
-            <button
+            <NuxtLink
               v-if="isAdmin"
-              @click="navigateTo('/admin/dashboard')"
+              to="/admin/dashboard"
               class="hidden h-10 items-center gap-2 rounded-xl bg-slate-900 px-3 text-sm font-medium text-white shadow-sm transition-all hover:bg-slate-800 sm:flex"
-              type="button"
             >
               <svg
                 class="h-4 w-4"
@@ -191,7 +187,7 @@
                 />
               </svg>
               <span>Admin</span>
-            </button>
+            </NuxtLink>
           </ClientOnly>
 
           <button
@@ -338,65 +334,55 @@
               <span class="text-lg">🏪</span>
               <span>{{ branchStore.activeBranchName }}</span>
             </button>
-            <button
-              @click="
-                navigateTo('/#deals');
-                mobileMenuOpen = false;
-              "
+            <NuxtLink
+              to="/#deals"
+              @click="mobileMenuOpen = false"
               class="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-left text-sm font-semibold text-gray-700 transition-colors hover:bg-red-50 hover:text-red-700"
             >
               <span class="text-lg">⚡</span>
               <span>Deals</span>
-            </button>
-            <button
-              @click="
-                navigateTo('/#about');
-                mobileMenuOpen = false;
-              "
+            </NuxtLink>
+            <NuxtLink
+              to="/#about"
+              @click="mobileMenuOpen = false"
               class="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-left text-sm font-semibold text-gray-700 transition-colors hover:bg-red-50 hover:text-red-700"
             >
               <span class="text-lg">ℹ️</span>
               <span>About Us</span>
-            </button>
-            <button
-              @click="
-                navigateTo('/#contact');
-                mobileMenuOpen = false;
-              "
+            </NuxtLink>
+            <NuxtLink
+              to="/#contact"
+              @click="mobileMenuOpen = false"
               class="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-left text-sm font-semibold text-gray-700 transition-colors hover:bg-red-50 hover:text-red-700"
             >
               <span class="text-lg">📞</span>
               <span>Contact</span>
-            </button>
+            </NuxtLink>
           </nav>
 
           <!-- Mobile account link -->
           <div class="mt-4 border-t border-gray-100 pt-4 sm:hidden">
-            <button
-              @click="
-                navigateTo('/profile');
-                mobileMenuOpen = false;
-              "
+            <NuxtLink
+              to="/profile"
+              @click="mobileMenuOpen = false"
               class="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-left text-sm font-semibold text-gray-700 transition-colors hover:bg-red-50 hover:text-red-700"
             >
               <span class="text-lg">👤</span>
               <span>My Account</span>
-            </button>
+            </NuxtLink>
           </div>
 
           <!-- Mobile admin link (visible only for admins) -->
           <ClientOnly>
             <div v-if="isAdmin" class="border-t border-gray-100 pt-2 sm:hidden">
-              <button
-                @click="
-                  navigateTo('/admin/dashboard');
-                  mobileMenuOpen = false;
-                "
+              <NuxtLink
+                to="/admin/dashboard"
+                @click="mobileMenuOpen = false"
                 class="flex w-full items-center gap-3 rounded-xl bg-slate-900 px-4 py-3 text-left text-sm font-semibold text-white transition-colors hover:bg-slate-800"
               >
                 <span class="text-lg">⚙️</span>
                 <span>Admin Dashboard</span>
-              </button>
+              </NuxtLink>
             </div>
           </ClientOnly>
         </div>
