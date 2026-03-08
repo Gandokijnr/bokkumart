@@ -54,9 +54,12 @@
                 with your new password.
               </p>
             </div>
-            <FormButton block size="lg" @click="navigateTo('/auth')">
+            <NuxtLink
+              to="/auth"
+              class="w-full py-3 px-4 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-lg text-center inline-block"
+            >
               Sign In
-            </FormButton>
+            </NuxtLink>
           </div>
 
           <!-- Error State -->
@@ -82,9 +85,12 @@
               <h3 class="text-lg font-semibold text-gray-900">Reset Failed</h3>
               <p class="text-sm text-gray-600 mt-1">{{ resetError }}</p>
             </div>
-            <FormButton block size="lg" @click="navigateTo('/auth')">
+            <NuxtLink
+              to="/auth"
+              class="w-full py-3 px-4 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-lg text-center inline-block"
+            >
               Back to Sign In
-            </FormButton>
+            </NuxtLink>
           </div>
 
           <!-- Reset Form -->

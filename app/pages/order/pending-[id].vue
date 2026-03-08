@@ -41,12 +41,12 @@
         <p class="mt-2 text-gray-600">
           We couldn't find the order you're looking for.
         </p>
-        <button
-          @click="navigateTo('/')"
-          class="mt-6 rounded-xl bg-red-600 px-6 py-3 font-bold text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition-colors"
+        <NuxtLink
+          to="/"
+          class="mt-6 rounded-xl bg-red-600 px-6 py-3 font-bold text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition-colors inline-block"
         >
           Continue Shopping
-        </button>
+        </NuxtLink>
       </div>
 
       <!-- Awaiting Verification State -->
@@ -313,12 +313,12 @@
             </div>
           </div>
 
-          <button
-            @click="navigateTo('/profile')"
-            class="mt-6 w-full rounded-xl bg-red-600 py-3 font-bold text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition-colors"
+          <NuxtLink
+            to="/profile"
+            class="mt-6 w-full rounded-xl bg-red-600 py-3 font-bold text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition-colors text-center inline-block"
           >
             View Order Details
-          </button>
+          </NuxtLink>
         </div>
       </div>
 
@@ -353,12 +353,12 @@
             {{ order.rejection_reason || "This order has been cancelled." }}
           </p>
 
-          <button
-            @click="navigateTo('/')"
-            class="mt-6 w-full rounded-xl bg-red-600 py-3 font-bold text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition-colors"
+          <NuxtLink
+            to="/"
+            class="mt-6 w-full rounded-xl bg-red-600 py-3 font-bold text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition-colors text-center inline-block"
           >
             Continue Shopping
-          </button>
+          </NuxtLink>
         </div>
       </div>
 
@@ -422,12 +422,12 @@
             </dl>
           </div>
 
-          <button
-            @click="navigateTo('/profile')"
-            class="mt-6 w-full rounded-xl bg-red-600 py-3 font-bold text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition-colors"
+          <NuxtLink
+            to="/profile"
+            class="mt-6 w-full rounded-xl bg-red-600 py-3 font-bold text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition-colors text-center inline-block"
           >
             Back to Profile
-          </button>
+          </NuxtLink>
         </div>
       </div>
     </main>

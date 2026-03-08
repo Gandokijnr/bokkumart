@@ -1163,6 +1163,88 @@ export interface Database {
           updated_at?: string;
         };
       };
+      driver_earnings: {
+        Row: {
+          id: string;
+          driver_id: string;
+          order_id: string;
+          delivery_fee: number;
+          tip_amount: number | null;
+          total_earned: number;
+          is_withdrawn: boolean;
+          withdrawn_at: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          driver_id: string;
+          order_id: string;
+          delivery_fee?: number;
+          tip_amount?: number | null;
+          total_earned?: number;
+          is_withdrawn?: boolean;
+          withdrawn_at?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          driver_id?: string;
+          order_id?: string;
+          delivery_fee?: number;
+          tip_amount?: number | null;
+          total_earned?: number;
+          is_withdrawn?: boolean;
+          withdrawn_at?: string | null;
+          created_at?: string;
+        };
+      };
+      driver_withdrawals: {
+        Row: {
+          id: string;
+          driver_id: string;
+          amount: number;
+          status: "pending" | "approved" | "rejected" | "paid";
+          bank_name: string | null;
+          account_number: string | null;
+          account_name: string | null;
+          processed_by: string | null;
+          processed_at: string | null;
+          rejection_reason: string | null;
+          notes: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          driver_id: string;
+          amount: number;
+          status?: "pending" | "approved" | "rejected" | "paid";
+          bank_name?: string | null;
+          account_number?: string | null;
+          account_name?: string | null;
+          processed_by?: string | null;
+          processed_at?: string | null;
+          rejection_reason?: string | null;
+          notes?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          driver_id?: string;
+          amount?: number;
+          status?: "pending" | "approved" | "rejected" | "paid";
+          bank_name?: string | null;
+          account_number?: string | null;
+          account_name?: string | null;
+          processed_by?: string | null;
+          processed_at?: string | null;
+          rejection_reason?: string | null;
+          notes?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+      };
     };
     Views: {
       user_profile_summary: {

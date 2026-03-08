@@ -314,12 +314,12 @@
             <p class="mt-2 text-sm text-gray-500">
               Start shopping to see your order history here
             </p>
-            <button
-              @click="navigateTo('/')"
-              class="mt-6 rounded-xl bg-red-600 px-6 py-3 font-medium text-white hover:bg-red-700"
+            <NuxtLink
+              to="/"
+              class="mt-6 rounded-xl bg-red-600 px-6 py-3 font-medium text-white hover:bg-red-700 inline-block"
             >
               Start Shopping
-            </button>
+            </NuxtLink>
           </div>
 
           <div v-else class="space-y-4">

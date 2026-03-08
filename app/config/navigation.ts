@@ -88,6 +88,20 @@ export const navigationSchema: NavItem[] = [
     section: "management",
   },
   {
+    label: "Driver Payouts",
+    to: "/admin/driver-payouts",
+    icon: "currencyNaira",
+    allowedRoles: ["super_admin"],
+    section: "management",
+  },
+  {
+    label: "Pending Riders",
+    to: "/admin/riders/pending",
+    icon: "users",
+    allowedRoles: ["super_admin"],
+    section: "management",
+  },
+  {
     label: "Staff Management",
     to: "/admin/staff-management",
     icon: "users",

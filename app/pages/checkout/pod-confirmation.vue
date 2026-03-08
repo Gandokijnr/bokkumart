@@ -150,12 +150,12 @@
           <span v-else>Check Order Status</span>
         </button>
 
-        <button
-          @click="navigateTo('/profile')"
-          class="w-full rounded-xl border-2 border-gray-200 bg-white py-4 text-sm font-bold text-gray-700 hover:bg-gray-50"
+        <NuxtLink
+          to="/profile"
+          class="w-full rounded-xl border-2 border-gray-200 bg-white py-4 text-sm font-bold text-gray-700 hover:bg-gray-50 text-center inline-block"
         >
           View My Orders
-        </button>
+        </NuxtLink>
       </div>
 
       <!-- Confirmation Modal -->
@@ -185,12 +185,12 @@
           <p class="mt-2 text-sm text-gray-600">
             Your order has been confirmed. We're preparing it for delivery now.
           </p>
-          <button
-            @click="navigateTo('/profile')"
-            class="mt-6 w-full rounded-xl bg-red-600 py-3 text-sm font-bold text-white hover:bg-red-700"
+          <NuxtLink
+            to="/profile"
+            class="mt-6 w-full rounded-xl bg-red-600 py-3 text-sm font-bold text-white hover:bg-red-700 text-center inline-block"
           >
             View Order Status
-          </button>
+          </NuxtLink>
         </div>
       </div>
     </main>

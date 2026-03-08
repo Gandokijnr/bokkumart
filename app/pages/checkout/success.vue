@@ -147,18 +147,18 @@
       </div>
 
       <div class="mt-6 space-y-3">
-        <button
-          @click="navigateTo('/')"
-          class="w-full rounded-xl bg-red-600 py-3.5 text-sm font-bold text-white hover:bg-red-700"
+        <NuxtLink
+          to="/"
+          class="w-full rounded-xl bg-red-600 py-3.5 text-sm font-bold text-white hover:bg-red-700 text-center inline-block"
         >
           Continue Shopping
-        </button>
-        <button
-          @click="navigateTo('/profile')"
-          class="w-full rounded-xl border-2 border-gray-200 bg-white py-3.5 text-sm font-bold text-gray-700 hover:bg-gray-50"
+        </NuxtLink>
+        <NuxtLink
+          to="/profile"
+          class="w-full rounded-xl border-2 border-gray-200 bg-white py-3.5 text-sm font-bold text-gray-700 hover:bg-gray-50 text-center inline-block"
         >
           View My Orders
-        </button>
+        </NuxtLink>
       </div>
     </main>
   </div>

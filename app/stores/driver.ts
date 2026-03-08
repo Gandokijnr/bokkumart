@@ -48,6 +48,11 @@ interface DriverState {
   realtimeChannel: any | null;
   offlineActions: OfflineAction[];
   isOnline: boolean;
+  withdrawableBalance: number;
+  eligibleOrdersCount: number;
+  minimumPayout: number;
+  canRequestPayout: boolean;
+  hasPendingPayoutRequest: boolean;
 }
 
 interface OfflineAction {
@@ -68,6 +73,11 @@ export const useDriverStore = defineStore("driver", {
     realtimeChannel: null,
     offlineActions: [],
     isOnline: typeof navigator !== "undefined" ? navigator.onLine : true,
+    withdrawableBalance: 0,
+    eligibleOrdersCount: 0,
+    minimumPayout: 2000,
+    canRequestPayout: false,
+    hasPendingPayoutRequest: false,
   }),
 
   getters: {
@@ -171,6 +181,96 @@ export const useDriverStore = defineStore("driver", {
   },
 
   actions: {
+    async fetchWithdrawableBalance() {
+      const supabase = useSupabaseClient<Database>();
+      try {
+        const { data: sessionData, error: sessionError } =
+          await supabase.auth.getSession();
+        if (sessionError) throw sessionError;
+
+        const accessToken = sessionData?.session?.access_token;
+        if (!accessToken) return;
+
+        const res = await $fetch("/api/driver/payout-balance", {
+          method: "GET" as any,
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
+        });
+
+        const bal = (res as any)?.balance;
+        this.withdrawableBalance = Number(bal?.withdrawableBalance || 0);
+        this.eligibleOrdersCount = Number(bal?.eligibleOrdersCount || 0);
+        this.minimumPayout = Number(bal?.minimumPayout || 2000);
+        this.canRequestPayout = Boolean(bal?.canRequest);
+        this.hasPendingPayoutRequest = Boolean(bal?.hasPendingRequest);
+      } catch (err: any) {
+        console.error("Failed to fetch withdrawable balance:", err);
+      }
+    },
+
+    async requestPayout(bankDetails: Record<string, any>) {
+      const supabase = useSupabaseClient<Database>();
+      const toast = useToast();
+
+      try {
+        const { data: sessionData, error: sessionError } =
+          await supabase.auth.getSession();
+        if (sessionError) throw sessionError;
+        const accessToken = sessionData?.session?.access_token;
+        if (!accessToken) throw new Error("Session expired");
+
+        if (this.hasPendingPayoutRequest) {
+          toast.add({
+            title: "Payout Pending",
+            description: "You already have a pending payout request.",
+            color: "warning",
+          } as any);
+          return;
+        }
+
+        if (this.withdrawableBalance < this.minimumPayout) {
+          toast.add({
+            title: "Insufficient Balance",
+            description: `Minimum payout is ₦${this.minimumPayout.toLocaleString()}`,
+            color: "warning",
+          } as any);
+          return;
+        }
+
+        await $fetch("/api/driver/request-payout", {
+          method: "POST" as any,
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
+          body: {
+            bank_details: bankDetails,
+          },
+        });
+
+        toast.add({
+          title: "Payout Requested",
+          description: "Your payout request has been submitted.",
+          color: "success",
+        } as any);
+
+        const refresh = this.fetchWithdrawableBalance as unknown as
+          | (() => Promise<void>)
+          | undefined;
+        if (refresh) {
+          await refresh();
+        }
+      } catch (err: any) {
+        const message = err?.statusMessage || err?.message || "Request failed";
+        toast.add({
+          title: "Payout Request Failed",
+          description: message,
+          color: "error",
+        } as any);
+        throw err;
+      }
+    },
+
     async resolveUserId() {
       const supabase = useSupabaseClient<Database>();
       const user = useSupabaseUser();
@@ -210,6 +310,16 @@ export const useDriverStore = defineStore("driver", {
 
         // Fetch order history for performance metrics
         await this.fetchOrderHistory();
+
+        // Fetch withdrawable payout balance
+        {
+          const refresh = this.fetchWithdrawableBalance as unknown as
+            | (() => Promise<void>)
+            | undefined;
+          if (refresh) {
+            await refresh();
+          }
+        }
 
         // Setup realtime subscription
         this.setupRealtimeSubscription();

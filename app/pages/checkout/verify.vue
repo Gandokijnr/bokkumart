@@ -89,9 +89,9 @@
       </div>
 
       <div v-if="!verifying" class="mt-8 space-y-3">
-        <button
-          @click="navigateTo(success ? '/' : '/checkout')"
-          class="w-full rounded-xl py-3.5 text-sm font-bold text-white"
+        <NuxtLink
+          :to="success ? '/' : '/checkout'"
+          class="w-full rounded-xl py-3.5 text-sm font-bold text-white text-center inline-block"
           :class="
             success
               ? 'bg-red-600 hover:bg-red-700'
@@ -99,14 +99,14 @@
           "
         >
           {{ success ? "Continue Shopping" : "Try Again" }}
-        </button>
-        <button
+        </NuxtLink>
+        <NuxtLink
           v-if="success"
-          @click="navigateTo('/profile')"
-          class="w-full rounded-xl border-2 border-gray-200 bg-white py-3.5 text-sm font-bold text-gray-700 hover:bg-gray-50"
+          to="/profile"
+          class="w-full rounded-xl border-2 border-gray-200 bg-white py-3.5 text-sm font-bold text-gray-700 hover:bg-gray-50 text-center inline-block"
         >
           View My Orders
-        </button>
+        </NuxtLink>
       </div>
     </main>
   </div>

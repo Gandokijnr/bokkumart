@@ -57,7 +57,7 @@
         </div>
 
         <!-- Stats Bar -->
-        <div v-if="driverStore.isAvailable" class="grid grid-cols-2 gap-3 mt-4">
+        <div v-if="driverStore.isAvailable" class="grid grid-cols-3 gap-3 mt-4">
           <div
             class="bg-slate-800/50 rounded-xl p-3 border border-slate-700/30"
           >
@@ -74,6 +74,24 @@
               ₦{{ formatMoney(driverStore.todayDeliveryFees) }}
             </p>
           </div>
+          <NuxtLink
+            to="/driver/earnings"
+            class="bg-blue-500/20 hover:bg-blue-500/30 rounded-xl p-3 border border-blue-500/30 flex flex-col items-center justify-center transition-all"
+          >
+            <p class="text-xs text-blue-400">My Earnings</p>
+            <svg class="w-6 h-6 text-blue-400 mt-1" viewBox="0 0 24 24">
+              <text
+                x="12"
+                y="16"
+                text-anchor="middle"
+                font-size="16"
+                font-weight="700"
+                fill="currentColor"
+              >
+                ₦
+              </text>
+            </svg>
+          </NuxtLink>
         </div>
       </div>
     </div>

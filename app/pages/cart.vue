@@ -72,8 +72,8 @@
             </div>
 
             <!-- Continue Shopping Link -->
-            <button
-              @click="navigateTo('/#categories')"
+            <NuxtLink
+              to="/#categories"
               class="flex items-center gap-2 text-sm font-medium text-red-600 transition-colors hover:text-red-700 sm:text-base"
             >
               <svg
@@ -90,7 +90,7 @@
                 />
               </svg>
               Continue Shopping
-            </button>
+            </NuxtLink>
 
             <!-- Cross-Sell Section -->
             <CrossSellProducts

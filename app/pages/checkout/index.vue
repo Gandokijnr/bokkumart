@@ -632,12 +632,12 @@
 
         <!-- Navigation -->
         <div class="flex gap-3 pt-4">
-          <button
-            @click="navigateTo('/cart')"
-            class="flex-1 rounded-xl border-2 border-gray-200 bg-white py-4 text-sm font-bold text-gray-700 hover:bg-gray-50"
+          <NuxtLink
+            to="/cart"
+            class="flex-1 rounded-xl border-2 border-gray-200 bg-white py-4 text-sm font-bold text-gray-700 hover:bg-gray-50 text-center inline-block"
           >
             Back to Cart
-          </button>
+          </NuxtLink>
           <button
             @click="goToStep2"
             :disabled="!canProceedStep1"

@@ -65,12 +65,12 @@
       >
         <div class="mb-4 text-6xl">📦</div>
         <h3 class="text-lg font-semibold text-gray-900">Category not found</h3>
-        <button
-          @click="navigateTo('/#deals')"
-          class="mt-6 rounded-xl bg-red-600 px-6 py-3 font-medium text-white hover:bg-red-700"
+        <NuxtLink
+          to="/#deals"
+          class="mt-6 rounded-xl bg-red-600 px-6 py-3 font-medium text-white hover:bg-red-700 inline-block"
         >
           Browse All Products
-        </button>
+        </NuxtLink>
       </div>
 
       <div
@@ -82,12 +82,12 @@
         <p class="mt-2 text-sm text-gray-600">
           No products available in this category.
         </p>
-        <button
-          @click="navigateTo('/#deals')"
-          class="mt-6 rounded-xl bg-red-600 px-6 py-3 font-medium text-white hover:bg-red-700"
+        <NuxtLink
+          to="/#deals"
+          class="mt-6 rounded-xl bg-red-600 px-6 py-3 font-medium text-white hover:bg-red-700 inline-block"
         >
           Browse All Products
-        </button>
+        </NuxtLink>
       </div>
 
       <!-- Products grid - Same design as ProductGrid -->
