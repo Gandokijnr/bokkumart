@@ -24,7 +24,7 @@ async function fetchBranches() {
     .select("id, name, city")
     .eq("is_active", true);
   if (data) {
-    branches.value = data.reduce(
+    branches.value = (data as any[]).reduce(
       (acc, b) => {
         acc[b.id] = { name: b.name, city: b.city };
         return acc;
@@ -198,6 +198,11 @@ onMounted(async () => {
               }})
             </div>
 
+            <div class="mt-2 text-sm text-slate-700">
+              <span class="font-medium">Selected Branches:</span>
+              {{ getBranchNames(row.branches?.selected_branches || []) }}
+            </div>
+
             <div class="mt-3 flex flex-wrap gap-2">
               <a
                 v-if="row.documents?.id_card_url"
@@ -221,13 +226,43 @@ onMounted(async () => {
             </div>
           </div>
 
-          <div class="w-full max-w-xs">
-            <button
-              @click="approve(row)"
-              class="w-full px-3 py-2 rounded-lg bg-green-600 text-white hover:bg-green-700"
-            >
-              Approve
-            </button>
+          <div class="w-full max-w-xs space-y-2">
+            <div v-if="rejectingId === row.id" class="space-y-2">
+              <textarea
+                v-model="rejectionReason"
+                placeholder="Reason for rejection (optional)"
+                class="w-full px-3 py-2 rounded-lg border border-slate-300 text-sm resize-none"
+                rows="2"
+              ></textarea>
+              <div class="flex gap-2">
+                <button
+                  @click="cancelReject"
+                  class="flex-1 px-3 py-2 rounded-lg bg-slate-200 text-slate-700 text-sm hover:bg-slate-300"
+                >
+                  Cancel
+                </button>
+                <button
+                  @click="reject(row)"
+                  class="flex-1 px-3 py-2 rounded-lg bg-red-600 text-white text-sm hover:bg-red-700"
+                >
+                  Confirm Reject
+                </button>
+              </div>
+            </div>
+            <div v-else class="flex gap-2">
+              <button
+                @click="startReject(row)"
+                class="flex-1 px-3 py-2 rounded-lg bg-red-100 text-red-700 text-sm hover:bg-red-200"
+              >
+                Reject
+              </button>
+              <button
+                @click="approve(row)"
+                class="flex-1 px-3 py-2 rounded-lg bg-green-600 text-white text-sm hover:bg-green-700"
+              >
+                Approve
+              </button>
+            </div>
           </div>
         </div>
       </div>
