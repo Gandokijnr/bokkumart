@@ -105,17 +105,32 @@ export const navigationSchema: NavItem[] = [
   },
 ];
 
+// Context options for navigation visibility
+export interface NavigationContext {
+  pendingVerificationCount?: number;
+}
+
 // Helper function to get visible navigation for a role
-export function getVisibleNavigation(userRole: UserRole): NavItem[] {
+export function getVisibleNavigation(
+  userRole: UserRole,
+  context?: NavigationContext,
+): NavItem[] {
   return navigationSchema
     .filter((item) => item.allowedRoles.includes(userRole))
     .map((item) => {
       // Apply contextual naming based on role
       const dynamicLabel = item.roleLabels?.[userRole] || item.label;
 
+      // Apply badge counts from context
+      let badge = item.badge;
+      if (item.to === "/admin/orders" && context?.pendingVerificationCount) {
+        badge = context.pendingVerificationCount;
+      }
+
       return {
         ...item,
         label: dynamicLabel,
+        badge,
       };
     });
 }

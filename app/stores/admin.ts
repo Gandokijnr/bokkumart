@@ -639,6 +639,60 @@ export const useAdminStore = defineStore("admin", {
     // ORDER STATUS MANAGEMENT
     // ============================================
 
+    async verifyCollection(orderId: string, pin: string): Promise<boolean> {
+      const supabase = useSupabaseClient<Database>();
+
+      try {
+        // Verify the collection PIN and mark as delivered
+        const { data, error } = await supabase.rpc("verify_collection", {
+          p_order_id: orderId,
+          p_pin: pin,
+        } as any);
+
+        if (error) throw error;
+
+        if (data) {
+          await this.logInteraction(orderId, "collection", "verified", {
+            notes: `Collection verified with PIN`,
+          });
+          await this.fetchOrders();
+          await this.fetchDashboardStats();
+          return true;
+        }
+        return false;
+      } catch (err) {
+        console.error("Error verifying collection:", err);
+        return false;
+      }
+    },
+
+    async verifyDelivery(orderId: string, pin: string): Promise<boolean> {
+      const supabase = useSupabaseClient<Database>();
+
+      try {
+        // Verify the delivery PIN and mark as delivered
+        const { data, error } = await supabase.rpc("verify_delivery", {
+          p_order_id: orderId,
+          p_pin: pin,
+        } as any);
+
+        if (error) throw error;
+
+        if (data) {
+          await this.logInteraction(orderId, "delivery", "verified", {
+            notes: `Delivery verified with PIN`,
+          });
+          await this.fetchOrders();
+          await this.fetchDashboardStats();
+          return true;
+        }
+        return false;
+      } catch (err) {
+        console.error("Error verifying delivery:", err);
+        return false;
+      }
+    },
+
     async updateOrderStatus(
       orderId: string,
       newStatus: AdminOrderStatus,

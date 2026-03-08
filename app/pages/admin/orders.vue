@@ -212,7 +212,7 @@
               </div>
               <div class="mt-2 flex gap-2">
                 <button
-                  @click.stop="updateStatus(order, getNextStatus(order))"
+                  @click.stop="handleStatusUpdateWithVerify(order)"
                   :disabled="processing.has(order.id)"
                   class="flex-1 rounded-lg bg-red-600 px-2 py-1.5 text-xs font-bold text-white hover:bg-red-700 disabled:cursor-not-allowed disabled:bg-gray-300"
                 >
@@ -344,7 +344,7 @@
               <td class="px-4 py-3">
                 <div class="flex gap-2">
                   <button
-                    @click="updateStatus(order, getNextStatus(order))"
+                    @click="handleStatusUpdateWithVerify(order)"
                     :disabled="
                       processing.has(order.id) ||
                       order.status === 'delivered' ||
@@ -361,6 +361,19 @@
         </table>
       </div>
     </div>
+
+    <!-- Standalone Verification Modal (for Kanban/Table views) -->
+    <OrderVerificationModal
+      v-model="showVerifyModal"
+      :type="
+        verifyModalOrder?.delivery_method === 'pickup' ? 'pickup' : 'delivery'
+      "
+      :order-id="verifyModalOrder?.id"
+      :loading="verifyingModal"
+      :error="verifyModalError"
+      @cancel="closeVerifyModal"
+      @verify="onVerifyModalSubmit"
+    />
 
     <!-- Order Details Modal -->
     <div
@@ -394,110 +407,25 @@
           </button>
         </div>
 
-        <div
-          v-if="showVerifyCollection"
-          class="mt-4 rounded-xl border border-amber-200 bg-amber-50 p-4"
-        >
-          <div class="flex items-start justify-between gap-4">
-            <div>
-              <p class="font-bold text-amber-900">Verify Customer Collection</p>
-              <p class="mt-1 text-sm text-amber-800">
-                Please scan the customer's QR code or enter their 6-digit
-                verification code.
-              </p>
-            </div>
-            <button
-              @click="closeVerifyCollection()"
-              class="rounded-lg bg-amber-600 px-3 py-1.5 text-xs font-bold text-white hover:bg-amber-700"
-            >
-              Close
-            </button>
-          </div>
+        <OrderVerificationModal
+          v-model="showVerifyCollection"
+          type="pickup"
+          :order-id="selectedOrder?.id"
+          :loading="verifyingCollection"
+          :error="verifyError"
+          @cancel="closeVerifyCollection"
+          @verify="onVerifyCollectionSubmit"
+        />
 
-          <div class="mt-3 grid gap-3">
-            <div class="rounded-lg bg-white p-3">
-              <p class="text-xs font-semibold text-gray-700">Manual Code</p>
-              <input
-                v-model="verifyCode"
-                inputmode="numeric"
-                maxlength="6"
-                placeholder="Enter 6-digit code"
-                class="mt-2 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-amber-500 focus:outline-none"
-              />
-              <button
-                @click="verifyCollection()"
-                :disabled="
-                  verifyingCollection || !verifyCode || verifyCode.length < 4
-                "
-                class="mt-2 w-full rounded-lg bg-green-600 px-3 py-2 text-xs font-bold text-white hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-60"
-              >
-                {{
-                  verifyingCollection
-                    ? "Verifying..."
-                    : "Verify & Mark Collected"
-                }}
-              </button>
-              <p
-                v-if="verifyError"
-                class="mt-2 text-xs font-semibold text-red-600"
-              >
-                {{ verifyError }}
-              </p>
-            </div>
-          </div>
-        </div>
-
-        <div
-          v-if="showVerifyDeliveryPin"
-          class="mt-4 rounded-xl border border-emerald-200 bg-emerald-50 p-4"
-        >
-          <div class="flex items-start justify-between gap-4">
-            <div>
-              <p class="font-bold text-emerald-900">Verify Delivery PIN</p>
-              <p class="mt-1 text-sm text-emerald-800">
-                Enter the customer's delivery PIN to complete this delivery.
-              </p>
-            </div>
-            <button
-              @click="closeVerifyDeliveryPin()"
-              class="rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-bold text-white hover:bg-emerald-700"
-            >
-              Close
-            </button>
-          </div>
-
-          <div class="mt-3 grid gap-3">
-            <div class="rounded-lg bg-white p-3">
-              <p class="text-xs font-semibold text-gray-700">Delivery PIN</p>
-              <input
-                v-model="deliveryPin"
-                inputmode="numeric"
-                maxlength="6"
-                placeholder="Enter PIN"
-                class="mt-2 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none"
-              />
-              <button
-                @click="verifyDeliveryPin()"
-                :disabled="
-                  verifyingDeliveryPin || !deliveryPin || deliveryPin.length < 4
-                "
-                class="mt-2 w-full rounded-lg bg-emerald-600 px-3 py-2 text-xs font-bold text-white hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-60"
-              >
-                {{
-                  verifyingDeliveryPin
-                    ? "Verifying..."
-                    : "Verify & Mark Delivered"
-                }}
-              </button>
-              <p
-                v-if="deliveryPinError"
-                class="mt-2 text-xs font-semibold text-red-600"
-              >
-                {{ deliveryPinError }}
-              </p>
-            </div>
-          </div>
-        </div>
+        <OrderVerificationModal
+          v-model="showVerifyDeliveryPin"
+          type="delivery"
+          :order-id="selectedOrder?.id"
+          :loading="verifyingDeliveryPin"
+          :error="deliveryPinError"
+          @cancel="closeVerifyDeliveryPin"
+          @verify="onVerifyDeliverySubmit"
+        />
 
         <div class="mt-4 space-y-4">
           <div class="rounded-lg bg-gray-50 p-4">
@@ -598,7 +526,26 @@
           </div>
 
           <div class="flex gap-3">
-            <div v-if="activeStepAction" class="flex-1">
+            <!-- Driver Assignment Component for orders ready to assign -->
+            <div
+              v-if="
+                selectedOrder.status === 'completed_in_pos' &&
+                selectedOrder.delivery_method === 'delivery'
+              "
+              class="flex-1"
+            >
+              <DriverAssignment
+                :order-id="selectedOrder.id"
+                :store-id="selectedOrder.store_id"
+                label="Select Driver"
+                assign-button-text="Assign Driver"
+                no-drivers-title="No Online Drivers"
+                no-drivers-message="No drivers are currently online in this store. Please ask a driver to go online or use the Dispatch page."
+                @assigned="fetchOrders"
+              />
+            </div>
+
+            <div v-else-if="activeStepAction" class="flex-1">
               <button
                 @click="handleActiveStepAction()"
                 :disabled="processing.has(selectedOrder.id)"
@@ -632,6 +579,56 @@
         </div>
       </div>
     </div>
+
+    <!-- Rider Assignment Modal (shown after POS completion for delivery orders) -->
+    <div
+      v-if="showAssignRiderModal && assignRiderOrder"
+      class="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
+    >
+      <div class="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl">
+        <div class="flex items-center justify-between">
+          <h3 class="text-xl font-bold text-gray-900">Assign Rider</h3>
+          <button
+            @click="closeAssignRiderModal"
+            class="text-gray-400 hover:text-gray-600"
+          >
+            <svg
+              class="h-6 w-6"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M6 18L18 6M6 6l12 12"
+              />
+            </svg>
+          </button>
+        </div>
+
+        <div class="mt-4">
+          <p class="text-sm text-gray-600 mb-4">
+            Order
+            <span class="font-mono font-bold"
+              >#{{ assignRiderOrder.id.slice(-8).toUpperCase() }}</span
+            >
+            is ready for delivery. Please select a rider to assign.
+          </p>
+
+          <DriverAssignment
+            :order-id="assignRiderOrder.id"
+            :store-id="assignRiderOrder.store_id"
+            label="Select Driver"
+            assign-button-text="Assign & Dispatch"
+            no-drivers-title="No Online Drivers"
+            no-drivers-message="No drivers are currently online in this store. Please ask a driver to go online."
+            @assigned="onRiderAssigned"
+          />
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -646,6 +643,8 @@ import {
   type FulfillmentType,
 } from "~/composables/useUserOrders";
 import { useToast } from "~/composables/useToast";
+import OrderVerificationModal from "~/components/OrderVerificationModal.vue";
+import DriverAssignment from "~/components/DriverAssignment.vue";
 
 definePageMeta({
   layout: "admin",
@@ -672,6 +671,14 @@ const viewMode = ref<"kanban" | "table">("kanban");
 
 const selectedOrder = ref<any>(null);
 
+// Verification modal for kanban/table views (outside order details modal)
+const verifyModalOrder = ref<any>(null);
+const verifyModalNextStatus = ref<string>("");
+const showVerifyModal = ref(false);
+const verifyModalCode = ref("");
+const verifyModalError = ref("");
+const verifyingModal = ref(false);
+
 const sensitiveActionConfirm = ref<{
   orderId: string;
   nextStatus: string;
@@ -687,6 +694,10 @@ const showVerifyDeliveryPin = ref(false);
 const deliveryPin = ref("");
 const deliveryPinError = ref("");
 const verifyingDeliveryPin = ref(false);
+
+// Rider assignment modal state
+const showAssignRiderModal = ref(false);
+const assignRiderOrder = ref<any>(null);
 
 const verifyVideoEl = ref<HTMLVideoElement | null>(null);
 const scannerActive = ref(false);
@@ -824,6 +835,7 @@ const activeStepAction = computed(() => {
       type: "logistics",
       subtext: "Seal thermal bag and assign rider.",
       buttonClass: "bg-indigo-600 hover:bg-indigo-700",
+      requiresRiderAssignment: true,
     };
   }
 
@@ -885,6 +897,12 @@ const handleActiveStepAction = async () => {
     return;
   }
 
+  // Show rider assignment modal for delivery orders at completed_in_pos
+  if (isDelivery && selectedOrder.value?.status === "completed_in_pos") {
+    openAssignRiderModal(selectedOrder.value);
+    return;
+  }
+
   if (activeStepAction.value.sensitive) {
     const now = Date.now();
     const armed = sensitiveActionConfirm.value;
@@ -938,6 +956,23 @@ const openVerifyDeliveryPin = () => {
 const closeVerifyDeliveryPin = () => {
   showVerifyDeliveryPin.value = false;
   deliveryPinError.value = "";
+};
+
+// Rider assignment modal functions
+const openAssignRiderModal = (order: any) => {
+  assignRiderOrder.value = order;
+  showAssignRiderModal.value = true;
+};
+
+const closeAssignRiderModal = () => {
+  showAssignRiderModal.value = false;
+  assignRiderOrder.value = null;
+};
+
+// Handler for when driver is assigned from modal
+const onRiderAssigned = () => {
+  closeAssignRiderModal();
+  fetchOrders();
 };
 
 const stopVerifyScanner = () => {
@@ -1116,6 +1151,172 @@ const verifyDeliveryPin = async () => {
   } finally {
     verifyingDeliveryPin.value = false;
   }
+};
+
+// Standalone verification modal functions for kanban/table views
+const openVerifyModal = (order: any, nextStatus: string) => {
+  verifyModalOrder.value = order;
+  verifyModalNextStatus.value = nextStatus;
+  showVerifyModal.value = true;
+  verifyModalError.value = "";
+};
+
+const closeVerifyModal = () => {
+  showVerifyModal.value = false;
+  verifyModalOrder.value = null;
+  verifyModalNextStatus.value = "";
+  verifyModalError.value = "";
+};
+
+// Handler for standalone modal verification (kanban/table views)
+async function onVerifyModalSubmit(code: string) {
+  if (!verifyModalOrder.value) return;
+
+  verifyModalError.value = "";
+  const order = verifyModalOrder.value;
+  const isPickup = order.delivery_method === "pickup";
+
+  verifyingModal.value = true;
+  try {
+    const { error: refreshError } = await supabase.auth.refreshSession();
+    if (refreshError) {
+      console.warn("Session refresh failed, attempting with current session");
+    }
+
+    const { data: sessionData, error: sessionError } =
+      await supabase.auth.getSession();
+    if (sessionError) throw sessionError;
+
+    const accessToken = sessionData?.session?.access_token;
+    if (!accessToken) {
+      throw new Error("Your session has expired. Please log in again.");
+    }
+
+    if (isPickup) {
+      await $fetch("/api/admin/verify-collection", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${accessToken}` },
+        body: { orderId: order.id, code },
+      });
+    } else {
+      await $fetch("/api/orders/verify-delivery-pin", {
+        method: "POST" as any,
+        headers: { Authorization: `Bearer ${accessToken}` },
+        body: { orderId: order.id, pin: code },
+      });
+    }
+
+    showVerifyModal.value = false;
+    await updateStatus(order, "delivered");
+  } catch (e: any) {
+    verifyModalError.value =
+      e?.statusMessage || e?.message || "Verification failed";
+  } finally {
+    verifyingModal.value = false;
+  }
+}
+
+// Handler for order details collection verification
+async function onVerifyCollectionSubmit(code: string) {
+  if (!selectedOrder.value) return;
+
+  verifyError.value = "";
+  const orderId = String(selectedOrder.value.id);
+
+  verifyingCollection.value = true;
+  try {
+    const { error: refreshError } = await supabase.auth.refreshSession();
+    if (refreshError) {
+      console.warn("Session refresh failed, attempting with current session");
+    }
+
+    const { data: sessionData, error: sessionError } =
+      await supabase.auth.getSession();
+    if (sessionError) throw sessionError;
+
+    const accessToken = sessionData?.session?.access_token;
+    if (!accessToken) {
+      throw new Error("Your session has expired. Please log in again.");
+    }
+
+    await $fetch("/api/admin/verify-collection", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${accessToken}` },
+      body: { orderId, code },
+    });
+
+    stopVerifyScanner();
+    showVerifyCollection.value = false;
+    await updateStatus(selectedOrder.value, "delivered");
+  } catch (e: any) {
+    verifyError.value = e?.statusMessage || e?.message || "Validation failed";
+  } finally {
+    verifyingCollection.value = false;
+  }
+}
+
+// Handler for order details delivery verification
+async function onVerifyDeliverySubmit(pin: string) {
+  if (!selectedOrder.value) return;
+
+  deliveryPinError.value = "";
+  const orderId = String(selectedOrder.value.id);
+
+  verifyingDeliveryPin.value = true;
+  try {
+    const { error: refreshError } = await supabase.auth.refreshSession();
+    if (refreshError) {
+      console.warn("Session refresh failed, attempting with current session");
+    }
+
+    const { data: sessionData, error: sessionError } =
+      await supabase.auth.getSession();
+    if (sessionError) throw sessionError;
+
+    const accessToken = sessionData?.session?.access_token;
+    if (!accessToken) {
+      throw new Error("Your session has expired. Please log in again.");
+    }
+
+    await $fetch("/api/orders/verify-delivery-pin", {
+      method: "POST" as any,
+      headers: { Authorization: `Bearer ${accessToken}` },
+      body: { orderId, pin },
+    });
+
+    showVerifyDeliveryPin.value = false;
+    await updateStatus(selectedOrder.value, "delivered");
+  } catch (e: any) {
+    deliveryPinError.value =
+      e?.statusMessage || e?.message || "Validation failed";
+  } finally {
+    verifyingDeliveryPin.value = false;
+  }
+}
+
+// Helper to check if verification is required before status update
+const shouldVerifyBeforeComplete = (order: any, nextStatus: string) => {
+  return nextStatus === "delivered";
+};
+
+// Wrapper for kanban/table status updates that shows verification modal when needed
+const handleStatusUpdateWithVerify = (order: any) => {
+  const nextStatus = getNextStatus(order);
+  const isDelivery = order.delivery_method === "delivery";
+
+  // Show rider assignment modal for delivery orders at completed_in_pos
+  if (isDelivery && order.status === "completed_in_pos") {
+    openAssignRiderModal(order);
+    return;
+  }
+
+  if (shouldVerifyBeforeComplete(order, nextStatus)) {
+    openVerifyModal(order, nextStatus);
+    return;
+  }
+
+  // No verification needed - proceed with normal update
+  updateStatus(order, nextStatus);
 };
 
 const kanbanColumns = [

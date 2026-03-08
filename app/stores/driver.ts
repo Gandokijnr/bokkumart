@@ -21,6 +21,7 @@ interface ActiveOrder {
   store_id: string;
   items: any[];
   total_amount: number;
+  delivery_fee: number;
   status: OrderStatus;
   payment_method: "online" | "pod";
   delivery_details: DeliveryDetails | null;
@@ -123,6 +124,19 @@ export const useDriverStore = defineStore("driver", {
         .reduce((sum, order) => sum + Number(order.total_amount), 0);
     },
 
+    // Calculate today's delivery fees earned by driver
+    todayDeliveryFees: (state) => {
+      const today = new Date().toDateString();
+      return state.orderHistory
+        .filter((order) => {
+          const deliveredDate = order.delivered_at
+            ? new Date(order.delivered_at).toDateString()
+            : null;
+          return deliveredDate === today;
+        })
+        .reduce((sum, order) => sum + Number(order.delivery_fee || 0), 0);
+    },
+
     // Count today's deliveries
     todayDeliveries: (state) => {
       const today = new Date().toDateString();
@@ -194,6 +208,9 @@ export const useDriverStore = defineStore("driver", {
         // Fetch active order
         await this.fetchActiveOrder();
 
+        // Fetch order history for performance metrics
+        await this.fetchOrderHistory();
+
         // Setup realtime subscription
         this.setupRealtimeSubscription();
 
@@ -254,8 +271,8 @@ export const useDriverStore = defineStore("driver", {
       }
     },
 
-    // Fetch order history
-    async fetchOrderHistory(limit = 20) {
+    // Fetch order history with pagination support
+    async fetchOrderHistory(limit = 10, offset = 0, append = false) {
       const supabase = useSupabaseClient<Database>();
       const userId = await this.resolveUserId();
       if (!userId) return;
@@ -267,7 +284,7 @@ export const useDriverStore = defineStore("driver", {
           .eq("driver_id", userId)
           .eq("status", "delivered")
           .order("delivered_at", { ascending: false })
-          .limit(limit);
+          .range(offset, offset + limit - 1);
 
         if (error) throw error;
 
@@ -290,10 +307,22 @@ export const useDriverStore = defineStore("driver", {
           }
         }
 
-        this.orderHistory = orders.map((o) => ({
+        const enrichedOrders = orders.map((o) => ({
           ...o,
           customer: o.user_id ? customerMap.get(o.user_id) || null : null,
         })) as any;
+
+        if (append) {
+          // Append to existing history, avoiding duplicates by order ID
+          const existingIds = new Set(this.orderHistory.map((o) => o.id));
+          const newOrders = enrichedOrders.filter(
+            (o: any) => !existingIds.has(o.id),
+          );
+          this.orderHistory = [...this.orderHistory, ...newOrders];
+        } else {
+          // Replace existing history
+          this.orderHistory = enrichedOrders;
+        }
       } catch (err: any) {
         console.error("Failed to fetch order history:", err);
       }
@@ -303,7 +332,7 @@ export const useDriverStore = defineStore("driver", {
     async toggleAvailability() {
       const supabase = useSupabaseClient<Database>();
       const userId = await this.resolveUserId();
-      if (!userId || this.isOnDelivery) {
+      if (!userId) {
         if (!userId) {
           const toast = useToast();
           toast.add({
@@ -312,6 +341,21 @@ export const useDriverStore = defineStore("driver", {
             color: "error",
           } as any);
         }
+        return;
+      }
+
+      // Prevent going offline when the driver has an active order.
+      if (
+        this.driverStatus === "available" &&
+        (this.hasActiveOrder || this.isOnDelivery)
+      ) {
+        const toast = useToast();
+        toast.add({
+          title: "Cannot Go Offline",
+          description:
+            "You have an active delivery. Complete it before going offline.",
+          color: "warning",
+        } as any);
         return;
       }
 
@@ -344,22 +388,97 @@ export const useDriverStore = defineStore("driver", {
       }
     },
 
-    // Update order status based on workflow
+    // Strict State Machine: Validate status transitions
+    // assigned → picked_up → arrived → delivered (sequential only)
+    isValidStatusTransition(
+      currentStatus: OrderStatus,
+      newStatus: OrderStatus,
+    ): boolean {
+      const transitions: Record<OrderStatus, OrderStatus[]> = {
+        assigned: ["picked_up"],
+        picked_up: ["arrived"],
+        arrived: ["delivered"],
+        delivered: [],
+      };
+      return transitions[currentStatus]?.includes(newStatus) || false;
+    },
+
+    // Get current status in state machine
+    getCurrentState(): OrderStatus | null {
+      return this.activeOrder?.status || null;
+    },
+
+    // Strict State Machine: Update order status with validation
     async updateOrderStatus(newStatus: OrderStatus) {
       const supabase = useSupabaseClient<Database>();
 
-      if (!this.activeOrder) return;
+      if (!this.activeOrder) {
+        const toast = useToast();
+        toast.add({
+          title: "Error",
+          description: "No active order to update",
+          color: "red",
+        } as any);
+        return;
+      }
 
-      // If offline, queue the action
+      const currentStatus = this.activeOrder.status;
+
+      // STRICT VALIDATION: Prevent status skipping
+      if (!this.isValidStatusTransition(currentStatus, newStatus)) {
+        const toast = useToast();
+        toast.add({
+          title: "Invalid Action",
+          description: `Cannot jump from "${currentStatus}" to "${newStatus}". Please follow the sequence: Assigned → Picked Up → Arrived → Delivered.`,
+          color: "red",
+        } as any);
+        return;
+      }
+
+      // Build update payload with specific timestamps
+      const updateData: any = { status: newStatus };
+      const now = new Date().toISOString();
+
+      switch (newStatus) {
+        case "picked_up":
+          updateData.picked_up_at = now;
+          break;
+        case "arrived":
+          updateData.arrived_at = now;
+          break;
+        case "delivered":
+          updateData.delivered_at = now;
+          // Note: delivered status should ONLY be set via verifyDeliveryPIN
+          // This is a safety check - normal updateOrderStatus should not set delivered
+          const toast = useToast();
+          toast.add({
+            title: "Invalid Action",
+            description: "Use PIN verification to complete delivery",
+            color: "red",
+          } as any);
+          return;
+      }
+
+      // If offline, queue the action with full payload including timestamps
       if (!this.isOnline) {
         this.queueOfflineAction("status_update", this.activeOrder.id, {
           status: newStatus,
+          ...updateData,
         });
+
+        // Optimistically update local state
+        this.activeOrder.status = newStatus;
+        if (updateData.picked_up_at) {
+          this.activeOrder.picked_up_at = updateData.picked_up_at;
+        }
+        if (updateData.arrived_at) {
+          this.activeOrder.arrived_at = updateData.arrived_at;
+        }
 
         const toast = useToast();
         toast.add({
-          title: "Offline Mode",
-          description: "Action saved. Will sync when you are back online.",
+          title: "📡 Offline Mode",
+          description: `${this.getStatusMessage(newStatus)} saved. Will sync when online.`,
           color: "amber",
         } as any);
         return;
@@ -367,15 +486,6 @@ export const useDriverStore = defineStore("driver", {
 
       this.loading = true;
       try {
-        const updateData: any = { status: newStatus };
-
-        // Set appropriate timestamps
-        if (newStatus === "picked_up") {
-          updateData.picked_up_at = new Date().toISOString();
-        } else if (newStatus === "arrived") {
-          updateData.arrived_at = new Date().toISOString();
-        }
-
         const { error } = await (supabase.from("orders").update as any)(
           updateData,
         ).eq("id", this.activeOrder.id);
@@ -384,15 +494,16 @@ export const useDriverStore = defineStore("driver", {
 
         // Update local state
         this.activeOrder.status = newStatus;
-        if (newStatus === "picked_up") {
-          this.activeOrder.picked_up_at = new Date().toISOString();
-        } else if (newStatus === "arrived") {
-          this.activeOrder.arrived_at = new Date().toISOString();
+        if (updateData.picked_up_at) {
+          this.activeOrder.picked_up_at = updateData.picked_up_at;
+        }
+        if (updateData.arrived_at) {
+          this.activeOrder.arrived_at = updateData.arrived_at;
         }
 
         const toast = useToast();
         toast.add({
-          title: "Status Updated",
+          title: "✅ Status Updated",
           description: this.getStatusMessage(newStatus),
           color: "green",
         } as any);

@@ -9,7 +9,11 @@
             <p class="text-gray-600 mt-2">Managing: {{ managedStoreNames }}</p>
           </div>
           <div class="bg-blue-50 px-4 py-2 rounded-lg border border-blue-200">
-            <p class="text-sm font-medium text-blue-900">{{ managedStores.length }} Store{{ managedStores.length !== 1 ? 's' : '' }}</p>
+            <p class="text-sm font-medium text-blue-900">
+              {{ managedStores.length }} Store{{
+                managedStores.length !== 1 ? "s" : ""
+              }}
+            </p>
           </div>
         </div>
       </div>
@@ -42,7 +46,9 @@
         >
           <span class="text-3xl mb-3 block">📦</span>
           <h3 class="text-lg font-semibold text-gray-900">My Store Orders</h3>
-          <p class="text-sm text-gray-600 mt-2">View and manage orders from your stores</p>
+          <p class="text-sm text-gray-600 mt-2">
+            View and manage orders from your stores
+          </p>
         </NuxtLink>
 
         <NuxtLink
@@ -51,7 +57,9 @@
         >
           <span class="text-3xl mb-3 block">�</span>
           <h3 class="text-lg font-semibold text-gray-900">Manage Inventory</h3>
-          <p class="text-sm text-gray-600 mt-2">Upload CSV or manage stock for your stores</p>
+          <p class="text-sm text-gray-600 mt-2">
+            Upload CSV or manage stock for your stores
+          </p>
         </NuxtLink>
 
         <NuxtLink
@@ -60,7 +68,9 @@
         >
           <span class="text-3xl mb-3 block">📝</span>
           <h3 class="text-lg font-semibold text-gray-900">My Activity Log</h3>
-          <p class="text-sm text-gray-600 mt-2">View your recent actions and changes</p>
+          <p class="text-sm text-gray-600 mt-2">
+            View your recent actions and changes
+          </p>
         </NuxtLink>
       </div>
     </div>
@@ -68,36 +78,39 @@
 </template>
 
 <script setup lang="ts">
-import { useUserStore } from '~/stores/user'
-import { useDashboard } from '~/composables/useDashboard'
+import { useUserStore } from "~/stores/user";
+import { useDashboard } from "~/composables/useDashboard";
 
-const userStore = useUserStore()
-const dashboard = useDashboard()
-const { stats, loading, showRevenue, formatNaira } = dashboard
+const userStore = useUserStore();
+const dashboard = useDashboard();
+const { stats, loading, showRevenue, formatNaira } = dashboard;
 
 definePageMeta({
-  layout: 'admin',
-  middleware: ['auth']
-})
+  layout: "admin",
+  middleware: ["auth"],
+});
 
 useHead({
-  title: 'Branch Dashboard - HomeAffairs'
-})
+  title: "Branch Dashboard - HomeAffairs",
+});
 
-const managedStores = computed(() => userStore.managedStores)
-const managedStoreNames = computed(() => userStore.managedStoreNames)
+const managedStores = computed(() => userStore.managedStores);
+const managedStoreNames = computed(() => userStore.managedStoreNames);
 
 onMounted(async () => {
-  const dashboard = useDashboard()
-  await dashboard.startDashboard()
-})
+  const dashboard = useDashboard();
+  await dashboard.startDashboard();
+});
 
 onUnmounted(() => {
-  const dashboard = useDashboard()
-  dashboard.stopAll()
-})
+  const dashboard = useDashboard();
+  dashboard.stopAll();
+});
 
 const handleLowStockClick = () => {
-  navigateTo({ path: '/admin/branch-inventory', query: { status: 'low_stock' } })
-}
+  navigateTo({
+    path: "/admin/branch-inventory",
+    query: { status: "low_stock" },
+  });
+};
 </script>

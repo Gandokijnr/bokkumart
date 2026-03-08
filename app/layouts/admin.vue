@@ -4,7 +4,7 @@
     <AppSidebar />
 
     <!-- Main Content Area -->
-    <div class="flex-1 flex flex-col lg:ml-0">
+    <div class="flex-1 flex flex-col lg:ml-0 py-10 md:py-2">
       <!-- Page Content -->
       <main class="flex-1 p-6">
         <slot />

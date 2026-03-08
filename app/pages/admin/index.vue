@@ -2,6 +2,7 @@
 import { ref, computed, onMounted, onUnmounted } from "vue";
 import { useAdminStore, type AdminOrder } from "~/stores/admin";
 import { useUserStore } from "~/stores/user";
+import OrderVerificationModal from "~/components/OrderVerificationModal.vue";
 
 // Page meta
 useHead({
@@ -92,17 +93,10 @@ function closeVerifyCollection() {
   verifyError.value = "";
 }
 
-async function handleVerifyCollection() {
+async function handleVerifyCollectionCode(code: string) {
   if (!verifyCollectionOrder.value) return;
 
   verifyError.value = "";
-  const code = verifyCode.value.trim();
-
-  if (!code || code.length < 4) {
-    verifyError.value = "Please enter a valid verification code.";
-    return;
-  }
-
   verifyingCollection.value = true;
   try {
     const { data: sessionData } = await useSupabaseClient().auth.getSession();
@@ -127,36 +121,16 @@ async function handleVerifyCollection() {
     });
   } catch (e: any) {
     verifyError.value = e?.statusMessage || e?.message || "Verification failed";
+    throw e; // Re-throw so component knows it failed
   } finally {
     verifyingCollection.value = false;
   }
 }
 
-function openVerifyDeliveryPin(order: AdminOrder) {
-  verifyDeliveryOrder.value = order;
-  deliveryPin.value = "";
-  deliveryPinError.value = "";
-  showVerifyDeliveryPin.value = true;
-}
-
-function closeVerifyDeliveryPin() {
-  showVerifyDeliveryPin.value = false;
-  verifyDeliveryOrder.value = null;
-  deliveryPin.value = "";
-  deliveryPinError.value = "";
-}
-
-async function handleVerifyDeliveryPin() {
+async function handleVerifyDeliveryPinCode(pin: string) {
   if (!verifyDeliveryOrder.value) return;
 
   deliveryPinError.value = "";
-  const pin = deliveryPin.value.trim();
-
-  if (!pin || pin.length < 4) {
-    deliveryPinError.value = "Please enter a valid PIN.";
-    return;
-  }
-
   verifyingDeliveryPin.value = true;
   try {
     const { data: sessionData } = await useSupabaseClient().auth.getSession();
@@ -182,9 +156,22 @@ async function handleVerifyDeliveryPin() {
   } catch (e: any) {
     deliveryPinError.value =
       e?.statusMessage || e?.message || "PIN verification failed";
+    throw e; // Re-throw so component knows it failed
   } finally {
     verifyingDeliveryPin.value = false;
   }
+}
+
+function openVerifyDeliveryPin(order: AdminOrder) {
+  verifyDeliveryOrder.value = order;
+  deliveryPinError.value = "";
+  showVerifyDeliveryPin.value = true;
+}
+
+function closeVerifyDeliveryPin() {
+  showVerifyDeliveryPin.value = false;
+  verifyDeliveryOrder.value = null;
+  deliveryPinError.value = "";
 }
 
 // Order notes
@@ -1293,109 +1280,27 @@ async function saveNote(orderId: string) {
     </div>
 
     <!-- Verify Collection Modal (Pickup Orders) -->
-    <div
-      v-if="showVerifyCollection && verifyCollectionOrder"
-      class="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
-    >
-      <div class="bg-white rounded-xl shadow-xl max-w-md w-full mx-4">
-        <div class="px-6 py-4 border-b border-gray-200">
-          <h3 class="text-lg font-semibold text-gray-900">Verify Collection</h3>
-          <p class="text-sm text-gray-600">
-            Order #{{ verifyCollectionOrder.id.slice(-6).toUpperCase() }}
-          </p>
-        </div>
-        <div class="p-6 space-y-4">
-          <p class="text-sm text-gray-700">
-            Enter the customer's 6-digit verification code to complete pickup.
-          </p>
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1"
-              >Verification Code</label
-            >
-            <input
-              v-model="verifyCode"
-              type="text"
-              inputmode="numeric"
-              maxlength="6"
-              placeholder="Enter 6-digit code"
-              class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
-            />
-          </div>
-          <p v-if="verifyError" class="text-sm text-red-600">
-            {{ verifyError }}
-          </p>
-        </div>
-        <div class="px-6 py-4 border-t border-gray-200 flex gap-3">
-          <button
-            @click="handleVerifyCollection"
-            :disabled="
-              !verifyCode || verifyCode.length < 4 || verifyingCollection
-            "
-            class="flex-1 px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50"
-          >
-            {{ verifyingCollection ? "Verifying..." : "Verify & Complete" }}
-          </button>
-          <button
-            @click="closeVerifyCollection"
-            class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
-          >
-            Cancel
-          </button>
-        </div>
-      </div>
-    </div>
+    <OrderVerificationModal
+      v-model="showVerifyCollection"
+      type="pickup"
+      :order-id="verifyCollectionOrder?.id"
+      :loading="verifyingCollection"
+      :error="verifyError"
+      :order-id-length="6"
+      @cancel="closeVerifyCollection"
+      @verify="handleVerifyCollectionCode"
+    />
 
     <!-- Verify Delivery PIN Modal (Delivery Orders) -->
-    <div
-      v-if="showVerifyDeliveryPin && verifyDeliveryOrder"
-      class="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
-    >
-      <div class="bg-white rounded-xl shadow-xl max-w-md w-full mx-4">
-        <div class="px-6 py-4 border-b border-gray-200">
-          <h3 class="text-lg font-semibold text-gray-900">Verify Delivery</h3>
-          <p class="text-sm text-gray-600">
-            Order #{{ verifyDeliveryOrder.id.slice(-6).toUpperCase() }}
-          </p>
-        </div>
-        <div class="p-6 space-y-4">
-          <p class="text-sm text-gray-700">
-            Enter the customer's delivery PIN to confirm delivery.
-          </p>
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1"
-              >Delivery PIN</label
-            >
-            <input
-              v-model="deliveryPin"
-              type="text"
-              inputmode="numeric"
-              maxlength="6"
-              placeholder="Enter PIN"
-              class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
-            />
-          </div>
-          <p v-if="deliveryPinError" class="text-sm text-red-600">
-            {{ deliveryPinError }}
-          </p>
-        </div>
-        <div class="px-6 py-4 border-t border-gray-200 flex gap-3">
-          <button
-            @click="handleVerifyDeliveryPin"
-            :disabled="
-              !deliveryPin || deliveryPin.length < 4 || verifyingDeliveryPin
-            "
-            class="flex-1 px-4 py-2 text-sm font-medium text-white bg-emerald-600 rounded-lg hover:bg-emerald-700 transition-colors disabled:opacity-50"
-          >
-            {{ verifyingDeliveryPin ? "Verifying..." : "Confirm Delivery" }}
-          </button>
-          <button
-            @click="closeVerifyDeliveryPin"
-            class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
-          >
-            Cancel
-          </button>
-        </div>
-      </div>
-    </div>
+    <OrderVerificationModal
+      v-model="showVerifyDeliveryPin"
+      type="delivery"
+      :order-id="verifyDeliveryOrder?.id"
+      :loading="verifyingDeliveryPin"
+      :error="deliveryPinError"
+      :order-id-length="6"
+      @cancel="closeVerifyDeliveryPin"
+      @verify="handleVerifyDeliveryPinCode"
+    />
   </div>
 </template>

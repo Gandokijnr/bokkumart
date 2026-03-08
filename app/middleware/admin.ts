@@ -68,14 +68,8 @@ export default defineNuxtRouteMiddleware(async (to, from) => {
     role.length,
   );
 
-  // Allow admin, super_admin, branch_manager, manager, and staff roles to access admin panel
-  const allowedRoles = [
-    "admin",
-    "super_admin",
-    "branch_manager",
-    "staff",
-    "manager",
-  ];
+  // Allow admin, super_admin, branch_manager, and staff roles to access admin panel
+  const allowedRoles = ["admin", "super_admin", "branch_manager", "staff"];
   if (!allowedRoles.includes(role)) {
     console.log(
       `[Admin Middleware] Access denied - role '${role}' not in allowed roles`,

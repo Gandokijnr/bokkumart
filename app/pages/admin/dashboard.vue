@@ -8,6 +8,7 @@ import {
 import { useUserStore } from "~/stores/user";
 import { useInfiniteScroll } from "~/composables/useInfiniteScroll";
 import { useDashboard } from "~/composables/useDashboard";
+import OrderVerificationModal from "~/components/OrderVerificationModal.vue";
 
 // Page meta
 useHead({
@@ -390,6 +391,100 @@ async function saveNote(orderId: string) {
     title: "Note Saved",
     color: "success",
   });
+}
+
+// Collection verification modal
+const showCollectionModal = ref(false);
+const collectionOrder = ref<AdminOrder | null>(null);
+const collectionPinError = ref("");
+const verifyingCollection = ref(false);
+
+function openVerifyCollection(order: AdminOrder) {
+  collectionOrder.value = order;
+  collectionPinError.value = "";
+  showCollectionModal.value = true;
+}
+
+function closeVerifyCollection() {
+  showCollectionModal.value = false;
+  collectionOrder.value = null;
+  collectionPinError.value = "";
+}
+
+async function handleVerifyCollectionPin(pin: string) {
+  if (!collectionOrder.value) return;
+
+  verifyingCollection.value = true;
+  collectionPinError.value = "";
+  try {
+    const success = await adminStore.verifyCollection(
+      collectionOrder.value.id,
+      pin,
+    );
+
+    if (success) {
+      showCollectionModal.value = false;
+      collectionOrder.value = null;
+      toast.add({
+        title: "Collection Verified",
+        description: "Order marked as collected",
+        color: "success",
+      });
+    } else {
+      collectionPinError.value = "Invalid PIN. Please try again.";
+    }
+  } catch (e: any) {
+    collectionPinError.value = e?.message || "Verification failed";
+  } finally {
+    verifyingCollection.value = false;
+  }
+}
+
+// Delivery PIN verification modal
+const showDeliveryPinModal = ref(false);
+const deliveryPinOrder = ref<AdminOrder | null>(null);
+const deliveryPinError = ref("");
+const verifyingDeliveryPin = ref(false);
+
+function openVerifyDeliveryPin(order: AdminOrder) {
+  deliveryPinOrder.value = order;
+  deliveryPinError.value = "";
+  showDeliveryPinModal.value = true;
+}
+
+function closeVerifyDeliveryPin() {
+  showDeliveryPinModal.value = false;
+  deliveryPinOrder.value = null;
+  deliveryPinError.value = "";
+}
+
+async function handleVerifyDeliveryPinCode(pin: string) {
+  if (!deliveryPinOrder.value) return;
+
+  verifyingDeliveryPin.value = true;
+  deliveryPinError.value = "";
+  try {
+    const success = await adminStore.verifyDelivery(
+      deliveryPinOrder.value.id,
+      pin,
+    );
+
+    if (success) {
+      showDeliveryPinModal.value = false;
+      deliveryPinOrder.value = null;
+      toast.add({
+        title: "Delivery Verified",
+        description: "Order marked as delivered",
+        color: "success",
+      });
+    } else {
+      deliveryPinError.value = "Invalid PIN. Please try again.";
+    }
+  } catch (e: any) {
+    deliveryPinError.value = e?.message || "Verification failed";
+  } finally {
+    verifyingDeliveryPin.value = false;
+  }
 }
 </script>
 
@@ -1209,83 +1304,32 @@ async function saveNote(orderId: string) {
       </div>
     </div>
 
-    <!-- Blacklist Modal -->
-    <div
-      v-if="showBlacklistModal"
-      class="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
-    >
-      <div class="bg-white rounded-xl shadow-xl max-w-md w-full mx-4">
-        <div class="px-6 py-4 border-b border-gray-200">
-          <h3 class="text-lg font-semibold text-gray-900">Flag Customer</h3>
-          <p class="text-sm text-gray-600">
-            Add restriction to customer account
-          </p>
-        </div>
-        <div class="p-6 space-y-4">
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1"
-              >Restriction Type</label
-            >
-            <select
-              v-model="blacklistForm.type"
-              class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
-            >
-              <option value="account_suspended">Suspend Account</option>
-              <option value="order_limit">Order Limit</option>
-              <option value="manual_verification_required">
-                Require Manual Verification
-              </option>
-            </select>
-          </div>
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1"
-              >Reason</label
-            >
-            <input
-              v-model="blacklistForm.reason"
-              type="text"
-              placeholder="Enter reason for restriction"
-              class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
-            />
-          </div>
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1"
-              >Details (Optional)</label
-            >
-            <textarea
-              v-model="blacklistForm.details"
-              placeholder="Additional details..."
-              rows="2"
-              class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
-            />
-          </div>
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1"
-              >Expires At (Optional)</label
-            >
-            <input
-              v-model="blacklistForm.expiresAt"
-              type="datetime-local"
-              class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
-            />
-          </div>
-        </div>
-        <div class="px-6 py-4 border-t border-gray-200 flex gap-3">
-          <button
-            @click="handleAddRestriction"
-            :disabled="!blacklistForm.reason"
-            class="flex-1 px-4 py-2 text-sm font-medium text-white bg-orange-600 rounded-lg hover:bg-orange-700 transition-colors disabled:opacity-50"
-          >
-            Add Restriction
-          </button>
-          <button
-            @click="showBlacklistModal = false"
-            class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
-          >
-            Cancel
-          </button>
-        </div>
-      </div>
-    </div>
+    <!-- Collection Verification Modal -->
+    <OrderVerificationModal
+      v-model="showCollectionModal"
+      type="pickup"
+      :order-id="collectionOrder?.id"
+      :loading="verifyingCollection"
+      :error="collectionPinError"
+      :max-length="4"
+      :min-length="4"
+      :order-id-length="6"
+      @cancel="closeVerifyCollection"
+      @verify="handleVerifyCollectionPin"
+    />
+
+    <!-- Delivery PIN Verification Modal -->
+    <OrderVerificationModal
+      v-model="showDeliveryPinModal"
+      type="delivery"
+      :order-id="deliveryPinOrder?.id"
+      :loading="verifyingDeliveryPin"
+      :error="deliveryPinError"
+      :max-length="4"
+      :min-length="4"
+      :order-id-length="6"
+      @cancel="closeVerifyDeliveryPin"
+      @verify="handleVerifyDeliveryPinCode"
+    />
   </div>
 </template>

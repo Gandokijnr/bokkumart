@@ -4,14 +4,6 @@
     <div
       class="lg:hidden fixed top-0 left-0 right-0 z-40 bg-white border-b border-gray-200 px-4 py-3 flex items-center justify-between shadow-sm"
     >
-      <NuxtLink to="/" class="flex items-center gap-2">
-        <div
-          class="w-8 h-8 bg-red-600 rounded-lg flex items-center justify-center shadow-sm"
-        >
-          <span class="text-sm font-bold text-white">HA</span>
-        </div>
-        <span class="font-bold text-gray-900">HomeAffairs</span>
-      </NuxtLink>
       <button
         @click="isMobileMenuOpen = !isMobileMenuOpen"
         class="p-2 rounded-lg hover:bg-gray-100 transition-colors"
@@ -72,21 +64,6 @@
         'lg:translate-x-0',
       ]"
     >
-      <!-- Logo & Brand (Desktop Only) -->
-      <div class="hidden lg:block p-6 border-b border-gray-200">
-        <NuxtLink to="/" class="flex items-center gap-3 group">
-          <div
-            class="w-10 h-10 bg-red-600 rounded-xl flex items-center justify-center shadow-md group-hover:shadow-lg transition-shadow"
-          >
-            <span class="text-base font-bold text-white">HA</span>
-          </div>
-          <div>
-            <span class="font-bold text-lg text-gray-900">HomeAffairs</span>
-            <p class="text-xs text-gray-500">Admin Portal</p>
-          </div>
-        </NuxtLink>
-      </div>
-
       <!-- User Info Card -->
       <div class="p-4 border-b border-gray-200 bg-gray-50">
         <div class="flex items-center gap-3">

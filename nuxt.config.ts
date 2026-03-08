@@ -93,6 +93,7 @@ export default defineNuxtConfig({
 
   runtimeConfig: {
     paystackSecretKey: process.env.PAYSTACK_SECRET_KEY,
+    supabaseUrl: process.env.SUPABASE_URL,
     supabaseServiceRoleKey: process.env.SUPABASE_SERVICE_ROLE_KEY,
     orderPaymentTimeoutMinutes: Number(
       process.env.ORDER_PAYMENT_TIMEOUT_MINUTES || 15,
