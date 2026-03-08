@@ -7,6 +7,9 @@ type SubmitBody = {
     full_name: string;
     phone_number: string;
   };
+  branches: {
+    selected_branches: string[];
+  };
   vehicle: {
     vehicle_type: string;
     plate_number: string;
@@ -72,6 +75,14 @@ export default defineEventHandler(async (event) => {
     });
   }
 
+  const selectedBranches = body?.branches?.selected_branches || [];
+  if (!Array.isArray(selectedBranches) || selectedBranches.length === 0) {
+    throw createError({
+      statusCode: 400,
+      statusMessage: "Please select at least one branch to operate with",
+    });
+  }
+
   const profileUpdate: Database["public"]["Tables"]["profiles"]["Update"] = {
     full_name: fullName,
     phone_number: phone,
@@ -90,6 +101,7 @@ export default defineEventHandler(async (event) => {
     user_id: user.id,
     status: "pending",
     personal: body.personal,
+    branches: { selected_branches: selectedBranches },
     vehicle: body.vehicle,
     payout: body.payout,
     phone_verification: body.phone_verification,

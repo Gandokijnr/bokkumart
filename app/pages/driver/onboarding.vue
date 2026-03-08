@@ -5,9 +5,9 @@ definePageMeta({});
 
 useHead({ title: "Rider Onboarding - HomeAffairs" });
 
-type StepKey = "personal" | "vehicle" | "payout";
+type StepKey = "personal" | "branches" | "vehicle" | "payout";
 
-const stepOrder: StepKey[] = ["personal", "vehicle", "payout"];
+const stepOrder: StepKey[] = ["personal", "branches", "vehicle", "payout"];
 
 const step = ref<StepKey>("personal");
 
@@ -21,6 +21,7 @@ const user = useSupabaseUser();
 const form = ref({
   full_name: "",
   phone_number: "",
+  selected_branches: [] as string[],
 
   vehicle_type: "motorcycle",
   plate_number: "",
@@ -53,11 +54,20 @@ const normalized = (s: string) =>
     .replace(/[^a-z0-9 ]/g, "")
     .trim();
 
+const branches = ref<
+  Array<{ id: string; name: string; address: string; city: string }>
+>([]);
+const branchesLoading = ref(false);
+
 const personalValid = computed(() => {
   return (
     String(form.value.full_name).trim().length >= 3 &&
     String(form.value.phone_number).trim().length >= 8
   );
+});
+
+const branchesValid = computed(() => {
+  return form.value.selected_branches.length > 0;
 });
 
 const vehicleValid = computed(() => {
@@ -76,18 +86,23 @@ const payoutValid = computed(() => {
 
   const resolvedOk =
     !resolvedAccountName.value ||
-    normalized(resolvedAccountName.value) === normalized(form.value.account_name);
+    normalized(resolvedAccountName.value) ===
+      normalized(form.value.account_name);
 
   return bankOk && acctOk && nameOk && resolvedOk;
 });
 
 const canContinue = computed(() => {
   if (step.value === "personal") return personalValid.value;
+  if (step.value === "branches") return branchesValid.value;
   if (step.value === "vehicle") return vehicleValid.value;
   return payoutValid.value;
 });
 
-async function uploadPrivateDoc(kind: "id_card" | "vehicle_registration", file: File) {
+async function uploadPrivateDoc(
+  kind: "id_card" | "vehicle_registration",
+  file: File,
+) {
   if (!user.value?.id) {
     throw new Error("Please sign in again to continue");
   }
@@ -158,13 +173,14 @@ async function resolveAccount() {
 
   resolvingAccount.value = true;
   try {
-    const res = await $fetch<{ success: boolean; account_name?: string; message?: string }>(
-      "/api/paystack/resolve-account",
-      {
-        method: "POST",
-        body: { bank_code: bankCode, account_number: accountNumber },
-      },
-    );
+    const res = await $fetch<{
+      success: boolean;
+      account_name?: string;
+      message?: string;
+    }>("/api/paystack/resolve-account", {
+      method: "POST",
+      body: { bank_code: bankCode, account_number: accountNumber },
+    });
 
     if (!res?.success || !res.account_name) {
       throw new Error(res?.message || "Could not resolve account");
@@ -178,9 +194,36 @@ async function resolveAccount() {
   }
 }
 
+async function fetchBranches() {
+  branchesLoading.value = true;
+  try {
+    const res =
+      await $fetch<
+        Array<{ id: string; name: string; address: string; city: string }>
+      >("/api/branches");
+    branches.value = res || [];
+  } catch (e: any) {
+    error.value = e?.message || "Failed to load branches";
+  } finally {
+    branchesLoading.value = false;
+  }
+}
+
+function toggleBranch(branchId: string) {
+  const idx = form.value.selected_branches.indexOf(branchId);
+  if (idx > -1) {
+    form.value.selected_branches.splice(idx, 1);
+  } else {
+    form.value.selected_branches.push(branchId);
+  }
+}
+
 function nextStep() {
   if (!canGoNext.value) return;
   if (!canContinue.value) return;
+  if (step.value === "personal") {
+    fetchBranches();
+  }
   step.value = stepOrder[currentStepIndex.value + 1] as StepKey;
 }
 
@@ -193,7 +236,12 @@ async function submitApplication() {
   error.value = "";
   success.value = false;
 
-  if (!payoutValid.value || !vehicleValid.value || !personalValid.value) {
+  if (
+    !payoutValid.value ||
+    !vehicleValid.value ||
+    !branchesValid.value ||
+    !personalValid.value
+  ) {
     error.value = "Please complete all steps before submitting";
     return;
   }
@@ -208,6 +256,9 @@ async function submitApplication() {
           personal: {
             full_name: form.value.full_name,
             phone_number: form.value.phone_number,
+          },
+          branches: {
+            selected_branches: form.value.selected_branches,
           },
           vehicle: {
             vehicle_type: form.value.vehicle_type,
@@ -234,7 +285,8 @@ async function submitApplication() {
 
     success.value = true;
   } catch (e: any) {
-    error.value = e?.statusMessage || e?.message || "Failed to submit application";
+    error.value =
+      e?.statusMessage || e?.message || "Failed to submit application";
   } finally {
     loading.value = false;
   }
@@ -247,15 +299,22 @@ async function submitApplication() {
       <div class="mb-5">
         <h1 class="text-2xl font-bold text-gray-900">Rider Onboarding</h1>
         <p class="mt-1 text-sm text-gray-600">
-          Complete your details. A Super Admin will review your documents before you go live.
+          Complete your details. A Super Admin will review your documents before
+          you go live.
         </p>
       </div>
 
-      <div v-if="error" class="mb-4 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+      <div
+        v-if="error"
+        class="mb-4 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700"
+      >
         {{ error }}
       </div>
 
-      <div v-if="success" class="mb-4 rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-800">
+      <div
+        v-if="success"
+        class="mb-4 rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-800"
+      >
         Application submitted successfully. You’ll be contacted after review.
       </div>
 
@@ -266,23 +325,121 @@ async function submitApplication() {
               Step {{ currentStepIndex + 1 }} of {{ stepOrder.length }}
             </div>
             <div class="text-xs text-gray-600">
-              {{ step === 'personal' ? 'Personal Info' : step === 'vehicle' ? 'Vehicle Specs' : 'Payout Setup' }}
+              {{
+                step === "personal"
+                  ? "Personal Info"
+                  : step === "branches"
+                    ? "Select Branches"
+                    : step === "vehicle"
+                      ? "Vehicle Specs"
+                      : "Payout Setup"
+              }}
             </div>
           </div>
         </template>
 
         <div v-if="step === 'personal'" class="space-y-4">
-          <FormInput v-model="form.full_name" label="Full Name" placeholder="e.g. John Doe" />
-          <FormInput v-model="form.phone_number" label="Phone Number" placeholder="e.g. 08012345678" inputmode="tel" />
+          <FormInput
+            v-model="form.full_name"
+            label="Full Name"
+            placeholder="e.g. John Doe"
+          />
+          <FormInput
+            v-model="form.phone_number"
+            label="Phone Number"
+            placeholder="e.g. 08012345678"
+            inputmode="tel"
+          />
 
-          <div class="rounded-xl border border-amber-200 bg-amber-50 p-3 text-xs text-amber-800">
+          <div
+            class="rounded-xl border border-amber-200 bg-amber-50 p-3 text-xs text-amber-800"
+          >
             Phone OTP verification is not enforced yet in this build.
+          </div>
+        </div>
+
+        <div v-else-if="step === 'branches'" class="space-y-4">
+          <div
+            v-if="branchesLoading"
+            class="py-8 text-center text-sm text-gray-500"
+          >
+            Loading branches...
+          </div>
+          <div
+            v-else-if="branches.length === 0"
+            class="py-8 text-center text-sm text-gray-500"
+          >
+            No branches available.
+          </div>
+          <div v-else>
+            <p class="text-sm text-gray-600 mb-3">
+              Select the branches you want to operate with (at least one
+              required):
+            </p>
+            <div class="space-y-2 max-h-64 overflow-y-auto">
+              <div
+                v-for="branch in branches"
+                :key="branch.id"
+                @click="toggleBranch(branch.id)"
+                class="flex items-start gap-3 p-3 rounded-xl border-2 cursor-pointer transition-all"
+                :class="
+                  form.selected_branches.includes(branch.id)
+                    ? 'border-red-500 bg-red-50'
+                    : 'border-gray-200 hover:border-gray-300'
+                "
+              >
+                <div class="flex-shrink-0 mt-0.5">
+                  <div
+                    class="w-5 h-5 rounded border-2 flex items-center justify-center transition-colors"
+                    :class="
+                      form.selected_branches.includes(branch.id)
+                        ? 'bg-red-600 border-red-600'
+                        : 'border-gray-300'
+                    "
+                  >
+                    <svg
+                      v-if="form.selected_branches.includes(branch.id)"
+                      class="w-3 h-3 text-white"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="3"
+                        d="M5 13l4 4L19 7"
+                      />
+                    </svg>
+                  </div>
+                </div>
+                <div class="flex-1 min-w-0">
+                  <p class="font-medium text-sm text-gray-900">
+                    {{ branch.name }}
+                  </p>
+                  <p class="text-xs text-gray-500">
+                    {{ branch.address }}, {{ branch.city }}
+                  </p>
+                </div>
+              </div>
+            </div>
+            <p
+              v-if="form.selected_branches.length > 0"
+              class="mt-3 text-xs text-emerald-600"
+            >
+              {{ form.selected_branches.length }} branch{{
+                form.selected_branches.length > 1 ? "es" : ""
+              }}
+              selected
+            </p>
           </div>
         </div>
 
         <div v-else-if="step === 'vehicle'" class="space-y-4">
           <div class="space-y-1.5">
-            <label class="block text-sm font-medium text-gray-700">Vehicle Type</label>
+            <label class="block text-sm font-medium text-gray-700"
+              >Vehicle Type</label
+            >
             <select
               v-model="form.vehicle_type"
               class="w-full rounded-xl border-2 border-gray-200 bg-white px-4 py-2.5 text-sm text-gray-900 transition-all outline-none focus:border-red-500 focus:ring-2 focus:ring-red-200"
@@ -294,36 +451,81 @@ async function submitApplication() {
             </select>
           </div>
 
-          <FormInput v-model="form.plate_number" label="Plate Number" placeholder="e.g. ABC-1234" />
+          <FormInput
+            v-model="form.plate_number"
+            label="Plate Number"
+            placeholder="e.g. ABC-1234"
+          />
 
           <div class="space-y-2">
-            <label class="block text-sm font-medium text-gray-700">ID Card (Upload)</label>
-            <input type="file" accept="image/*,application/pdf" class="block w-full text-sm" @change="onPickIdCard" />
+            <label class="block text-sm font-medium text-gray-700"
+              >ID Card (Upload)</label
+            >
+            <input
+              type="file"
+              accept="image/*,application/pdf"
+              class="block w-full text-sm"
+              @change="onPickIdCard"
+            />
             <p v-if="idCardPath" class="text-xs text-gray-600">Uploaded.</p>
           </div>
 
           <div class="space-y-2">
-            <label class="block text-sm font-medium text-gray-700">Vehicle Registration (Upload)</label>
-            <input type="file" accept="image/*,application/pdf" class="block w-full text-sm" @change="onPickVehicleReg" />
+            <label class="block text-sm font-medium text-gray-700"
+              >Vehicle Registration (Upload)</label
+            >
+            <input
+              type="file"
+              accept="image/*,application/pdf"
+              class="block w-full text-sm"
+              @change="onPickVehicleReg"
+            />
             <p v-if="vehicleRegPath" class="text-xs text-gray-600">Uploaded.</p>
           </div>
         </div>
 
         <div v-else class="space-y-4">
-          <FormInput v-model="form.bank_code" label="Bank Code" placeholder="e.g. 058" inputmode="numeric" />
-          <FormInput v-model="form.account_number" label="Account Number" placeholder="10-digit NUBAN" inputmode="numeric" :maxlength="10" />
-          <FormInput v-model="form.account_name" label="Account Name" placeholder="e.g. JOHN DOE" />
+          <FormInput
+            v-model="form.bank_code"
+            label="Bank Code"
+            placeholder="e.g. 058"
+            inputmode="numeric"
+          />
+          <FormInput
+            v-model="form.account_number"
+            label="Account Number"
+            placeholder="10-digit NUBAN"
+            inputmode="numeric"
+            :maxlength="10"
+          />
+          <FormInput
+            v-model="form.account_name"
+            label="Account Name"
+            placeholder="e.g. JOHN DOE"
+          />
 
           <div class="flex gap-2">
-            <FormButton :loading="resolvingAccount" :disabled="resolvingAccount" variant="outline" @click="resolveAccount">
+            <FormButton
+              :loading="resolvingAccount"
+              :disabled="resolvingAccount"
+              variant="outline"
+              @click="resolveAccount"
+            >
               Resolve Account
             </FormButton>
           </div>
 
-          <div v-if="resolvedAccountName" class="rounded-xl border border-gray-200 bg-gray-50 p-3 text-xs text-gray-700">
-            Resolved Name: <span class="font-semibold">{{ resolvedAccountName }}</span>
+          <div
+            v-if="resolvedAccountName"
+            class="rounded-xl border border-gray-200 bg-gray-50 p-3 text-xs text-gray-700"
+          >
+            Resolved Name:
+            <span class="font-semibold">{{ resolvedAccountName }}</span>
             <div
-              v-if="normalized(resolvedAccountName) !== normalized(form.account_name)"
+              v-if="
+                normalized(resolvedAccountName) !==
+                normalized(form.account_name)
+              "
               class="mt-1 text-red-600"
             >
               Account name does not match resolved name.
@@ -333,7 +535,12 @@ async function submitApplication() {
 
         <template #footer>
           <div class="flex items-center justify-between gap-3">
-            <FormButton variant="outline" color="neutral" :disabled="loading || !canGoBack" @click="prevStep">
+            <FormButton
+              variant="outline"
+              color="neutral"
+              :disabled="loading || !canGoBack"
+              @click="prevStep"
+            >
               Back
             </FormButton>
 

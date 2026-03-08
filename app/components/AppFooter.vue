@@ -104,6 +104,14 @@
                 Contact
               </button>
             </li>
+            <li>
+              <NuxtLink
+                to="/driver/onboarding"
+                class="text-gray-400 transition-colors hover:text-white"
+              >
+                Become a Driver
+              </NuxtLink>
+            </li>
           </ul>
         </div>
 
