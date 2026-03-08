@@ -32,7 +32,7 @@
 
       <!-- Service Fee -->
       <div class="flex justify-between text-xs sm:text-sm">
-        <span class="text-gray-600">Service Fee (2.5%)</span>
+        <span class="text-gray-600">Service Fee</span>
         <span class="font-medium text-gray-900">{{
           formatPrice(serviceFee)
         }}</span>

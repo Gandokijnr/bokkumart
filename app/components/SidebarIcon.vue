@@ -111,6 +111,22 @@
     />
   </svg>
 
+  <!-- Currency Naira (₦) -->
+  <svg
+    v-else-if="name === 'currencyNaira'"
+    class="w-5 h-5"
+    fill="none"
+    stroke="currentColor"
+    viewBox="0 0 24 24"
+  >
+    <path
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      stroke-width="2"
+      d="M8 7h8M8 12h8M8 17h8M6 7v10M18 7v10M4 10h16M4 14h16"
+    />
+  </svg>
+
   <!-- Users -->
   <svg
     v-else-if="name === 'users'"

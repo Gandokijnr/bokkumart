@@ -135,12 +135,6 @@ export const useAdminStore = defineStore("admin", {
   }),
 
   getters: {
-    pendingVerification: (state) => {
-      const filtered = state.orders.filter((o) => o.status === "pending");
-      console.log("pendingVerification:", filtered.length, "orders");
-      return filtered;
-    },
-
     processingOrders: (state) => {
       const filtered = state.orders.filter((o) =>
         ["processing", "paid", "confirmed", "picked_up"].includes(o.status),

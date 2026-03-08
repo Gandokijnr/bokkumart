@@ -1,144 +1,174 @@
-import { defineEventHandler, readBody, createError } from 'h3'
-import { createClient } from '@supabase/supabase-js'
-import type { Database } from '~/types/database.types'
+import { defineEventHandler, readBody, createError } from "h3";
+import { createClient } from "@supabase/supabase-js";
+import type { Database } from "~/types/database.types";
 
 interface CreateUserBody {
-  email: string
-  password: string
-  fullName?: string
-  phone?: string
-  role?: 'staff' | 'branch_manager' | 'super_admin' | 'customer' | 'driver'
-  managedStoreIds?: string[]
+  email: string;
+  password: string;
+  fullName?: string;
+  phone?: string;
+  role?: "staff" | "branch_manager" | "super_admin" | "customer" | "driver";
+  storeId?: string;
+  managedStoreIds?: string[];
 }
 
 export default defineEventHandler(async (event) => {
-  const config = useRuntimeConfig()
+  const config = useRuntimeConfig();
 
   const supabaseUrl =
     ((config.public as any)?.supabase?.url as string | undefined) ||
-    (process.env.SUPABASE_URL as string | undefined)
+    (process.env.SUPABASE_URL as string | undefined);
 
   const serviceRoleKey =
     (config.supabaseServiceRoleKey as string | undefined) ||
-    (process.env.SUPABASE_SERVICE_ROLE_KEY as string | undefined)
+    (process.env.SUPABASE_SERVICE_ROLE_KEY as string | undefined);
 
   if (!supabaseUrl || !serviceRoleKey) {
     throw createError({
       statusCode: 500,
-      statusMessage: 'Server not configured for admin user creation'
-    })
+      statusMessage: "Server not configured for admin user creation",
+    });
   }
 
   // Verify the caller is authenticated and is a super_admin
-  const authHeader = event.node.req.headers['authorization']
-  const bearer = Array.isArray(authHeader) ? authHeader[0] : authHeader
-  const token = typeof bearer === 'string' && bearer.startsWith('Bearer ')
-    ? bearer.slice('Bearer '.length)
-    : null
+  const authHeader = event.node.req.headers["authorization"];
+  const bearer = Array.isArray(authHeader) ? authHeader[0] : authHeader;
+  const token =
+    typeof bearer === "string" && bearer.startsWith("Bearer ")
+      ? bearer.slice("Bearer ".length)
+      : null;
 
   if (!token) {
     throw createError({
       statusCode: 401,
-      statusMessage: 'Missing Authorization Bearer token'
-    })
+      statusMessage: "Missing Authorization Bearer token",
+    });
   }
 
   const admin = createClient(supabaseUrl, serviceRoleKey, {
-    auth: { persistSession: false, autoRefreshToken: false }
-  }) as unknown as ReturnType<typeof createClient<Database>>
+    auth: { persistSession: false, autoRefreshToken: false },
+  }) as unknown as ReturnType<typeof createClient<Database>>;
 
-  const { data: callerData, error: callerErr } = await admin.auth.getUser(token)
+  const { data: callerData, error: callerErr } =
+    await admin.auth.getUser(token);
   if (callerErr || !callerData?.user) {
     throw createError({
       statusCode: 401,
-      statusMessage: 'Invalid session'
-    })
+      statusMessage: "Invalid session",
+    });
   }
 
-  const callerId = callerData.user.id
+  const callerId = callerData.user.id;
   const { data: callerProfile, error: profileErr } = await (admin as any)
-    .from('profiles')
-    .select('role')
-    .eq('id', callerId)
-    .single()
+    .from("profiles")
+    .select("role")
+    .eq("id", callerId)
+    .single();
 
   if (profileErr) {
     throw createError({
       statusCode: 500,
-      statusMessage: profileErr.message
-    })
+      statusMessage: profileErr.message,
+    });
   }
 
-  if (callerProfile?.role !== 'super_admin') {
+  if (callerProfile?.role !== "super_admin") {
     throw createError({
       statusCode: 403,
-      statusMessage: 'Not authorized'
-    })
+      statusMessage: "Not authorized",
+    });
   }
 
-  const body = await readBody<CreateUserBody>(event)
+  const body = await readBody<CreateUserBody>(event);
   if (!body?.email || !body?.password) {
     throw createError({
       statusCode: 400,
-      statusMessage: 'Email and password are required',
+      statusMessage: "Email and password are required",
       data: {
-        message: 'Email and password are required'
-      }
-    })
+        message: "Email and password are required",
+      },
+    });
   }
 
-  const { data: created, error: createErr } = await admin.auth.admin.createUser({
-    email: body.email,
-    password: body.password,
-    email_confirm: true,
-    app_metadata: {
-      role: body.role || 'staff'
+  const role = (body.role || "staff") as CreateUserBody["role"];
+  const storeId = String(body.storeId || "").trim();
+  const managedStoreIds = Array.isArray(body.managedStoreIds)
+    ? body.managedStoreIds.map((x) => String(x))
+    : [];
+
+  if (role === "staff" && !storeId) {
+    throw createError({
+      statusCode: 400,
+      statusMessage: "storeId is required for staff",
+    });
+  }
+
+  if (role === "branch_manager" && managedStoreIds.length === 0) {
+    throw createError({
+      statusCode: 400,
+      statusMessage: "managedStoreIds is required for branch manager",
+    });
+  }
+
+  const { data: created, error: createErr } = await admin.auth.admin.createUser(
+    {
+      email: body.email,
+      password: body.password,
+      email_confirm: true,
+      app_metadata: {
+        role,
+      },
+      user_metadata: {
+        full_name: body.fullName || "",
+        phone: body.phone || "",
+        role,
+        store_id: storeId || null,
+        managed_store_ids: managedStoreIds,
+      },
     },
-    user_metadata: {
-      full_name: body.fullName || '',
-      phone: body.phone || '',
-      role: body.role || 'staff',
-      managed_store_ids: body.managedStoreIds || []
-    }
-  })
+  );
 
   if (createErr || !created?.user) {
-    const message = createErr?.message || 'Failed to create user'
+    const message = createErr?.message || "Failed to create user";
     throw createError({
       statusCode: 400,
       statusMessage: message,
       data: {
-        message
-      }
-    })
+        message,
+      },
+    });
   }
 
   const { error: updateProfileErr } = await (admin as any)
-    .from('profiles')
-    .upsert({
-      id: created.user.id,
-      full_name: body.fullName || null,
-      phone_number: body.phone || null,
-      role: body.role || 'staff',
-      managed_store_ids: body.managedStoreIds && body.managedStoreIds.length > 0 ? body.managedStoreIds : null
-    }, { onConflict: 'id' })
+    .from("profiles")
+    .upsert(
+      {
+        id: created.user.id,
+        full_name: body.fullName || null,
+        phone_number: body.phone || null,
+        role,
+        store_id: storeId || null,
+        managed_store_ids: managedStoreIds.length > 0 ? managedStoreIds : null,
+      },
+      { onConflict: "id" },
+    );
 
   if (updateProfileErr) {
-    const message = updateProfileErr.message
+    const message = updateProfileErr.message;
     throw createError({
       statusCode: 400,
       statusMessage: message,
       data: {
-        message
-      }
-    })
+        message,
+      },
+    });
   }
 
   return {
     success: true,
     user: {
       id: created.user.id,
-      email: created.user.email
-    }
-  }
-})
+      email: created.user.email,
+    },
+  };
+});

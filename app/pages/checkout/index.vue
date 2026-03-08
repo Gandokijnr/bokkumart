@@ -781,7 +781,10 @@
           <h1 class="text-xl sm:text-2xl font-bold text-gray-900">
             Review & Pay
           </h1>
-          <p class="mt-2 text-sm text-gray-600">Choose your payment method</p>
+          <p class="mt-2 text-sm text-gray-600">
+            To ensure priority packing and safety, HomeAffairs currently accepts
+            secure online payments only.
+          </p>
         </div>
 
         <div
@@ -830,7 +833,7 @@
 
             <!-- Paystack Discount -->
             <div
-              v-if="paymentMethod === 'paystack' && currentDeliveryFee > 0"
+              v-if="fulfillmentMode === 'delivery' && currentDeliveryFee > 0"
               class="flex justify-between text-sm text-green-600"
             >
               <span class="font-medium">Online Payment Discount</span>
@@ -945,105 +948,10 @@
           </div>
         </div>
 
-        <!-- Payment Method Selection -->
-        <div class="space-y-3">
-          <p class="text-sm font-medium text-gray-700">Select Payment Method</p>
-
-          <!-- Pay Online Option -->
-          <label
-            class="flex cursor-pointer items-center gap-4 rounded-xl border-2 p-4 transition-all"
-            :class="
-              !canPayOnline
-                ? 'border-gray-200 bg-gray-50 opacity-60 cursor-not-allowed'
-                : paymentMethod === 'paystack'
-                  ? 'border-red-600 bg-red-50'
-                  : 'border-gray-200 hover:border-gray-300'
-            "
-          >
-            <input
-              type="radio"
-              value="paystack"
-              v-model="paymentMethod"
-              :disabled="!canPayOnline"
-              class="h-4 w-4 text-red-600"
-            />
-            <div class="flex-1">
-              <div class="flex items-center justify-between">
-                <div>
-                  <p
-                    class="font-bold"
-                    :class="
-                      paymentMethod === 'paystack'
-                        ? 'text-red-600'
-                        : 'text-gray-900'
-                    "
-                  >
-                    Pay Online
-                  </p>
-                  <p class="text-xs text-gray-600">
-                    Credit Card, Bank Transfer, USSD
-                  </p>
-                  <p v-if="!canPayOnline" class="text-xs text-gray-600 mt-1">
-                    Online payment is unavailable for this branch.
-                  </p>
-                </div>
-                <span
-                  v-if="currentDeliveryFee > 0"
-                  class="rounded-full bg-green-100 px-2 py-1 text-xs font-medium text-green-800"
-                >
-                  Save ₦500
-                </span>
-              </div>
-            </div>
-          </label>
-
-          <!--
-          POD/COD Option (temporarily disabled)
-          <label
-            v-if="canUsePOD && fulfillmentMode !== 'pickup'"
-            class="flex cursor-pointer items-center gap-4 rounded-xl border-2 p-4 transition-all"
-            :class="
-              paymentMethod === 'pod'
-                ? 'border-red-600 bg-red-50'
-                : 'border-gray-200 hover:border-gray-300'
-            "
-          >
-            <input
-              type="radio"
-              value="pod"
-              v-model="paymentMethod"
-              class="h-4 w-4 text-red-600"
-            />
-            <div class="flex-1">
-              <div class="flex items-center justify-between">
-                <div>
-                  <p
-                    class="font-bold"
-                    :class="
-                      paymentMethod === 'pod' ? 'text-red-600' : 'text-gray-900'
-                    "
-                  >
-                    Pay on Delivery
-                  </p>
-                  <p class="text-xs text-gray-600">
-                    Pay cash when you receive your order
-                  </p>
-                </div>
-                <span
-                  class="rounded-full bg-amber-100 px-2 py-1 text-xs font-medium text-amber-800"
-                >
-                  Phone confirmation required
-                </span>
-              </div>
-            </div>
-          </label>
-          -->
-        </div>
-
         <!-- Pay Button -->
         <div class="space-y-3">
           <div
-            v-if="paymentMethod === 'paystack' && !canPayOnline"
+            v-if="!canPayOnline"
             class="rounded-xl border-2 border-gray-200 bg-gray-50 p-4"
           >
             <p class="font-bold text-gray-900">Online payment unavailable</p>
@@ -1061,14 +969,6 @@
             :disabled="!canSubmitPayment"
             class="w-full rounded-xl bg-red-600 py-4 text-sm font-bold text-white hover:bg-red-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-all"
           >
-            <!--
-            POD/COD Button behavior (temporarily disabled)
-            @click="
-              paymentMethod === 'paystack'
-                ? initiatePaystackPayment()
-                : initiatePODOrder()
-            "
-            -->
             <span
               v-if="processingPayment"
               class="flex items-center justify-center gap-2"
@@ -1089,23 +989,9 @@
                 ></path>
               </svg>
               Processing...
-              <!--
-              {{
-                paymentMethod === "pod"
-                  ? "Confirming Order..."
-                  : "Processing..."
-              }}
-              -->
             </span>
             <span v-else>
               {{ `Pay ${formatPrice(finalTotal)} with Paystack` }}
-              <!--
-              {{
-                paymentMethod === "pod"
-                  ? "Confirm Pay on Delivery Order"
-                  : `Pay ${formatPrice(finalTotal)} with Paystack`
-              }}
-              -->
             </span>
           </button>
 
@@ -1127,13 +1013,6 @@
                 />
               </svg>
               Secure Payment
-              <!--
-              {{
-                paymentMethod === "pod"
-                  ? "Phone verification required"
-                  : "Secure Payment"
-              }}
-              -->
             </span>
           </div>
         </div>
@@ -1320,6 +1199,7 @@ import { useCartStore } from "~/stores/useCartStore";
 import { navigateTo } from "#app";
 import { useStoreStore } from "~/stores/store";
 import { useBranchStore } from "~/stores/useBranchStore";
+import { useFees } from "~/composables/useFees";
 
 const cartStore = useCartStore();
 const storeStore = useStoreStore();
@@ -1349,13 +1229,6 @@ const storeChangeChecking = ref(false);
 const storeChangeWarnings = ref<
   { product_id: string; name: string; requested: number; available: number }[]
 >([]);
-
-const paymentMethod = ref<"paystack" | "pod">("paystack");
-const showPODIncentive = ref(true);
-
-// POD/COD state (temporarily disabled)
-// const canUsePOD = ref(true);
-// const userCancellationRate = ref(0);
 
 const userLocation = ref<{ lat: number; lng: number } | null>(null);
 const pendingStore = ref<{ id: string; name: string } | null>(null);
@@ -1405,10 +1278,9 @@ const deliveryZones = [
   { id: "magodo", name: "Magodo", fee: 1500 },
 ];
 
-const serviceFee = computed(() => {
-  return fulfillmentMode.value === "pickup"
-    ? 500
-    : Math.round(cartStore.cartSubtotal * 0.025);
+const { serviceFee, serviceFeeKobo } = useFees({
+  subtotal: computed(() => cartStore.cartSubtotal),
+  fulfillmentMode,
 });
 
 // Loyalty Points State
@@ -1420,9 +1292,7 @@ const finalTotal = computed(() => {
   const base =
     cartStore.cartSubtotal + currentDeliveryFee.value + serviceFee.value;
   const onlineDiscount =
-    fulfillmentMode.value === "delivery" &&
-    paymentMethod.value === "paystack" &&
-    currentDeliveryFee.value > 0
+    fulfillmentMode.value === "delivery" && currentDeliveryFee.value > 0
       ? 500
       : 0;
   return Math.max(0, base - onlineDiscount - pointsRedemptionValue.value);
@@ -1946,7 +1816,6 @@ async function initiatePaystackPayment() {
     // Customer pays full amount including service fee
     // Service fee will be deducted and sent to platform via transaction_charge
     const customerTotalAmount = finalTotal.value;
-    const serviceFeeKobo = Math.round(serviceFee.value * 100);
 
     const response: { authorization_url: string; reference?: string } =
       await $fetch("/api/paystack/initialize", {
@@ -1954,7 +1823,7 @@ async function initiatePaystackPayment() {
         body: {
           email: userEmail,
           amount: Math.round(customerTotalAmount * 100), // Full amount customer pays
-          service_fee_kobo: serviceFeeKobo, // Amount platform keeps
+          service_fee_kobo: serviceFeeKobo.value, // Amount platform keeps
           metadata: {
             order_id: orderData?.id,
             user_id: userId,

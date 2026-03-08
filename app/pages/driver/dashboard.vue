@@ -167,33 +167,12 @@
               <p class="text-sm text-slate-400">Order #{{ shortOrderId }}</p>
             </div>
 
-            <!-- Total Amount - Highlighted if POD -->
+            <!-- Total Amount -->
             <div
-              class="text-right px-4 py-3 rounded-2xl"
-              :class="
-                driverStore.isPayOnDelivery
-                  ? 'bg-amber-500/20 border-2 border-amber-500/50'
-                  : 'bg-slate-700/30 border border-slate-600/30'
-              "
+              class="text-right px-4 py-3 rounded-2xl bg-slate-700/30 border border-slate-600/30"
             >
-              <p
-                class="text-xs font-medium"
-                :class="
-                  driverStore.isPayOnDelivery
-                    ? 'text-amber-400'
-                    : 'text-slate-400'
-                "
-              >
-                {{
-                  driverStore.isPayOnDelivery ? "💰 COLLECT CASH" : "Prepaid"
-                }}
-              </p>
-              <p
-                class="text-2xl font-bold mt-1"
-                :class="
-                  driverStore.isPayOnDelivery ? 'text-amber-300' : 'text-white'
-                "
-              >
+              <p class="text-xs font-medium text-slate-400">Prepaid</p>
+              <p class="text-2xl font-bold text-white mt-1">
                 ₦{{ formatMoney(driverStore.activeOrder?.total_amount || 0) }}
               </p>
             </div>
@@ -365,18 +344,9 @@
             v-else
             @click="showPinModal = true"
             :disabled="driverStore.loading"
-            class="w-full py-5 font-bold text-lg rounded-2xl shadow-xl transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
-            :class="
-              driverStore.isPayOnDelivery
-                ? 'bg-amber-500 text-white shadow-amber-500/30'
-                : 'bg-green-500 text-white shadow-green-500/30'
-            "
+            class="w-full py-5 font-bold text-lg rounded-2xl shadow-xl transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed bg-green-500 text-white shadow-green-500/30"
           >
-            {{
-              driverStore.isPayOnDelivery
-                ? "💰 Confirm Payment & Close Order"
-                : "🔐 Enter Delivery PIN"
-            }}
+            🔐 Enter Delivery PIN
           </button>
         </div>
 

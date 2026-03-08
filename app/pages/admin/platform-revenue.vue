@@ -1,5 +1,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from "vue";
+import { usePlatformRevenueStore } from "~/stores/platformRevenue";
+import type { RevenueRecord, RevenueStatus } from "~/stores/platformRevenue";
 
 definePageMeta({
   layout: "admin",
@@ -10,204 +12,194 @@ useHead({
   title: "Platform Revenue - HomeAffairs",
 });
 
-// State
-const revenueRecords = ref<any[]>([]);
-const loading = ref(false);
-const selectedMonth = ref(new Date().getMonth() + 1);
-const selectedYear = ref(new Date().getFullYear());
-const showCalculateModal = ref(false);
-const excludeDeliveryFees = ref(false);
-const forceRecalculate = ref(false);
-const calculating = ref(false);
-const generatingInvoice = ref<string | null>(null);
-const locking = ref<string | null>(null);
+// Initialize Pinia store
+const store = usePlatformRevenueStore();
 const toast = useToast();
 
-// Computed
-const currentMonthRevenue = computed(() => {
-  return revenueRecords.value.find(
-    (r) => r.month === selectedMonth.value && r.year === selectedYear.value,
-  );
+// Local UI state (not in store)
+const showCalculateModal = ref(false);
+const showAuditModal = ref(false);
+const selectedRevenueForAudit = ref<RevenueRecord | null>(null);
+const excludeDeliveryFees = ref(false);
+const forceRecalculate = ref(false);
+
+// Month options for dropdown
+const monthOptions = [
+  { label: "January", value: 1 },
+  { label: "February", value: 2 },
+  { label: "March", value: 3 },
+  { label: "April", value: 4 },
+  { label: "May", value: 5 },
+  { label: "June", value: 6 },
+  { label: "July", value: 7 },
+  { label: "August", value: 8 },
+  { label: "September", value: 9 },
+  { label: "October", value: 10 },
+  { label: "November", value: 11 },
+  { label: "December", value: 12 },
+];
+
+// Computed properties from store
+const revenueRecords = computed(() => store.sortedRecords);
+const loading = computed(() => store.loading);
+const calculating = computed(() => store.calculating);
+const selectedMonth = computed({
+  get: () => store.selectedMonth,
+  set: (val) => store.setSelectedMonthYear(val, store.selectedYear),
+});
+const selectedYear = computed({
+  get: () => store.selectedYear,
+  set: (val) => store.setSelectedMonthYear(store.selectedMonth, val),
 });
 
-const totalPlatformFees = computed(() => {
-  return revenueRecords.value.reduce(
-    (sum, r) => sum + (r.platform_fee || 0),
-    0,
-  );
+const currentMonthRevenue = computed(() => store.currentMonthRevenue);
+const totalPlatformFees = computed(() => store.totalPlatformFees);
+const totalOrders = computed(() => store.totalOrders);
+const totalGrossSales = computed(() => store.totalGrossSales);
+const isCurrentLocked = computed(() => store.isCurrentLocked);
+const canCalculate = computed(() => store.canCalculate);
+
+// Computed for audit logs
+const auditLogsForSelected = computed(() => {
+  if (!selectedRevenueForAudit.value) return [];
+  return store.getAuditLogsForRevenue(selectedRevenueForAudit.value.id);
 });
 
-const totalOrders = computed(() => {
-  return revenueRecords.value.reduce(
-    (sum, r) => sum + (r.total_orders || 0),
-    0,
-  );
-});
-
-const totalGrossSales = computed(() => {
-  return revenueRecords.value.reduce((sum, r) => sum + (r.gross_sales || 0), 0);
-});
-
-// Methods
+// Methods that delegate to store
 async function fetchRevenue() {
-  loading.value = true;
   try {
-    const { data } = await $fetch<{ success: boolean; data: any[] }>(
-      "/api/admin/platform-revenue",
-      {
-        params: {
-          limit: 24,
-        },
-      },
-    );
-    revenueRecords.value = data || [];
+    await store.fetchRecords(24);
   } catch (error: any) {
     toast.add({
       title: "Error",
       description: error.message || "Failed to fetch revenue data",
       color: "error",
     });
-  } finally {
-    loading.value = false;
   }
 }
 
 async function calculateRevenue() {
-  calculating.value = true;
   try {
-    const result = await $fetch("/api/admin/platform-revenue/calculate", {
-      method: "POST",
-      body: {
-        month: selectedMonth.value,
-        year: selectedYear.value,
-        excludeDeliveryFees: excludeDeliveryFees.value,
-        forceRecalculate: forceRecalculate.value,
-      },
+    // Show warning if forcing recalculation
+    if (forceRecalculate.value && isCurrentLocked.value) {
+      toast.add({
+        title: "Warning",
+        description: "Force recalculating a locked month. This will be logged.",
+        color: "warning",
+      });
+    }
+
+    await store.calculateRevenue({
+      month: selectedMonth.value,
+      year: selectedYear.value,
+      excludeDeliveryFees: excludeDeliveryFees.value,
+      forceRecalculate: forceRecalculate.value,
     });
 
     toast.add({
       title: "Success",
-      description: `Calculated revenue for ${result.data.month_name} ${result.data.year}`,
+      description: `Calculated revenue for ${store.getMonthName(selectedMonth.value)} ${selectedYear.value}`,
       color: "success",
     });
 
     showCalculateModal.value = false;
-    await fetchRevenue();
+    excludeDeliveryFees.value = false;
+    forceRecalculate.value = false;
   } catch (error: any) {
     toast.add({
       title: "Error",
       description: error.message || "Failed to calculate revenue",
       color: "error",
     });
-  } finally {
-    calculating.value = false;
   }
 }
 
 async function generateInvoice(revenueId: string) {
-  generatingInvoice.value = revenueId;
   try {
-    const result = await $fetch<{
-      success: boolean;
-      data: {
-        invoice_number: string;
-        invoice_date: string;
-        due_date: string;
-        billing_period: string;
-        subtotal: number;
-        vat: number;
-        total: number;
-        status: string;
-      };
-    }>("/api/admin/platform-revenue/generate-invoice", {
-      method: "POST",
-      body: {
-        id: revenueId,
-        dueDays: 7,
-      },
-    });
+    const result = await store.generateInvoice(revenueId);
 
     toast.add({
       title: "Invoice Generated",
-      description: `Invoice #${result.data.invoice_number} created`,
+      description: `Invoice #${result.invoice_number} created`,
       color: "success",
     });
-
-    await fetchRevenue();
   } catch (error: any) {
     toast.add({
       title: "Error",
       description: error.message || "Failed to generate invoice",
       color: "error",
     });
-  } finally {
-    generatingInvoice.value = null;
   }
 }
 
-async function lockRevenue(revenueId: string, currentStatus: string) {
-  const newStatus = currentStatus === "locked" ? "pending" : "locked";
-  locking.value = revenueId;
+async function lockRevenue(revenueId: string, currentStatus: RevenueStatus) {
   try {
-    await $fetch("/api/admin/platform-revenue/lock", {
-      method: "PATCH",
-      body: {
-        id: revenueId,
-        status: newStatus,
-      },
-    });
+    const newStatus = await store.toggleLock(revenueId, currentStatus);
 
     toast.add({
       title: "Status Updated",
       description: `Revenue ${newStatus === "locked" ? "locked" : "unlocked"}`,
       color: "success",
     });
-
-    await fetchRevenue();
   } catch (error: any) {
     toast.add({
       title: "Error",
       description: error.message || "Failed to update status",
       color: "error",
     });
-  } finally {
-    locking.value = null;
   }
 }
 
+async function showAuditTrail(revenue: RevenueRecord) {
+  selectedRevenueForAudit.value = revenue;
+  showAuditModal.value = true;
+  await store.fetchAuditLogs(revenue.id);
+}
+
 function exportCSV(month: number, year: number) {
-  const url = `/api/admin/platform-revenue/export-csv?month=${month}&year=${year}`;
-  window.open(url, "_blank");
+  store.exportCSV(month, year);
 }
 
 function formatCurrency(amount: number) {
-  return new Intl.NumberFormat("en-NG", {
-    style: "currency",
-    currency: "NGN",
-  }).format(amount || 0);
+  return store.formatCurrency(amount);
 }
 
 function formatNumber(num: number) {
-  return new Intl.NumberFormat("en-NG").format(num || 0);
+  return store.formatNumber(num);
 }
 
-function getStatusColor(status: string) {
-  switch (status) {
-    case "paid":
-      return "green";
-    case "locked":
-      return "amber";
-    case "disputed":
-      return "red";
+function getStatusColor(status: RevenueStatus) {
+  return store.getStatusColor(status);
+}
+
+function getStatusBadgeClass(status: RevenueStatus, size: "sm" | "lg") {
+  const color = getStatusColor(status);
+  const base =
+    "inline-flex items-center rounded-full font-semibold capitalize ring-1 ring-inset";
+  const sizeClass = size === "lg" ? "px-3 py-1 text-sm" : "px-2 py-0.5 text-xs";
+
+  switch (color) {
+    case "green":
+      return `${base} ${sizeClass} bg-green-50 text-green-700 ring-green-200`;
+    case "amber":
+      return `${base} ${sizeClass} bg-amber-50 text-amber-700 ring-amber-200`;
+    case "red":
+      return `${base} ${sizeClass} bg-red-50 text-red-700 ring-red-200`;
     default:
-      return "gray";
+      return `${base} ${sizeClass} bg-gray-50 text-gray-700 ring-gray-200`;
   }
 }
 
 function getMonthName(month: number) {
-  return new Date(2020, month - 1, 1).toLocaleString("default", {
-    month: "long",
-  });
+  return store.getMonthName(month);
+}
+
+function isLocking(revenueId: string) {
+  return store.isLocking(revenueId);
+}
+
+function isGeneratingInvoice(revenueId: string) {
+  return store.isGeneratingInvoice(revenueId);
 }
 
 onMounted(() => {
@@ -258,13 +250,13 @@ onMounted(() => {
 
       <!-- Actions -->
       <div class="flex flex-wrap gap-4 mb-6">
-        <UButton
-          color="red"
-          icon="i-heroicons-calculator"
+        <button
+          type="button"
+          class="inline-flex items-center gap-2 rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-red-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-600"
           @click="showCalculateModal = true"
         >
           Calculate Monthly Revenue
-        </UButton>
+        </button>
       </div>
 
       <!-- Current Month Summary -->
@@ -277,9 +269,9 @@ onMounted(() => {
             {{ getMonthName(currentMonthRevenue.month) }}
             {{ currentMonthRevenue.year }}
           </h2>
-          <UBadge :color="getStatusColor(currentMonthRevenue.status)" size="lg">
+          <span :class="getStatusBadgeClass(currentMonthRevenue.status, 'lg')">
             {{ currentMonthRevenue.status }}
-          </UBadge>
+          </span>
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
@@ -367,44 +359,54 @@ onMounted(() => {
 
         <!-- Actions -->
         <div class="flex flex-wrap gap-3 mt-6 pt-4 border-t">
-          <UButton
+          <button
             v-if="!currentMonthRevenue.invoice_number"
-            color="green"
-            variant="soft"
-            :loading="generatingInvoice === currentMonthRevenue.id"
+            type="button"
+            class="inline-flex items-center justify-center rounded-lg bg-green-50 px-3 py-2 text-sm font-semibold text-green-700 ring-1 ring-inset ring-green-200 hover:bg-green-100 disabled:opacity-60"
+            :disabled="isGeneratingInvoice(currentMonthRevenue.id)"
             @click="generateInvoice(currentMonthRevenue.id)"
           >
-            Generate Invoice
-          </UButton>
+            {{
+              isGeneratingInvoice(currentMonthRevenue.id)
+                ? "Generating..."
+                : "Generate Invoice"
+            }}
+          </button>
           <div v-else class="flex items-center gap-2 text-sm text-gray-600">
-            <UIcon name="i-heroicons-document-check" class="text-green-500" />
             <span>Invoice: {{ currentMonthRevenue.invoice_number }}</span>
           </div>
 
-          <UButton
-            color="blue"
-            variant="soft"
+          <button
+            type="button"
+            class="inline-flex items-center justify-center rounded-lg bg-blue-50 px-3 py-2 text-sm font-semibold text-blue-700 ring-1 ring-inset ring-blue-200 hover:bg-blue-100"
             @click="
               exportCSV(currentMonthRevenue.month, currentMonthRevenue.year)
             "
           >
             Export CSV
-          </UButton>
+          </button>
 
-          <UButton
-            :color="currentMonthRevenue.status === 'locked' ? 'amber' : 'gray'"
-            variant="soft"
-            :loading="locking === currentMonthRevenue.id"
+          <button
+            type="button"
+            class="inline-flex items-center justify-center rounded-lg px-3 py-2 text-sm font-semibold ring-1 ring-inset hover:bg-gray-100 disabled:opacity-60"
+            :class="
+              currentMonthRevenue.status === 'locked'
+                ? 'bg-amber-50 text-amber-700 ring-amber-200 hover:bg-amber-100'
+                : 'bg-gray-50 text-gray-700 ring-gray-200'
+            "
+            :disabled="isLocking(currentMonthRevenue.id)"
             @click="
               lockRevenue(currentMonthRevenue.id, currentMonthRevenue.status)
             "
           >
             {{
-              currentMonthRevenue.status === "locked"
-                ? "Unlock"
-                : "Lock Numbers"
+              isLocking(currentMonthRevenue.id)
+                ? "Updating..."
+                : currentMonthRevenue.status === "locked"
+                  ? "Unlock"
+                  : "Lock Numbers"
             }}
-          </UButton>
+          </button>
         </div>
       </div>
 
@@ -492,9 +494,9 @@ onMounted(() => {
                 {{ formatCurrency(record.platform_fee) }}
               </td>
               <td class="px-6 py-4 whitespace-nowrap text-center">
-                <UBadge :color="getStatusColor(record.status)" size="sm">
+                <span :class="getStatusBadgeClass(record.status, 'sm')">
                   {{ record.status }}
-                </UBadge>
+                </span>
               </td>
               <td
                 class="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-500"
@@ -505,33 +507,48 @@ onMounted(() => {
                 class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium"
               >
                 <div class="flex items-center justify-end gap-2">
-                  <UButton
+                  <button
                     v-if="!record.invoice_number"
-                    color="green"
-                    variant="ghost"
-                    size="xs"
-                    :loading="generatingInvoice === record.id"
+                    type="button"
+                    class="rounded-md px-2 py-1 text-xs font-semibold text-green-700 hover:bg-green-50 disabled:opacity-60"
+                    :disabled="isGeneratingInvoice(record.id)"
                     @click="generateInvoice(record.id)"
                   >
-                    Invoice
-                  </UButton>
-                  <UButton
-                    color="blue"
-                    variant="ghost"
-                    size="xs"
+                    {{ isGeneratingInvoice(record.id) ? "..." : "Invoice" }}
+                  </button>
+                  <button
+                    type="button"
+                    class="rounded-md px-2 py-1 text-xs font-semibold text-purple-700 hover:bg-purple-50"
+                    @click="showAuditTrail(record)"
+                  >
+                    Audit
+                  </button>
+                  <button
+                    type="button"
+                    class="rounded-md px-2 py-1 text-xs font-semibold text-blue-700 hover:bg-blue-50"
                     @click="exportCSV(record.month, record.year)"
                   >
                     CSV
-                  </UButton>
-                  <UButton
-                    :color="record.status === 'locked' ? 'amber' : 'gray'"
-                    variant="ghost"
-                    size="xs"
-                    :loading="locking === record.id"
+                  </button>
+                  <button
+                    type="button"
+                    class="rounded-md px-2 py-1 text-xs font-semibold hover:bg-gray-50 disabled:opacity-60"
+                    :class="
+                      record.status === 'locked'
+                        ? 'text-amber-700 hover:bg-amber-50'
+                        : 'text-gray-700'
+                    "
+                    :disabled="isLocking(record.id)"
                     @click="lockRevenue(record.id, record.status)"
                   >
-                    {{ record.status === "locked" ? "Unlock" : "Lock" }}
-                  </UButton>
+                    {{
+                      isLocking(record.id)
+                        ? "..."
+                        : record.status === "locked"
+                          ? "Unlock"
+                          : "Lock"
+                    }}
+                  </button>
                 </div>
               </td>
             </tr>
@@ -541,79 +558,296 @@ onMounted(() => {
     </div>
 
     <!-- Calculate Modal -->
-    <UModal v-model="showCalculateModal">
-      <div class="p-6">
-        <h3 class="text-lg font-bold text-gray-900 mb-4">
-          Calculate Monthly Revenue
-        </h3>
+    <div v-if="showCalculateModal" class="fixed inset-0 z-50">
+      <div
+        class="absolute inset-0 bg-black/40"
+        @click="showCalculateModal = false"
+      ></div>
+      <div class="relative flex min-h-full items-center justify-center p-4">
+        <div class="w-full max-w-lg rounded-xl bg-white shadow-xl">
+          <div class="p-6">
+            <h3 class="text-lg font-bold text-gray-900 mb-4">
+              Calculate Monthly Revenue
+            </h3>
 
-        <div class="space-y-4">
-          <div class="grid grid-cols-2 gap-4">
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1"
-                >Month</label
-              >
-              <USelect
-                v-model="selectedMonth"
-                :options="[
-                  { label: 'January', value: 1 },
-                  { label: 'February', value: 2 },
-                  { label: 'March', value: 3 },
-                  { label: 'April', value: 4 },
-                  { label: 'May', value: 5 },
-                  { label: 'June', value: 6 },
-                  { label: 'July', value: 7 },
-                  { label: 'August', value: 8 },
-                  { label: 'September', value: 9 },
-                  { label: 'October', value: 10 },
-                  { label: 'November', value: 11 },
-                  { label: 'December', value: 12 },
-                ]"
-              />
+            <div class="space-y-4">
+              <div class="grid grid-cols-2 gap-4">
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-1"
+                    >Month</label
+                  >
+                  <select
+                    v-model.number="selectedMonth"
+                    class="block w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500"
+                  >
+                    <option
+                      v-for="opt in monthOptions"
+                      :key="opt.value"
+                      :value="opt.value"
+                    >
+                      {{ opt.label }}
+                    </option>
+                  </select>
+                </div>
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-1"
+                    >Year</label
+                  >
+                  <input
+                    v-model.number="selectedYear"
+                    type="number"
+                    class="block w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500"
+                  />
+                </div>
+              </div>
+
+              <div class="space-y-2">
+                <label class="flex items-center gap-2 text-sm text-gray-900">
+                  <input
+                    v-model="excludeDeliveryFees"
+                    type="checkbox"
+                    class="h-4 w-4 rounded border-gray-300 text-red-600 focus:ring-red-500"
+                  />
+                  <span>Exclude delivery fees from calculation</span>
+                </label>
+                <p class="text-xs text-gray-500">
+                  If checked, platform fee will be calculated on (gross sales -
+                  delivery fees)
+                </p>
+              </div>
+
+              <div class="space-y-2">
+                <label class="flex items-center gap-2 text-sm text-gray-900">
+                  <input
+                    v-model="forceRecalculate"
+                    type="checkbox"
+                    class="h-4 w-4 rounded border-gray-300 text-red-600 focus:ring-red-500"
+                  />
+                  <span>Force recalculate (even if locked)</span>
+                </label>
+                <p class="text-xs text-gray-500">
+                  Only use this if you need to correct a calculation
+                </p>
+              </div>
             </div>
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1"
-                >Year</label
+
+            <div class="flex justify-end gap-3 mt-6">
+              <button
+                type="button"
+                class="inline-flex items-center justify-center rounded-lg bg-gray-50 px-4 py-2 text-sm font-semibold text-gray-700 ring-1 ring-inset ring-gray-200 hover:bg-gray-100"
+                @click="showCalculateModal = false"
               >
-              <UInput v-model="selectedYear" type="number" />
+                Cancel
+              </button>
+              <button
+                type="button"
+                class="inline-flex items-center justify-center rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-red-700 disabled:opacity-60"
+                :disabled="calculating"
+                @click="calculateRevenue"
+              >
+                {{ calculating ? "Calculating..." : "Calculate" }}
+              </button>
             </div>
           </div>
-
-          <div class="space-y-2">
-            <UCheckbox
-              v-model="excludeDeliveryFees"
-              label="Exclude delivery fees from calculation"
-            />
-            <p class="text-xs text-gray-500">
-              If checked, platform fee will be calculated on (gross sales -
-              delivery fees)
-            </p>
-          </div>
-
-          <div class="space-y-2">
-            <UCheckbox
-              v-model="forceRecalculate"
-              label="Force recalculate (even if locked)"
-            />
-            <p class="text-xs text-gray-500">
-              Only use this if you need to correct a calculation
-            </p>
-          </div>
-        </div>
-
-        <div class="flex justify-end gap-3 mt-6">
-          <UButton
-            color="gray"
-            variant="soft"
-            @click="showCalculateModal = false"
-          >
-            Cancel
-          </UButton>
-          <UButton color="red" :loading="calculating" @click="calculateRevenue">
-            Calculate
-          </UButton>
         </div>
       </div>
-    </UModal>
+    </div>
+
+    <!-- Audit Trail Modal -->
+    <div v-if="showAuditModal" class="fixed inset-0 z-50">
+      <div
+        class="absolute inset-0 bg-black/40"
+        @click="showAuditModal = false"
+      ></div>
+      <div class="relative flex min-h-full items-center justify-center p-4">
+        <div
+          class="w-full max-w-4xl rounded-xl bg-white shadow-xl max-h-[80vh] flex flex-col"
+        >
+          <div class="p-6 border-b">
+            <div class="flex items-center justify-between">
+              <div>
+                <h3 class="text-lg font-bold text-gray-900">
+                  Audit Trail:
+                  {{
+                    selectedRevenueForAudit
+                      ? getMonthName(selectedRevenueForAudit.month)
+                      : ""
+                  }}
+                  {{ selectedRevenueForAudit?.year }}
+                </h3>
+                <p class="text-sm text-gray-500 mt-1">
+                  Financial accountability log for revenue calculations and
+                  status changes
+                </p>
+              </div>
+              <button
+                type="button"
+                class="text-gray-400 hover:text-gray-600"
+                @click="showAuditModal = false"
+              >
+                <svg
+                  class="w-6 h-6"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M6 18L18 6M6 6l12 12"
+                  />
+                </svg>
+              </button>
+            </div>
+          </div>
+
+          <div class="p-6 overflow-y-auto flex-1">
+            <div
+              v-if="auditLogsForSelected.length === 0"
+              class="text-center text-gray-500 py-8"
+            >
+              No audit records found for this revenue period.
+            </div>
+            <table v-else class="min-w-full divide-y divide-gray-200">
+              <thead class="bg-gray-50">
+                <tr>
+                  <th
+                    class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase"
+                  >
+                    Date
+                  </th>
+                  <th
+                    class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase"
+                  >
+                    Admin
+                  </th>
+                  <th
+                    class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase"
+                  >
+                    Action
+                  </th>
+                  <th
+                    class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase"
+                  >
+                    Status Change
+                  </th>
+                  <th
+                    class="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase"
+                  >
+                    Gross Sales
+                  </th>
+                  <th
+                    class="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase"
+                  >
+                    Platform Fee
+                  </th>
+                  <th
+                    class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase"
+                  >
+                    Notes
+                  </th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-gray-200">
+                <tr v-for="log in auditLogsForSelected" :key="log.id">
+                  <td class="px-4 py-2 text-sm text-gray-900 whitespace-nowrap">
+                    {{ new Date(log.created_at).toLocaleString() }}
+                  </td>
+                  <td class="px-4 py-2 text-sm text-gray-900">
+                    {{ log.admin_email || log.admin_id.slice(0, 8) + "..." }}
+                  </td>
+                  <td class="px-4 py-2 text-sm">
+                    <span
+                      class="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium"
+                      :class="{
+                        'bg-blue-50 text-blue-700':
+                          log.action === 'calculated' ||
+                          log.action === 'recalculated',
+                        'bg-red-50 text-red-700':
+                          log.action === 'force_recalculate',
+                        'bg-amber-50 text-amber-700': log.action === 'locked',
+                        'bg-green-50 text-green-700':
+                          log.action === 'unlocked' || log.action === 'paid',
+                        'bg-purple-50 text-purple-700':
+                          log.action === 'disputed',
+                      }"
+                    >
+                      {{ log.action.replace("_", " ") }}
+                    </span>
+                  </td>
+                  <td class="px-4 py-2 text-sm text-gray-900">
+                    <span v-if="log.previous_status || log.new_status">
+                      {{ log.previous_status || "-" }} →
+                      {{ log.new_status || "-" }}
+                    </span>
+                    <span v-else class="text-gray-400">-</span>
+                  </td>
+                  <td class="px-4 py-2 text-sm text-right text-gray-900">
+                    <span
+                      v-if="
+                        log.previous_total !== null || log.new_total !== null
+                      "
+                    >
+                      <span
+                        v-if="log.previous_total !== log.new_total"
+                        class="text-amber-600"
+                      >
+                        {{ formatCurrency(log.previous_total || 0) }} →
+                        {{ formatCurrency(log.new_total || 0) }}
+                      </span>
+                      <span v-else>{{
+                        formatCurrency(log.new_total || 0)
+                      }}</span>
+                    </span>
+                    <span v-else class="text-gray-400">-</span>
+                  </td>
+                  <td class="px-4 py-2 text-sm text-right text-gray-900">
+                    <span
+                      v-if="
+                        log.previous_platform_fee !== null ||
+                        log.new_platform_fee !== null
+                      "
+                    >
+                      <span
+                        v-if="
+                          log.previous_platform_fee !== log.new_platform_fee
+                        "
+                        class="text-amber-600"
+                      >
+                        {{ formatCurrency(log.previous_platform_fee || 0) }} →
+                        {{ formatCurrency(log.new_platform_fee || 0) }}
+                      </span>
+                      <span v-else>{{
+                        formatCurrency(log.new_platform_fee || 0)
+                      }}</span>
+                    </span>
+                    <span v-else class="text-gray-400">-</span>
+                  </td>
+                  <td
+                    class="px-4 py-2 text-sm text-gray-500 max-w-xs truncate"
+                    :title="log.notes || ''"
+                  >
+                    {{ log.notes || "-" }}
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="p-6 border-t bg-gray-50">
+            <div class="flex justify-end">
+              <button
+                type="button"
+                class="inline-flex items-center justify-center rounded-lg bg-gray-50 px-4 py-2 text-sm font-semibold text-gray-700 ring-1 ring-inset ring-gray-200 hover:bg-gray-100"
+                @click="showAuditModal = false"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </template>

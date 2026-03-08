@@ -55,6 +55,11 @@ function isPhoneVerified(profile: any) {
 }
 
 export default defineEventHandler(async (event) => {
+  throw createError({
+    statusCode: 403,
+    statusMessage: "POD is currently disabled.",
+  });
+
   const config = useRuntimeConfig()
 
   const supabaseUrl =

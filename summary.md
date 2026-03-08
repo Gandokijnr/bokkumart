@@ -24,7 +24,6 @@ It supports three primary “surfaces” (user experiences):
   - Step-based delivery flow
   - Delivery confirmation via PIN (prepaid) or payment confirmation (POD)
 
-
 ## 2) Technology & architecture
 
 ### 2.1 Frontend (Nuxt 4)
@@ -53,7 +52,6 @@ Key app folders:
   - Realtime subscriptions (client)
   - Storage for product images
 - Uses **Paystack** for online payments
-
 
 ## 3) Authentication, authorization, and routing
 
@@ -95,7 +93,6 @@ Role logic and navigation is primarily implemented in:
 Driver-specific hard guard:
 
 - Drivers are prevented from accessing `/admin` (and other restricted areas) and redirected to `/driver/dashboard`.
-
 
 ## 4) Core customer journey (end-to-end)
 
@@ -166,7 +163,6 @@ The UI is step-based:
 Before payment, the system supports a stock re-check endpoint:
 
 - `POST /api/orders/validate-cart-stock`
-
 
 ## 5) Payments
 
@@ -239,26 +235,8 @@ Key behaviors:
 
 ### 5.2 Pay-on-Delivery (POD)
 
-Server endpoint:
-
-- `POST /api/orders/create-pod` (`server/api/orders/create-pod.post.ts`)
-
-Key eligibility rules enforced:
-
-- POD is **not allowed for pickup** (pickup requires upfront payment).
-- Caller must provide a valid Bearer token.
-- Profile must have a phone number (basic “phone verified” requirement).
-- New account restrictions:
-  - New users (created within 7 days) are limited in POD usage.
-- Anti-abuse:
-  - Repeated cancellations can disable POD.
-
-Order is created with:
-
-- `status: "pending"`
-- `payment_method: "pod"`
-- Metadata includes fraud control fields.
-
+- POD is currently disabled.
+- To ensure priority packing and safety, HomeAffairs currently accepts secure online payments only.
 
 ## 6) Fulfillment modes
 
@@ -282,7 +260,6 @@ Pickup collection verification:
 
 - Claim code (6 chars) and QR payload stored in order metadata for store-side verification flows.
 
-
 ## 7) Customer order management
 
 Primary customer surface:
@@ -302,7 +279,6 @@ Customer-facing endpoints (as documented):
 - `POST /api/orders/im-here`
 - `POST /api/orders/expire-unpaid`
 - `POST /api/orders/expire-unpaid-pickup`
-
 
 ## 8) Admin / back-office operations
 
@@ -356,7 +332,6 @@ Super admin APIs include:
 - `GET /api/admin/operational-kpis`
 - `POST /api/admin/backfill-delivered-stock`
 
-
 ## 9) Driver workflow
 
 Driver routes:
@@ -384,7 +359,6 @@ Key driver behaviors:
 - Offline:
   - Queues actions and syncs when back online
 
-
 ## 10) Data model (conceptual)
 
 Based on usage across pages/stores/endpoints:
@@ -403,7 +377,6 @@ Based on usage across pages/stores/endpoints:
   - Items, totals, fulfillment details, payment fields, driver assignment, metadata
 - `order_interactions`
   - Operational logs/audit trail
-
 
 ## 11) Server API inventory (quick reference)
 
@@ -430,7 +403,6 @@ Based on usage across pages/stores/endpoints:
   - `POST /api/admin/backfill-delivered-stock`
 - **Stores**
   - `GET /api/stores`
-
 
 ## 12) Operational rules & safeguards (high impact)
 

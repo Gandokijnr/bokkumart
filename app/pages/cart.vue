@@ -140,6 +140,7 @@
 <script setup lang="ts">
 import { useCartStore } from "~/stores/useCartStore";
 import { useCategories } from "~/composables/useCategories";
+import { useFees } from "~/composables/useFees";
 import { computed, ref, onMounted, onUnmounted } from "vue";
 
 // Page meta
@@ -201,7 +202,12 @@ const crossSellProducts = ref<
 >([]);
 
 // Computed values
-const serviceFee = computed(() => Math.round(cartStore.cartSubtotal * 0.025));
+const { serviceFee } = useFees({
+  subtotal: computed(() => cartStore.cartSubtotal),
+  fulfillmentMode: computed(
+    () => cartStore.deliveryDetails?.method || "delivery",
+  ),
+});
 const totalWithService = computed(
   () => cartStore.cartSubtotal + cartStore.deliveryFee + serviceFee.value,
 );

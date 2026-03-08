@@ -18,6 +18,20 @@ const selectedStore = ref("");
 const stores = ref<any[]>([]);
 const toast = useToast();
 
+const daysOptions = [
+  { label: "Last 7 days", value: 7 },
+  { label: "Last 30 days", value: 30 },
+  { label: "Last 90 days", value: 90 },
+  { label: "Last 365 days", value: 365 },
+];
+
+const storeOptions = computed(() => {
+  return [
+    { label: "All Stores", value: "" },
+    ...stores.value.map((s) => ({ label: s.name, value: s.id })),
+  ];
+});
+
 // Colors for charts
 const chartColors = {
   primary: "#DC2626", // red-600
@@ -554,25 +568,31 @@ onMounted(() => {
 
         <!-- Filters -->
         <div class="flex flex-wrap gap-3">
-          <USelect
-            v-model="selectedDays"
-            :options="[
-              { label: 'Last 7 days', value: 7 },
-              { label: 'Last 30 days', value: 30 },
-              { label: 'Last 90 days', value: 90 },
-              { label: 'Last 365 days', value: 365 },
-            ]"
-            class="w-40"
-          />
-          <USelect
+          <select
+            v-model.number="selectedDays"
+            class="w-40 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500"
+          >
+            <option
+              v-for="opt in daysOptions"
+              :key="opt.value"
+              :value="opt.value"
+            >
+              {{ opt.label }}
+            </option>
+          </select>
+          <select
             v-if="stores.length > 0"
             v-model="selectedStore"
-            :options="[
-              { label: 'All Stores', value: '' },
-              ...stores.map((s) => ({ label: s.name, value: s.id })),
-            ]"
-            class="w-48"
-          />
+            class="w-48 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500"
+          >
+            <option
+              v-for="opt in storeOptions"
+              :key="opt.value"
+              :value="opt.value"
+            >
+              {{ opt.label }}
+            </option>
+          </select>
         </div>
       </div>
 
@@ -790,39 +810,46 @@ onMounted(() => {
             Quick Actions
           </h3>
           <div class="flex flex-wrap gap-3">
-            <UButton
+            <NuxtLink
               to="/admin/platform-revenue"
-              color="red"
-              icon="i-heroicons-currency-dollar"
+              class="inline-flex items-center justify-center rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-red-700"
             >
               Platform Revenue
-            </UButton>
-            <UButton
+            </NuxtLink>
+            <NuxtLink
               to="/admin/orders"
-              color="blue"
-              variant="soft"
-              icon="i-heroicons-clipboard-list"
+              class="inline-flex items-center justify-center rounded-lg bg-blue-50 px-4 py-2 text-sm font-semibold text-blue-700 ring-1 ring-inset ring-blue-200 hover:bg-blue-100"
             >
               View All Orders
-            </UButton>
-            <UButton
+            </NuxtLink>
+            <NuxtLink
               to="/admin/global-dashboard"
-              color="green"
-              variant="soft"
-              icon="i-heroicons-globe"
+              class="inline-flex items-center justify-center rounded-lg bg-green-50 px-4 py-2 text-sm font-semibold text-green-700 ring-1 ring-inset ring-green-200 hover:bg-green-100"
             >
               Global Dashboard
-            </UButton>
+            </NuxtLink>
           </div>
         </div>
       </div>
 
       <!-- Empty State -->
       <div v-else class="text-center py-20">
-        <UIcon
-          name="i-heroicons-chart-bar"
+        <svg
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
           class="w-16 h-16 text-gray-300 mx-auto mb-4"
-        />
+          aria-hidden="true"
+        >
+          <path d="M3 3v18h18" />
+          <path d="M7 14v4" />
+          <path d="M11 10v8" />
+          <path d="M15 6v12" />
+          <path d="M19 12v6" />
+        </svg>
         <h3 class="text-lg font-medium text-gray-900">No data available</h3>
         <p class="text-gray-500 mt-2">
           Try adjusting your filters or check back later.

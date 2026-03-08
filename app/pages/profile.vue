@@ -366,10 +366,6 @@
                       {{ formatCurrency(order.total_amount) }}
                     </p>
                     <div
-                      v-if="
-                        order.delivery_method === 'pickup' &&
-                        order.confirmation_code
-                      "
                       class="mt-2 inline-flex items-center gap-2 rounded-lg bg-gray-50 px-3 py-1 text-xs font-medium text-gray-700"
                     >
                       <span class="text-gray-500">Confirmation Code:</span>
@@ -887,6 +883,7 @@ import {
   type AddressLabel,
   LAGOS_AREAS,
 } from "../composables/useUserAddresses";
+import { useCartStore } from "../stores/useCartStore";
 import type { Database } from "../types/database.types";
 
 const supabase = useSupabaseClient<Database>();
@@ -1188,9 +1185,152 @@ const setAsPrimary = async (id: string) => {
 };
 
 const reorder = async (order: Order) => {
+  if (!order.items || order.items.length === 0) {
+    showToast("No items to reorder", "error");
+    return;
+  }
+
   reorderingOrderId.value = order.id;
-  showToast("Items added to cart!", "success");
-  reorderingOrderId.value = null;
+  const cartStore = useCartStore();
+
+  try {
+    // Check if cart has items from a different store
+    if (
+      cartStore.items.length > 0 &&
+      cartStore.currentStoreId !== order.store_id
+    ) {
+      const currentStore = cartStore.currentStoreName || "another store";
+      const newStore = order.metadata?.store_name || "this store";
+
+      // Clear cart for different store
+      cartStore.clearCart();
+      showToast(
+        `Switched from ${currentStore} to ${newStore}. Previous cart cleared.`,
+        "info",
+      );
+    }
+
+    // Fetch current product details for all items
+    const productIds = order.items.map((item) => item.product_id);
+    type ReorderProduct = {
+      id: string;
+      name: string;
+      price: number;
+      image_url: string | null;
+    };
+
+    type ReorderInventory = {
+      product_id: string;
+      available_stock: number;
+      digital_buffer: number | null;
+      is_visible: boolean;
+      store_price: number | null;
+    };
+
+    const { data: productsRaw, error: productsError } = await supabase
+      .from("products")
+      .select("id, name, price, image_url")
+      .in("id", productIds);
+
+    if (productsError) throw productsError;
+
+    const products = productsRaw as ReorderProduct[] | null;
+
+    const { data: inventoryRaw, error: inventoryError } = await supabase
+      .from("store_inventory")
+      .select(
+        "product_id, available_stock, digital_buffer, is_visible, store_price",
+      )
+      .eq("store_id", order.store_id)
+      .in("product_id", productIds);
+
+    if (inventoryError) throw inventoryError;
+
+    const inventory = inventoryRaw as ReorderInventory[] | null;
+
+    const productMap = new Map(products?.map((p) => [p.id, p]) || []);
+    const inventoryMap = new Map(
+      inventory?.map((i) => [i.product_id, i]) || [],
+    );
+
+    let addedCount = 0;
+    let skippedCount = 0;
+
+    // Add each item to cart
+    for (const item of order.items) {
+      const product = productMap.get(item.product_id);
+      const inv = inventoryMap.get(item.product_id);
+
+      if (!product || !inv) {
+        skippedCount++;
+        continue;
+      }
+
+      if (!inv.is_visible) {
+        skippedCount++;
+        continue;
+      }
+
+      // Check if product is still available
+      const effectiveStock = Math.max(
+        0,
+        inv.available_stock - (inv.digital_buffer || 0),
+      );
+      if (effectiveStock <= 0) {
+        skippedCount++;
+        continue;
+      }
+
+      // Add to cart using cart store
+      const result = cartStore.addToCart(
+        {
+          id: product.id,
+          product_id: product.id,
+          name: product.name,
+          price: inv.store_price ?? product.price,
+          store_id: order.store_id,
+          store_name: order.metadata?.store_name || "",
+          image_url: product.image_url ?? undefined,
+          max_quantity: effectiveStock,
+          digital_buffer: inv.digital_buffer || 0,
+        },
+        item.quantity,
+      );
+
+      if (result.success) {
+        addedCount++;
+      } else {
+        skippedCount++;
+      }
+    }
+
+    // Save cart to database
+    if (addedCount > 0) {
+      await cartStore.saveToDatabase(supabase);
+    }
+
+    // Show appropriate message
+    if (addedCount === order.items.length) {
+      showToast(`${addedCount} item(s) added to cart!`, "success");
+    } else if (addedCount > 0) {
+      showToast(
+        `${addedCount} item(s) added. ${skippedCount} unavailable.`,
+        "success",
+      );
+    } else {
+      showToast("No items available to reorder", "error");
+    }
+
+    // Navigate to cart if items were added
+    if (addedCount > 0) {
+      navigateTo("/cart");
+    }
+  } catch (err: any) {
+    console.error("Error reordering:", err);
+    showToast(err?.message || "Failed to reorder items", "error");
+  } finally {
+    reorderingOrderId.value = null;
+  }
 };
 
 const viewOrderDetails = (order: Order) => {

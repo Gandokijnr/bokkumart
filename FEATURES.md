@@ -24,7 +24,6 @@ The app uses:
   - Transaction initialize / verify
   - Webhook handling for `charge.success`
 
-
 ## 2. Technology & architecture
 
 ### 2.1 Frontend
@@ -52,7 +51,6 @@ The app uses:
   - Restores session on refresh
   - Enforces auth on protected routes
   - Applies role-based routing rules, especially for drivers
-
 
 ## 3. Roles & permissions
 
@@ -94,7 +92,6 @@ Role behavior is implemented primarily in:
 - Step-based workflow: assigned → picked_up → arrived → delivered
 - Delivery confirmation via PIN (prepaid) or payment confirmation (POD)
 - Basic offline action queueing (sync once online)
-
 
 ## 4. Core customer features
 
@@ -179,15 +176,8 @@ Pickup-specific behavior on successful online payment:
 
 #### 4.5.2 Pay on Delivery (POD)
 
-- Create POD order:
-  - `POST /api/orders/create-pod`
-
-Eligibility controls include:
-
-- Phone number must be present on profile (basic “phone verified” check)
-- New account limitations for POD
-- Cancellation-based restrictions (recent cancellations can disable POD)
-- Pickup fulfillment cannot use POD (pickup requires upfront payment)
+- POD is currently disabled.
+- To ensure priority packing and safety, HomeAffairs currently accepts secure online payments only.
 
 ### 4.6 Order management (Customer)
 
@@ -212,7 +202,6 @@ Unpaid order expiry endpoints (system/automation oriented):
   - `POST /api/orders/expire-unpaid`
 - Pickup online payment timeout cancellation:
   - `POST /api/orders/expire-unpaid-pickup`
-
 
 ## 5. Admin / back-office features
 
@@ -321,7 +310,6 @@ Other admin automation endpoint:
 - `POST /api/admin/backfill-delivered-stock`
   - Backfills/repairs stock updates for delivered orders
 
-
 ## 6. Driver features
 
 ### 6.1 Driver routes
@@ -353,7 +341,6 @@ Driver offline support:
 - Queues actions when offline
 - Syncs queued actions when back online
 
-
 ## 7. Data model (key entities)
 
 This summary is based on usage in stores, pages, and API handlers:
@@ -376,7 +363,6 @@ This summary is based on usage in stores, pages, and API handlers:
   - Pickup claim PIN + QR data in metadata for pickup collection
 - **order_interactions**
   - Verification logs, rejections, audit trail for operations
-
 
 ## 8. Public & protected routes (page inventory)
 
@@ -415,7 +401,6 @@ Examples from `app/pages/admin/*`:
 - `/driver` (index)
 - `/driver/dashboard`
 
-
 ## 9. Server API inventory
 
 ### 9.1 Cart
@@ -453,7 +438,6 @@ Examples from `app/pages/admin/*`:
 - `GET /api/stores`
   - Fetches active stores/branches
 
-
 ## 10. Notable operational rules & safeguards
 
 - **Role-based route guards**
@@ -468,7 +452,6 @@ Examples from `app/pages/admin/*`:
   - POD eligibility restrictions
   - Cancellation limit before blocking further cancellations
   - Basic rate limiting on Paystack verification endpoint
-
 
 ## 11. How to read this document
 

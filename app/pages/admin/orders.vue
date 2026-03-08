@@ -83,7 +83,6 @@
         class="rounded-lg border border-gray-300 px-3 py-2 focus:border-red-500 focus:outline-none"
       >
         <option value="">All Payment Methods</option>
-        <option value="pod">Pay on Delivery</option>
         <option value="prepaid">Prepaid</option>
       </select>
 
@@ -144,12 +143,12 @@
             @click="openOrderDetails(order)"
           >
             <div
-              class="absolute right-2 top-2 z-10 inline-flex items-center gap-1 rounded-md bg-gray-100/80 px-2 py-1 text-[10px] font-semibold text-gray-600 backdrop-blur"
-              :title="'This is the exact status currently displayed on the customer\'s mobile app.'"
+              class="absolute left-2 top-2 z-10 inline-flex items-center gap-1 rounded-md bg-gray-100/80 px-2 py-1 text-[10px] font-semibold text-gray-600 backdrop-blur"
+              :title="customerViewLabel(order)"
               @click.stop
             >
               <span aria-hidden="true">👁️</span>
-              <span>{{ customerViewLabel(order) }}</span>
+              <span>Client Sees</span>
             </div>
 
             <div
@@ -182,12 +181,6 @@
                 >
                   ARRIVED
                 </span>
-                <span
-                  v-if="order.payment_method === 'pod'"
-                  class="rounded bg-orange-100 px-1.5 py-0.5 text-xs font-bold text-orange-700"
-                >
-                  POD
-                </span>
               </div>
             </div>
 
@@ -216,6 +209,17 @@
                   class="h-1.5 rounded-full bg-red-600 transition-all"
                   :style="{ width: getProgressPercentage(column.status) + '%' }"
                 ></div>
+              </div>
+              <div class="mt-2 flex gap-2">
+                <button
+                  @click.stop="updateStatus(order, getNextStatus(order))"
+                  :disabled="processing.has(order.id)"
+                  class="flex-1 rounded-lg bg-red-600 px-2 py-1.5 text-xs font-bold text-white hover:bg-red-700 disabled:cursor-not-allowed disabled:bg-gray-300"
+                >
+                  {{
+                    processing.has(order.id) ? "..." : getNextStatusLabel(order)
+                  }}
+                </button>
               </div>
             </div>
           </div>
@@ -304,14 +308,9 @@
               </td>
               <td class="px-4 py-3">
                 <span
-                  class="rounded-full px-2 py-1 text-xs font-bold"
-                  :class="
-                    order.payment_method === 'pod'
-                      ? 'bg-orange-100 text-orange-700'
-                      : 'bg-green-100 text-green-700'
-                  "
+                  class="rounded-full px-2 py-1 text-xs font-bold bg-green-100 text-green-700"
                 >
-                  {{ order.payment_method === "pod" ? "POD" : "Prepaid" }}
+                  Prepaid
                 </span>
               </td>
               <td class="px-4 py-3">
@@ -415,44 +414,7 @@
             </button>
           </div>
 
-          <div class="mt-3 grid gap-3 md:grid-cols-2">
-            <div class="rounded-lg bg-white p-3">
-              <p class="text-xs font-semibold text-gray-700">Camera Scan</p>
-              <div class="mt-2 overflow-hidden rounded-lg bg-gray-100">
-                <video
-                  ref="verifyVideoEl"
-                  class="h-40 w-full object-cover"
-                  muted
-                  playsinline
-                ></video>
-              </div>
-              <div class="mt-2 flex gap-2">
-                <button
-                  @click="startVerifyScanner()"
-                  :disabled="scannerActive"
-                  class="flex-1 rounded-lg bg-indigo-600 px-3 py-2 text-xs font-bold text-white hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-60"
-                >
-                  Start Camera
-                </button>
-                <button
-                  @click="stopVerifyScanner()"
-                  :disabled="!scannerActive"
-                  class="flex-1 rounded-lg bg-gray-700 px-3 py-2 text-xs font-bold text-white hover:bg-gray-800 disabled:cursor-not-allowed disabled:opacity-60"
-                >
-                  Stop
-                </button>
-              </div>
-              <p
-                v-if="scannerError"
-                class="mt-2 text-xs font-semibold text-red-600"
-              >
-                {{ scannerError }}
-              </p>
-              <p v-else class="mt-2 text-xs text-gray-500">
-                If scanning isn't supported on this device, use manual entry.
-              </p>
-            </div>
-
+          <div class="mt-3 grid gap-3">
             <div class="rounded-lg bg-white p-3">
               <p class="text-xs font-semibold text-gray-700">Manual Code</p>
               <input
@@ -480,6 +442,58 @@
                 class="mt-2 text-xs font-semibold text-red-600"
               >
                 {{ verifyError }}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div
+          v-if="showVerifyDeliveryPin"
+          class="mt-4 rounded-xl border border-emerald-200 bg-emerald-50 p-4"
+        >
+          <div class="flex items-start justify-between gap-4">
+            <div>
+              <p class="font-bold text-emerald-900">Verify Delivery PIN</p>
+              <p class="mt-1 text-sm text-emerald-800">
+                Enter the customer's delivery PIN to complete this delivery.
+              </p>
+            </div>
+            <button
+              @click="closeVerifyDeliveryPin()"
+              class="rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-bold text-white hover:bg-emerald-700"
+            >
+              Close
+            </button>
+          </div>
+
+          <div class="mt-3 grid gap-3">
+            <div class="rounded-lg bg-white p-3">
+              <p class="text-xs font-semibold text-gray-700">Delivery PIN</p>
+              <input
+                v-model="deliveryPin"
+                inputmode="numeric"
+                maxlength="6"
+                placeholder="Enter PIN"
+                class="mt-2 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none"
+              />
+              <button
+                @click="verifyDeliveryPin()"
+                :disabled="
+                  verifyingDeliveryPin || !deliveryPin || deliveryPin.length < 4
+                "
+                class="mt-2 w-full rounded-lg bg-emerald-600 px-3 py-2 text-xs font-bold text-white hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {{
+                  verifyingDeliveryPin
+                    ? "Verifying..."
+                    : "Verify & Mark Delivered"
+                }}
+              </button>
+              <p
+                v-if="deliveryPinError"
+                class="mt-2 text-xs font-semibold text-red-600"
+              >
+                {{ deliveryPinError }}
               </p>
             </div>
           </div>
@@ -668,6 +682,11 @@ const showVerifyCollection = ref(false);
 const verifyCode = ref("");
 const verifyError = ref("");
 const verifyingCollection = ref(false);
+
+const showVerifyDeliveryPin = ref(false);
+const deliveryPin = ref("");
+const deliveryPinError = ref("");
+const verifyingDeliveryPin = ref(false);
 
 const verifyVideoEl = ref<HTMLVideoElement | null>(null);
 const scannerActive = ref(false);
@@ -859,6 +878,13 @@ const handleActiveStepAction = async () => {
     return;
   }
 
+  const isDelivery =
+    String(selectedOrder.value?.delivery_method || "") === "delivery";
+  if (isDelivery && nextStatus === "delivered") {
+    openVerifyDeliveryPin();
+    return;
+  }
+
   if (activeStepAction.value.sensitive) {
     const now = Date.now();
     const armed = sensitiveActionConfirm.value;
@@ -901,6 +927,17 @@ const closeVerifyCollection = () => {
   verifyError.value = "";
   scannerError.value = "";
   stopVerifyScanner();
+};
+
+const openVerifyDeliveryPin = () => {
+  showVerifyDeliveryPin.value = true;
+  deliveryPin.value = "";
+  deliveryPinError.value = "";
+};
+
+const closeVerifyDeliveryPin = () => {
+  showVerifyDeliveryPin.value = false;
+  deliveryPinError.value = "";
 };
 
 const stopVerifyScanner = () => {
@@ -1031,6 +1068,53 @@ const verifyCollection = async () => {
     verifyError.value = e?.statusMessage || e?.message || "Validation failed";
   } finally {
     verifyingCollection.value = false;
+  }
+};
+
+const verifyDeliveryPin = async () => {
+  if (!selectedOrder.value) return;
+
+  deliveryPinError.value = "";
+
+  const orderId = String(selectedOrder.value.id);
+  const pin = String(deliveryPin.value || "").trim();
+
+  if (!pin) {
+    deliveryPinError.value = "Please enter the delivery PIN.";
+    return;
+  }
+
+  verifyingDeliveryPin.value = true;
+  try {
+    const { error: refreshError } = await supabase.auth.refreshSession();
+    if (refreshError) {
+      console.warn("Session refresh failed, attempting with current session");
+    }
+
+    const { data: sessionData, error: sessionError } =
+      await supabase.auth.getSession();
+    if (sessionError) throw sessionError;
+
+    const accessToken = sessionData?.session?.access_token;
+    if (!accessToken) {
+      throw new Error("Your session has expired. Please log in again.");
+    }
+
+    await $fetch("/api/orders/verify-delivery-pin", {
+      method: "POST" as any,
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+      body: { orderId, pin },
+    });
+
+    showVerifyDeliveryPin.value = false;
+    await updateStatus(selectedOrder.value, "delivered");
+  } catch (e: any) {
+    deliveryPinError.value =
+      e?.statusMessage || e?.message || "Validation failed";
+  } finally {
+    verifyingDeliveryPin.value = false;
   }
 };
 
@@ -1373,7 +1457,7 @@ const riderViewLabel = (order: any) => {
 
   // Align with driverStore.nextActionText / driver dashboard wording
   if (status === "assigned") return "Rider Sees: Confirm Pickup at Store";
-  if (status === "picked_up") return "Rider Sees: Confirm Pickup at Store";
+  if (status === "picked_up") return "Rider Sees: Arrived at Customer";
   if (status === "arrived")
     return `Rider Sees: ${isPOD ? "Confirm Payment & Close Order" : "Enter Delivery PIN"}`;
   return null;

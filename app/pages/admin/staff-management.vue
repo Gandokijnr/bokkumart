@@ -35,6 +35,7 @@ const createForm = ref({
   fullName: "",
   phone: "",
   role: "staff" as "staff" | "branch_manager" | "super_admin" | "customer",
+  storeId: "" as string,
   managedStoreIds: [] as string[],
 });
 
@@ -45,6 +46,7 @@ const editForm = ref({
   fullName: "",
   phone: "",
   role: "staff" as string,
+  storeId: "" as string,
   managedStoreIds: [] as string[],
 });
 
@@ -177,6 +179,7 @@ const openCreateModal = () => {
     fullName: "",
     phone: "",
     role: "staff",
+    storeId: "",
     managedStoreIds: [],
   };
   showCreateModal.value = true;
@@ -208,6 +211,7 @@ const createUser = async () => {
         fullName: createForm.value.fullName,
         phone: createForm.value.phone,
         role: createForm.value.role,
+        storeId: createForm.value.storeId,
         managedStoreIds: createForm.value.managedStoreIds,
       },
     });
@@ -239,6 +243,7 @@ const openEditModal = (user: any) => {
     fullName: user.full_name || "",
     phone: user.phone_number || "",
     role: user.role || "staff",
+    storeId: user.store_id || "",
     managedStoreIds: user.managed_store_ids || [],
   };
 
@@ -276,6 +281,7 @@ const updateUser = async () => {
         fullName: editForm.value.fullName,
         phone: editForm.value.phone,
         role: editForm.value.role,
+        storeId: editForm.value.storeId,
         managedStoreIds: newStoreIds.length > 0 ? newStoreIds : null,
       },
     });
@@ -492,6 +498,12 @@ const formatDate = (date: string) => {
                       {{ getStoreName(storeId) }}
                     </span>
                   </div>
+                  <span
+                    v-else-if="user.store_id"
+                    class="inline-flex px-2 py-1 text-xs bg-blue-50 text-blue-700 rounded"
+                  >
+                    {{ getStoreName(user.store_id) }}
+                  </span>
                   <span v-else class="text-sm text-gray-400"
                     >No stores assigned</span
                   >
@@ -637,6 +649,24 @@ const formatDate = (date: string) => {
               Select one or more stores for this manager to oversee
             </p>
           </div>
+
+          <div v-if="createForm.role === 'staff'">
+            <label class="block text-sm font-medium text-gray-700 mb-1"
+              >Assign Branch *</label
+            >
+            <select
+              v-model="createForm.storeId"
+              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
+            >
+              <option value="">Select a store</option>
+              <option v-for="store in stores" :key="store.id" :value="store.id">
+                {{ store.name }}
+              </option>
+            </select>
+            <p class="text-xs text-gray-500 mt-1">
+              Staff will only see orders and inventory for this branch.
+            </p>
+          </div>
         </div>
 
         <div class="px-6 py-4 border-t border-gray-200 flex justify-end gap-3">
@@ -652,7 +682,11 @@ const formatDate = (date: string) => {
               loading ||
               !createForm.email ||
               !createForm.password ||
-              !createForm.fullName
+              !createForm.fullName ||
+              (createForm.role === 'staff' && !createForm.storeId) ||
+              (createForm.role === 'branch_manager' &&
+                (!createForm.managedStoreIds ||
+                  createForm.managedStoreIds.length === 0))
             "
             class="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
@@ -750,6 +784,24 @@ const formatDate = (date: string) => {
             </div>
             <p class="text-xs text-gray-500 mt-1">
               Manager can oversee multiple stores ("floater" managers)
+            </p>
+          </div>
+
+          <div v-if="editForm.role === 'staff'">
+            <label class="block text-sm font-medium text-gray-700 mb-1"
+              >Assign Branch</label
+            >
+            <select
+              v-model="editForm.storeId"
+              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
+            >
+              <option value="">Select a store</option>
+              <option v-for="store in stores" :key="store.id" :value="store.id">
+                {{ store.name }}
+              </option>
+            </select>
+            <p class="text-xs text-gray-500 mt-1">
+              Staff will only see data for the assigned branch.
             </p>
           </div>
         </div>

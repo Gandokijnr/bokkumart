@@ -137,55 +137,66 @@
               {{ store.name }}
             </option>
           </select>
+          <p
+            v-if="selectedStoreId"
+            class="mt-1 text-xs text-red-600 font-medium"
+          >
+            Viewing: {{ selectedStoreName }}
+          </p>
         </div>
       </div>
 
       <!-- Navigation -->
-      <nav class="flex-1 p-4 space-y-1 overflow-y-auto">
-        <!-- Dynamically filtered navigation items -->
-        <NuxtLink
-          v-for="item in visibleNav"
-          :key="item.to"
-          :to="item.to"
-          class="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 group relative"
-          :class="[
-            isActive(item.to)
-              ? 'bg-red-500 text-white shadow-md'
-              : 'text-gray-700 hover:bg-gray-50 hover:text-red-600',
-          ]"
-        >
-          <!-- Icon -->
-          <SidebarIcon
-            :name="item.icon"
-            class="flex-shrink-0 transition-transform group-hover:scale-110"
-            :class="[
-              isActive(item.to)
-                ? 'text-white'
-                : 'text-gray-400 group-hover:text-red-600',
-            ]"
-          />
-
-          <span class="flex-1">{{ item.label }}</span>
-
-          <!-- Notification Badge (Verification Queue for Branch Managers) -->
-          <span
-            v-if="item.badge && item.badge > 0"
-            class="flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-full text-xs font-bold transition-all"
-            :class="[
-              isActive(item.to)
-                ? 'bg-white text-red-600'
-                : 'bg-red-500 text-white',
-            ]"
-          >
-            {{ item.badge }}
-          </span>
-
-          <!-- Active indicator -->
-          <div
-            v-if="isActive(item.to)"
-            class="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-white rounded-r-full"
-          />
-        </NuxtLink>
+      <nav class="flex-1 p-4 overflow-y-auto">
+        <div class="space-y-6">
+          <!-- Dynamic Sections based on groupedNav -->
+          <div v-for="(items, section) in groupedNav" :key="section">
+            <p
+              class="px-4 text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2"
+            >
+              {{ sectionTitles[section] || section }}
+            </p>
+            <div class="space-y-1">
+              <NuxtLink
+                v-for="item in items"
+                :key="item.to"
+                :to="item.to"
+                class="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 group relative"
+                :class="[
+                  isActive(item.to)
+                    ? 'bg-red-500 text-white shadow-md'
+                    : 'text-gray-700 hover:bg-gray-50 hover:text-red-600',
+                ]"
+              >
+                <SidebarIcon
+                  :name="item.icon"
+                  class="flex-shrink-0 transition-transform group-hover:scale-110"
+                  :class="[
+                    isActive(item.to)
+                      ? 'text-white'
+                      : 'text-gray-400 group-hover:text-red-600',
+                  ]"
+                />
+                <span class="flex-1">{{ item.label }}</span>
+                <span
+                  v-if="item.badge && item.badge > 0"
+                  class="flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-full text-xs font-bold transition-all"
+                  :class="[
+                    isActive(item.to)
+                      ? 'bg-white text-red-600'
+                      : 'bg-red-500 text-white',
+                  ]"
+                >
+                  {{ item.badge }}
+                </span>
+                <div
+                  v-if="isActive(item.to)"
+                  class="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-white rounded-r-full"
+                />
+              </NuxtLink>
+            </div>
+          </div>
+        </div>
       </nav>
 
       <!-- Session Info (for staff/admin) -->
@@ -242,7 +253,8 @@
 
 <script setup lang="ts">
 import { useUserStore } from "~/stores/user";
-import type { UserRole } from "~/stores/user";
+import { useAdminStore } from "~/stores/admin";
+import { type NavItem, getVisibleNavigation } from "~/config/navigation";
 
 // Icon components
 const IconHome = "svg";
@@ -257,6 +269,7 @@ const IconPhone = "svg";
 const IconCube = "svg";
 
 const userStore = useUserStore();
+const adminStore = useAdminStore();
 const route = useRoute();
 const supabase = useSupabaseClient();
 
@@ -266,100 +279,36 @@ const selectedStoreId = ref("");
 const stores = ref<any[]>([]);
 const pendingVerificationCount = ref(0);
 
-// Navigation Items with Role-Based Access
-interface NavItem {
-  label: string;
-  to: string;
-  icon: string;
-  requiredRoles: UserRole[];
-  badge?: number;
-}
+// Section titles mapping
+const sectionTitles: Record<string, string> = {
+  overview: "Overview",
+  operations: "Operations",
+  inventory: "Inventory",
+  analytics: "Analytics",
+  management: "Management",
+  system: "System",
+};
 
-const navItems = ref<NavItem[]>([
-  // Super Admin Only
-  {
-    label: "Global Dashboard",
-    to: "/admin/global-dashboard",
-    icon: "globe",
-    requiredRoles: ["super_admin"],
-  },
-  {
-    label: "Platform Revenue",
-    to: "/admin/platform-revenue",
-    icon: "currencyDollar",
-    requiredRoles: ["super_admin"],
-  },
-  {
-    label: "Staff Management",
-    to: "/admin/staff-management",
-    icon: "users",
-    requiredRoles: ["super_admin"],
-  },
-  {
-    label: "All Orders",
-    to: "/admin/orders",
-    icon: "clipboardList",
-    requiredRoles: ["super_admin", "branch_manager", "staff"],
-  },
-  {
-    label: "Analytics",
-    to: "/admin/analytics",
-    icon: "chartBar",
-    requiredRoles: ["super_admin", "branch_manager", "staff"],
-  },
-
-  // Branch Manager
-  {
-    label: "Branch Dashboard",
-    to: "/admin/branch-dashboard",
-    icon: "officeBuilding",
-    requiredRoles: ["branch_manager"],
-  },
-  {
-    label: "Verification Queue",
-    to: "/admin/verification-queue",
-    icon: "phone",
-    requiredRoles: ["branch_manager", "staff"],
-    badge: 0, // Will be updated dynamically
-  },
-
-  // Staff Only
-  {
-    label: "Dashboard",
-    to: "/admin/dashboard",
-    icon: "home",
-    requiredRoles: ["staff"],
-  },
-  {
-    label: "Inventory",
-    to: "/admin/inventory",
-    icon: "cube",
-    requiredRoles: ["super_admin", "branch_manager", "staff"],
-  },
-  {
-    label: "Settings",
-    to: "/admin/settings",
-    icon: "cog",
-    requiredRoles: ["super_admin"],
-  },
-]);
-
-// Computed: Filter navigation based on current user role
+// Computed: Get visible navigation using the schema with contextual naming
 const visibleNav = computed(() => {
-  const userRole = userStore.effectiveRole;
+  return getVisibleNavigation(userStore.effectiveRole, {
+    pendingVerificationCount: pendingVerificationCount.value,
+  });
+});
 
-  return navItems.value
-    .filter((item) => item.requiredRoles.includes(userRole))
-    .map((item) => {
-      // Add badge for verification queue if branch manager
-      if (
-        item.to === "/admin/verification-queue" &&
-        userStore.isBranchManager
-      ) {
-        return { ...item, badge: pendingVerificationCount.value };
-      }
-      return item;
-    });
+// Computed: Group navigation items by section
+const groupedNav = computed(() => {
+  const groups: Record<string, NavItem[]> = {};
+
+  visibleNav.value.forEach((item) => {
+    const section = item.section || "overview";
+    if (!groups[section]) {
+      groups[section] = [];
+    }
+    groups[section].push(item);
+  });
+
+  return groups;
 });
 
 // Computed: User initials
@@ -368,7 +317,7 @@ const userInitials = computed(() => {
   if (!name) return "?";
   const parts = name.split(" ");
   if (parts.length >= 2) {
-    return (parts[0][0] + parts[1][0]).toUpperCase();
+    return ((parts[0]?.[0] ?? "") + (parts[1]?.[0] ?? "")).toUpperCase();
   }
   return name.substring(0, 2).toUpperCase();
 });
@@ -383,6 +332,7 @@ const userRoleDisplay = computed(() => {
     manager: "Manager",
     staff: "Staff Member",
     customer: "Customer",
+    driver: "Driver",
   };
   return roleNames[role] || role;
 });
@@ -392,6 +342,13 @@ const currentStoreDisplay = computed(() => {
   return userStore.managedStoreNames;
 });
 
+// Computed: Selected store name for display
+const selectedStoreName = computed(() => {
+  if (!selectedStoreId.value) return "All Stores";
+  const store = stores.value.find((s) => s.id === selectedStoreId.value);
+  return store?.name || "Unknown Store";
+});
+
 // Check if route is active
 const isActive = (to: string) => {
   return route.path === to || route.path.startsWith(to + "/");
@@ -399,9 +356,16 @@ const isActive = (to: string) => {
 
 // Handle store switch (super admin only)
 const handleStoreSwitch = () => {
-  // Emit event or update global state for store filtering
-  console.log("Switched to store:", selectedStoreId.value);
-  // You can emit this to a global state or event bus
+  // Update admin store's current store filter
+  const storeId = selectedStoreId.value || null;
+  adminStore.setCurrentStore(storeId);
+
+  // Persist selection to localStorage for page refresh survival
+  if (import.meta.client) {
+    localStorage.setItem("ha_admin_selected_store", storeId || "");
+  }
+
+  console.log("Super Admin switched to store:", storeId || "All Stores");
 };
 
 // Fetch stores for super admin
@@ -419,6 +383,18 @@ const fetchStores = async () => {
   }
 };
 
+// Load persisted store selection
+const loadPersistedStoreSelection = () => {
+  if (import.meta.client && userStore.isSuperAdmin) {
+    const persisted = localStorage.getItem("ha_admin_selected_store");
+    if (persisted !== null) {
+      selectedStoreId.value = persisted;
+      // Also sync with admin store
+      adminStore.setCurrentStore(persisted || null);
+    }
+  }
+};
+
 // Fetch pending verification count for branch managers
 const fetchPendingCount = async () => {
   if (userStore.isBranchManager && userStore.profile?.store_id) {
@@ -431,6 +407,10 @@ const fetchPendingCount = async () => {
 // Handle logout
 const handleLogout = async () => {
   isMobileMenuOpen.value = false;
+  // Clear persisted store selection on logout
+  if (import.meta.client) {
+    localStorage.removeItem("ha_admin_selected_store");
+  }
   await userStore.signOut();
   navigateTo("/auth");
 };
@@ -443,9 +423,21 @@ watch(
   },
 );
 
+// Watch for admin store currentStoreId changes (sync from other components)
+watch(
+  () => adminStore.currentStoreId,
+  (newStoreId) => {
+    if (userStore.isSuperAdmin) {
+      selectedStoreId.value = newStoreId || "";
+    }
+  },
+  { immediate: true },
+);
+
 // Initialize
 onMounted(() => {
   fetchStores();
+  loadPersistedStoreSelection();
   fetchPendingCount();
 });
 </script>

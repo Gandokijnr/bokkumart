@@ -34,6 +34,11 @@ function isPhoneVerified(profile: any) {
 }
 
 export default defineEventHandler(async (event) => {
+  throw createError({
+    statusCode: 403,
+    statusMessage: "POD is currently disabled.",
+  });
+
   const config = useRuntimeConfig();
 
   const supabaseUrl =
@@ -52,11 +57,25 @@ export default defineEventHandler(async (event) => {
   }
 
   const authHeader = event.node.req.headers["authorization"];
-  const bearer = Array.isArray(authHeader) ? authHeader[0] : authHeader;
-  const token =
-    typeof bearer === "string" && bearer.startsWith("Bearer ")
-      ? bearer.slice("Bearer ".length)
-      : null;
+  if (!authHeader) {
+    throw createError({
+      statusCode: 401,
+      statusMessage: "Missing Authorization Bearer token",
+    });
+  }
+  const h = authHeader as string | string[];
+  const bearer = Array.isArray(h) ? ((h[0] ?? "") as string) : (h as string);
+
+  if (typeof bearer !== "string") {
+    throw createError({
+      statusCode: 401,
+      statusMessage: "Missing Authorization Bearer token",
+    });
+  }
+
+  const token = bearer.startsWith("Bearer ")
+    ? bearer.slice("Bearer ".length)
+    : undefined;
 
   if (!token) {
     throw createError({
@@ -65,17 +84,19 @@ export default defineEventHandler(async (event) => {
     });
   }
 
-  const admin = createClient(supabaseUrl, serviceRoleKey, {
+  const admin = createClient(supabaseUrl!, serviceRoleKey!, {
     auth: { persistSession: false, autoRefreshToken: false },
   }) as unknown as ReturnType<typeof createClient<Database>>;
 
   const { data: callerData, error: callerErr } =
     await admin.auth.getUser(token);
+
   if (callerErr || !callerData?.user) {
     throw createError({ statusCode: 401, statusMessage: "Invalid session" });
   }
 
-  const userId = callerData.user.id;
+  const userId = callerData?.user?.id ?? "";
+
   const body = (await readBody<CreatePodBody>(event)) || ({} as any);
 
   const storeId = String((body as any)?.store_id || "");

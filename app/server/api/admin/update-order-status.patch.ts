@@ -110,7 +110,7 @@ export default defineEventHandler(async (event) => {
   const { data: existingOrder, error: fetchErr } = await (admin as any)
     .from("orders")
     .select(
-      "id, status, delivery_method, delivery_details, contact_phone, metadata, store_id, items",
+      "id, user_id, status, delivery_method, delivery_details, contact_phone, metadata, store_id, items, subtotal, total_amount, delivery_fee, points_discount_amount",
     )
     .eq("id", body.orderId)
     .single();
@@ -166,7 +166,7 @@ export default defineEventHandler(async (event) => {
     .update(updates)
     .eq("id", body.orderId)
     .select(
-      "id, status, delivery_method, delivery_details, contact_phone, metadata, store_id, items",
+      "id, user_id, status, delivery_method, delivery_details, contact_phone, metadata, store_id, items, subtotal, total_amount, delivery_fee, points_discount_amount",
     )
     .single();
 
@@ -225,22 +225,39 @@ export default defineEventHandler(async (event) => {
   // Award loyalty points when order is first marked as delivered
   if (shouldAwardLoyaltyPoints) {
     try {
-      // Get order total from items
-      const orderTotal = (existingOrder.items as any[]).reduce(
-        (sum: number, item: any) => {
-          return sum + Number(item?.price || 0) * Number(item?.quantity || 0);
-        },
+      const itemsArray = Array.isArray(existingOrder.items)
+        ? (existingOrder.items as any[])
+        : [];
+
+      // Prefer order.subtotal (authoritative), fall back to items sum.
+      const fallbackSubtotal = itemsArray.reduce((sum: number, item: any) => {
+        const qty = Number(item?.quantity || 0);
+        const unit = Number(
+          item?.unit_price ?? item?.price ?? item?.unitPrice ?? 0,
+        );
+        if (!Number.isFinite(qty) || qty <= 0) return sum;
+        if (!Number.isFinite(unit) || unit < 0) return sum;
+        return sum + unit * qty;
+      }, 0);
+
+      const rawSubtotal = Number(existingOrder.subtotal);
+      const subtotalToUse = Number.isFinite(rawSubtotal)
+        ? rawSubtotal
+        : fallbackSubtotal;
+
+      const pointsDiscountAmount = Math.max(
         0,
+        Number(existingOrder.points_discount_amount || 0),
       );
 
+      // Earn points on spend AFTER loyalty discount (and excluding delivery by using subtotal)
+      const eligibleSpend = Math.max(0, subtotalToUse - pointsDiscountAmount);
+
       // Calculate points: 1 point per ₦1000 spent (rounded down)
-      const pointsToAward = Math.floor(orderTotal / 1000);
+      const pointsToAward = Math.floor(eligibleSpend / 1000);
 
       if (pointsToAward > 0) {
-        // Get user_id from order metadata or delivery_details
-        const userId =
-          (existingOrder.metadata as any)?.user_id ||
-          (existingOrder.delivery_details as any)?.user_id;
+        const userId = (existingOrder as any)?.user_id;
 
         if (userId) {
           // Get current loyalty points
@@ -266,9 +283,10 @@ export default defineEventHandler(async (event) => {
           await (admin as any).from("loyalty_transactions").insert({
             user_id: userId,
             order_id: body.orderId,
-            points: pointsToAward,
-            type: "earned",
-            description: `Earned ${pointsToAward} points from order delivery (₦${orderTotal.toLocaleString()})`,
+            points_earned: pointsToAward,
+            points_redeemed: 0,
+            transaction_type: "earned",
+            description: `Earned ${pointsToAward} points from order delivery (₦${eligibleSpend.toLocaleString()})`,
             created_at: new Date().toISOString(),
           });
 

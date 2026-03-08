@@ -14,6 +14,8 @@ export type OrderStatus =
   | "processing"
   | "paid"
   | "confirmed"
+  | "ready_for_pos"
+  | "completed_in_pos"
   | "assigned"
   | "picked_up"
   | "arrived"
@@ -78,6 +80,8 @@ export function getStatusLabel(
     processing: "Packing",
     paid: "Paid",
     confirmed: "Confirmed",
+    ready_for_pos: "Packing",
+    completed_in_pos: "Packing",
     assigned: "Assigned",
     picked_up: "Picked Up",
     arrived: "Arrived",
@@ -121,6 +125,8 @@ export function getStepperKeyForStatus(
     status === "processing" ||
     status === "paid" ||
     status === "confirmed" ||
+    status === "ready_for_pos" ||
+    status === "completed_in_pos" ||
     status === "assigned"
   ) {
     return "processing";
@@ -155,6 +161,8 @@ export const useUserOrders = () => {
         "processing",
         "paid",
         "confirmed",
+        "ready_for_pos",
+        "completed_in_pos",
         "assigned",
         "picked_up",
         "arrived",
@@ -274,6 +282,16 @@ export const useUserOrders = () => {
         label: "Confirmed",
         color: "text-red-700",
         bg: "bg-red-100",
+      },
+      ready_for_pos: {
+        label: "Packing",
+        color: "text-blue-700",
+        bg: "bg-blue-100",
+      },
+      completed_in_pos: {
+        label: "Packing",
+        color: "text-blue-700",
+        bg: "bg-blue-100",
       },
       assigned: {
         label: "Assigned",
