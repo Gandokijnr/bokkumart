@@ -11,8 +11,28 @@ useHead({ title: "Pending Riders - HomeAffairs" });
 const loading = ref(false);
 const error = ref<string | null>(null);
 const riders = ref<any[]>([]);
+const branches = ref<Record<string, { name: string; city: string }>>({});
+const rejectingId = ref<string | null>(null);
+const rejectionReason = ref("");
 
 const pendingCount = computed(() => riders.value.length);
+
+async function fetchBranches() {
+  const supabase = useSupabaseClient();
+  const { data } = await supabase
+    .from("stores")
+    .select("id, name, city")
+    .eq("is_active", true);
+  if (data) {
+    branches.value = data.reduce(
+      (acc, b) => {
+        acc[b.id] = { name: b.name, city: b.city };
+        return acc;
+      },
+      {} as Record<string, { name: string; city: string }>,
+    );
+  }
+}
 
 async function fetchPending() {
   loading.value = true;
@@ -30,10 +50,21 @@ async function fetchPending() {
 
     riders.value = (res?.riders || []) as any[];
   } catch (e: any) {
-    error.value = e?.statusMessage || e?.message || "Failed to fetch pending riders";
+    error.value =
+      e?.statusMessage || e?.message || "Failed to fetch pending riders";
   } finally {
     loading.value = false;
   }
+}
+
+function getBranchNames(branchIds: string[]): string {
+  if (!branchIds || branchIds.length === 0) return "Not specified";
+  return branchIds
+    .map((id) => {
+      const b = branches.value[id];
+      return b ? `${b.name} (${b.city})` : "Unknown";
+    })
+    .join(", ");
 }
 
 async function approve(row: any) {
@@ -65,7 +96,54 @@ async function approve(row: any) {
   }
 }
 
-onMounted(fetchPending);
+async function reject(row: any) {
+  const toast = useToast();
+  try {
+    const { data: sessionData } = await useSupabaseClient().auth.getSession();
+    const accessToken = sessionData?.session?.access_token;
+    if (!accessToken) throw new Error("Session expired");
+
+    await $fetch("/api/admin/riders/reject", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${accessToken}` },
+      body: {
+        applicationId: row.id,
+        reason: rejectionReason.value,
+      },
+    });
+
+    toast.add({
+      title: "Rejected",
+      description: "Rider application rejected.",
+      color: "success",
+    } as any);
+
+    rejectingId.value = null;
+    rejectionReason.value = "";
+    await fetchPending();
+  } catch (e: any) {
+    toast.add({
+      title: "Reject failed",
+      description: e?.statusMessage || e?.message || "Failed to reject rider",
+      color: "error",
+    } as any);
+  }
+}
+
+function startReject(row: any) {
+  rejectingId.value = row.id;
+  rejectionReason.value = "";
+}
+
+function cancelReject() {
+  rejectingId.value = null;
+  rejectionReason.value = "";
+}
+
+onMounted(async () => {
+  await fetchBranches();
+  await fetchPending();
+});
 </script>
 
 <template>
@@ -73,7 +151,9 @@ onMounted(fetchPending);
     <div class="flex items-center justify-between mb-6">
       <div>
         <h1 class="text-2xl font-bold text-slate-900">Pending Riders</h1>
-        <p class="text-sm text-slate-500">Pending applications: {{ pendingCount }}</p>
+        <p class="text-sm text-slate-500">
+          Pending applications: {{ pendingCount }}
+        </p>
       </div>
       <button
         @click="fetchPending"
@@ -96,7 +176,9 @@ onMounted(fetchPending);
           <div class="min-w-0">
             <div class="font-semibold text-slate-900">
               {{ row.personal?.full_name || row.user_id }}
-              <span class="ml-2 text-xs text-slate-500">({{ row.status }})</span>
+              <span class="ml-2 text-xs text-slate-500"
+                >({{ row.status }})</span
+              >
             </div>
             <div class="text-sm text-slate-600">
               Phone: {{ row.personal?.phone_number || "-" }}
@@ -106,11 +188,14 @@ onMounted(fetchPending);
             </div>
 
             <div class="mt-3 text-sm text-slate-700">
-              Vehicle: {{ row.vehicle?.vehicle_type || "-" }} | Plate: {{ row.vehicle?.plate_number || "-" }}
+              Vehicle: {{ row.vehicle?.vehicle_type || "-" }} | Plate:
+              {{ row.vehicle?.plate_number || "-" }}
             </div>
 
             <div class="mt-2 text-sm text-slate-700">
-              Payout: {{ row.payout?.account_name || "-" }} ({{ row.payout?.account_number || "-" }})
+              Payout: {{ row.payout?.account_name || "-" }} ({{
+                row.payout?.account_number || "-"
+              }})
             </div>
 
             <div class="mt-3 flex flex-wrap gap-2">
