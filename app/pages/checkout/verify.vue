@@ -124,6 +124,8 @@ const success = ref(false);
 const pending = ref(false);
 const message = ref("Please wait while we confirm your payment...");
 
+const handledConfirmed = ref(false);
+
 const reference = route.query.reference as string;
 const trxref = route.query.trxref as string;
 
@@ -133,12 +135,34 @@ function isPaidStatus(status: unknown): boolean {
   );
 }
 
-function handleConfirmedPayment(order: { id: string; total_amount: number }) {
+async function handleConfirmedPayment(order: {
+  id: string;
+  total_amount: number;
+}) {
+  if (handledConfirmed.value) return;
+  handledConfirmed.value = true;
   verifying.value = false;
   pending.value = false;
   success.value = true;
   message.value = `Your payment of ${formatPrice(order.total_amount)} has been confirmed!`;
-  cartStore.retainCartFor48Hours();
+
+  // Clear cart locally first
+  cartStore.clearCart();
+
+  // Persist empty cart to database (delete the cart record)
+  try {
+    const result = await cartStore.saveToDatabase(supabase as any);
+    if (!result) {
+      console.error(
+        "[Verify] saveToDatabase returned false - cart may not have been deleted",
+      );
+    } else {
+      console.log("[Verify] Cart cleared and saved to database successfully");
+    }
+  } catch (err) {
+    console.error("[Verify] Failed to save cleared cart to database:", err);
+  }
+
   setTimeout(() => navigateTo(`/checkout/success?order=${order.id}`), 1500);
 }
 
@@ -174,7 +198,7 @@ async function verifyPayment() {
 
         // Payment confirmed - either from DB or reconciled from Paystack
         if (statusRes.status === "confirmed" && statusRes.order_id) {
-          handleConfirmedPayment({
+          await handleConfirmedPayment({
             id: statusRes.order_id,
             total_amount: statusRes.total_amount || 0,
           });

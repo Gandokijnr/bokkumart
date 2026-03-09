@@ -121,7 +121,7 @@ export default defineEventHandler(async (event) => {
     const { data: orderRow, error: orderErr } = await (admin as any)
       .from("orders")
       .select(
-        "id, status, payment_method, items, store_id, user_id, paystack_reference, metadata",
+        "id, status, payment_method, items, store_id, user_id, delivery_method, delivery_fee, subtotal, points_discount_amount, total_amount, paystack_reference, metadata",
       )
       .eq("id", orderId)
       .single();
@@ -215,6 +215,70 @@ export default defineEventHandler(async (event) => {
       Math.round(Number((body as any).service_fee_kobo || 0)),
     );
 
+    // Enforce: online payment discount is only applied once per user (first successful paid order)
+    const deliveryMethod = String((orderRow as any)?.delivery_method || "");
+    const deliveryFee = Number((orderRow as any)?.delivery_fee || 0);
+    const isDiscountScenario = deliveryMethod === "delivery" && deliveryFee > 0;
+
+    let applyOnlinePaymentDiscount = false;
+    if (isDiscountScenario) {
+      const { data: priorPaid, error: priorPaidErr } = await (admin as any)
+        .from("orders")
+        .select("id")
+        .eq("user_id", userId)
+        .eq("status", "paid")
+        .limit(1);
+
+      // Be conservative: if the check fails, do NOT apply the discount.
+      applyOnlinePaymentDiscount =
+        !priorPaidErr && Array.isArray(priorPaid) && priorPaid.length === 0;
+    }
+
+    const discountNaira =
+      applyOnlinePaymentDiscount && isDiscountScenario ? 500 : 0;
+    const serviceFeeNaira = Number(
+      (((orderRow as any)?.metadata || {}) as any)?.service_fee || 0,
+    );
+    const subtotalNaira = Number((orderRow as any)?.subtotal || 0);
+    const pointsDiscountNaira = Number(
+      (orderRow as any)?.points_discount_amount || 0,
+    );
+
+    const expectedTotalNaira = Math.max(
+      0,
+      subtotalNaira +
+        deliveryFee +
+        serviceFeeNaira -
+        discountNaira -
+        pointsDiscountNaira,
+    );
+    const desiredAmountKobo = Math.round(expectedTotalNaira * 100);
+
+    const mergedMetadataForDiscount = {
+      ...(((orderRow as any)?.metadata || {}) as any),
+      online_payment_discount_applied: discountNaira > 0,
+      online_payment_discount_amount: discountNaira,
+    };
+
+    const existingTotal = Number((orderRow as any)?.total_amount || 0);
+    if (Math.abs(existingTotal - expectedTotalNaira) > 0.009) {
+      const { error: totalFixErr } = await (
+        (admin as any).from("orders") as any
+      )
+        .update({
+          total_amount: expectedTotalNaira,
+          metadata: mergedMetadataForDiscount,
+        })
+        .eq("id", orderId);
+
+      if (totalFixErr) {
+        throw createError({
+          statusCode: 500,
+          statusMessage: totalFixErr.message,
+        });
+      }
+    }
+
     // Optional stock recheck right before payment initialization
     if ((config as any).inventoryRecheckBeforePayment) {
       const items = Array.isArray(orderRow.items) ? orderRow.items : [];
@@ -278,7 +342,7 @@ export default defineEventHandler(async (event) => {
     // Prepare Paystack payload with service fee split
     const payload = {
       email: body.email,
-      amount: body.amount,
+      amount: desiredAmountKobo,
       currency: "NGN",
       callback_url: callbackUrl,
       subaccount: subaccountCode,
@@ -286,13 +350,15 @@ export default defineEventHandler(async (event) => {
       transaction_charge: serviceFeeKobo, // Platform keeps service fee
       metadata: {
         ...body.metadata,
+        online_payment_discount_applied: discountNaira > 0,
+        online_payment_discount_amount: discountNaira,
         routing: {
           store_id: String(orderRow.store_id),
           subaccount: subaccountCode,
           bearer: "account",
           transaction_charge_kobo: serviceFeeKobo,
           platform_keeps_kobo: serviceFeeKobo,
-          store_receives_kobo: Math.max(0, body.amount - serviceFeeKobo),
+          store_receives_kobo: Math.max(0, desiredAmountKobo - serviceFeeKobo),
           note: "Service fee deducted for platform, rest goes to store",
         },
         custom_fields: [

@@ -281,47 +281,35 @@
         <div v-if="fulfillmentMode === 'pickup'" class="space-y-4">
           <div class="flex items-center justify-between">
             <p class="text-sm font-medium text-gray-700">Pickup</p>
-            <div class="flex items-center gap-3">
-              <button
-                type="button"
-                class="text-xs font-medium text-red-600 hover:text-red-700"
-                @click="showAllPickupStores = !showAllPickupStores"
+            <button
+              v-if="userLocation"
+              @click="getUserLocation"
+              class="text-xs text-red-600 hover:text-red-700 flex items-center gap-1"
+            >
+              <svg
+                class="h-3 w-3"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
               >
-                {{
-                  showAllPickupStores ? "Hide branches" : "Change Pickup Branch"
-                }}
-              </button>
-
-              <button
-                v-if="userLocation"
-                @click="getUserLocation"
-                class="text-xs text-red-600 hover:text-red-700 flex items-center gap-1"
-              >
-                <svg
-                  class="h-3 w-3"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
-                  />
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
-                  />
-                </svg>
-                Refresh Location
-              </button>
-            </div>
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
+                />
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
+                />
+              </svg>
+              Refresh Location
+            </button>
           </div>
 
-          <!-- Selected Pickup Card (Smart Default) -->
+          <!-- Selected Pickup Card (Smart Default) - ALWAYS show when selected -->
           <div
             v-if="selectedStore"
             class="rounded-xl border-2 border-gray-200 bg-white p-5"
@@ -366,17 +354,11 @@
                 >
                   {{ selectedStore.isOpen ? "Open" : "Closed" }}
                 </span>
-                <a
-                  href="#"
-                  class="text-xs font-semibold text-red-600 hover:text-red-700"
-                  @click.prevent="showAllPickupStores = !showAllPickupStores"
-                >
-                  {{ showAllPickupStores ? "Cancel" : "Change store" }}
-                </a>
               </div>
             </div>
           </div>
 
+          <!-- Delivery Suggestion Banner -->
           <div
             v-if="selectedStore"
             class="rounded-xl border-2 border-blue-200 bg-blue-50 p-4"
@@ -426,76 +408,6 @@
                   <div class="h-3 w-1/2 rounded bg-gray-200"></div>
                 </div>
               </div>
-            </div>
-          </div>
-
-          <!-- Other Branches (Expanded) -->
-          <div v-else-if="showAllPickupStores" class="space-y-3">
-            <label
-              v-for="store in pickupStoresVisible"
-              :key="store.id"
-              class="flex cursor-pointer items-start gap-3 rounded-xl border-2 p-4 transition-all"
-              :class="
-                selectedStoreId === store.id
-                  ? 'border-red-600 bg-red-50'
-                  : 'border-gray-200 hover:border-gray-300 bg-white'
-              "
-            >
-              <input
-                type="radio"
-                :value="store.id"
-                v-model="selectedStoreId"
-                @change="checkStoreChange(store.id)"
-                class="mt-1 h-4 w-4 text-red-600"
-              />
-              <div class="flex-1">
-                <div class="flex items-start justify-between">
-                  <div class="flex-1">
-                    <div class="flex items-center gap-2">
-                      <p class="font-bold text-gray-900">{{ store.name }}</p>
-                      <!-- Open/Closed Badge -->
-                      <span
-                        class="px-2 py-0.5 rounded-full text-xs font-medium"
-                        :class="
-                          store.isOpen
-                            ? 'bg-green-100 text-green-800'
-                            : 'bg-red-100 text-red-800'
-                        "
-                      >
-                        {{ store.isOpen ? "Open" : "Closed" }}
-                      </span>
-                    </div>
-                    <p class="text-sm text-gray-600 mt-1">
-                      {{ store.address }}
-                    </p>
-                    <div class="flex items-center gap-3 mt-2 text-xs">
-                      <span class="text-gray-500">{{ store.hours }}</span>
-                      <span
-                        v-if="store.distance !== null"
-                        class="text-red-600 font-medium"
-                      >
-                        {{ store.distance.toFixed(1) }} km away
-                      </span>
-                    </div>
-                  </div>
-                  <span
-                    v-if="store.isFlagship"
-                    class="rounded-full bg-red-100 px-2 py-1 text-xs font-medium text-red-800 ml-2"
-                  >
-                    Flagship
-                  </span>
-                </div>
-              </div>
-            </label>
-
-            <div
-              v-if="storeChangeChecking"
-              class="flex items-center gap-2 text-xs text-gray-500 py-2"
-            >
-              <div
-                class="h-3.5 w-3.5 animate-spin rounded-full border-2 border-gray-300 border-t-red-600"
-              ></div>
-              Checking availability at this branch...
             </div>
           </div>
 
@@ -833,7 +745,11 @@
 
             <!-- Paystack Discount -->
             <div
-              v-if="fulfillmentMode === 'delivery' && currentDeliveryFee > 0"
+              v-if="
+                onlinePaymentDiscountEligible &&
+                fulfillmentMode === 'delivery' &&
+                currentDeliveryFee > 0
+              "
               class="flex justify-between text-sm text-green-600"
             >
               <span class="font-medium">Online Payment Discount</span>
@@ -1045,83 +961,6 @@
       </div>
     </div>
 
-    <!-- Store Change Confirmation Modal -->
-    <div
-      v-if="showStoreChangeModal"
-      class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
-    >
-      <div class="w-full max-w-sm rounded-2xl bg-white p-6 shadow-xl">
-        <div
-          class="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-amber-100"
-        >
-          <svg
-            class="h-6 w-6 text-amber-600"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-            />
-          </svg>
-        </div>
-        <h3 class="mb-2 text-lg font-bold text-gray-900">
-          Switch pickup branch?
-        </h3>
-        <p class="mb-4 text-sm text-gray-600">
-          You selected
-          <span class="font-medium text-red-600">{{ pendingStore?.name }}</span
-          >.
-        </p>
-
-        <div
-          v-if="storeChangeWarnings.length"
-          class="mb-5 rounded-xl border border-amber-200 bg-amber-50 p-4"
-        >
-          <p class="text-sm font-semibold text-amber-900">
-            Some items may be unavailable at this branch:
-          </p>
-          <ul class="mt-2 space-y-2">
-            <li
-              v-for="w in storeChangeWarnings"
-              :key="w.product_id"
-              class="flex items-start justify-between gap-3 text-sm"
-            >
-              <span class="text-amber-900">{{ w.name }}</span>
-              <span class="text-amber-800 whitespace-nowrap"
-                >Need {{ w.requested }}, available {{ w.available }}</span
-              >
-            </li>
-          </ul>
-          <p class="mt-3 text-xs text-amber-800">
-            If you continue, we’ll clear your cart so you can re-add available
-            items from the new branch.
-          </p>
-        </div>
-
-        <p v-else class="mb-5 text-sm text-gray-600">
-          Your cart items look available at this branch. Do you want to switch?
-        </p>
-        <div class="flex gap-3">
-          <button
-            @click="cancelStoreChange"
-            class="flex-1 rounded-xl border-2 border-gray-200 bg-white py-3 text-sm font-bold text-gray-700 hover:bg-gray-50"
-          >
-            Cancel
-          </button>
-          <button
-            @click="confirmStoreChange"
-            class="flex-1 rounded-xl bg-red-600 py-3 text-sm font-bold text-white hover:bg-red-700"
-          >
-            Switch Branch
-          </button>
-        </div>
-      </div>
-    </div>
-
     <!-- Toast Notification -->
     <Teleport to="body">
       <Transition
@@ -1223,16 +1062,8 @@ const loadingStores = ref(false);
 const loadingLocation = ref(false);
 const processingPayment = ref(false);
 const showPaymentModal = ref(false);
-const showStoreChangeModal = ref(false);
-const showAllPickupStores = ref(false);
-const storeChangeChecking = ref(false);
-const storeChangeWarnings = ref<
-  { product_id: string; name: string; requested: number; available: number }[]
->([]);
 
 const userLocation = ref<{ lat: number; lng: number } | null>(null);
-const pendingStore = ref<{ id: string; name: string } | null>(null);
-const previousStoreId = ref<string | null>(null);
 
 const userDetails = ref({
   fullName: "",
@@ -1292,11 +1123,44 @@ const availableLoyaltyPoints = ref(0);
 const pointsToRedeem = ref(0);
 const pointsRedemptionValue = computed(() => pointsToRedeem.value * 10); // 1 point = ₦10
 
+const onlinePaymentDiscountEligible = ref(false);
+const onlinePaymentDiscountLoading = ref(false);
+
+async function fetchOnlinePaymentDiscountEligibility() {
+  if (!import.meta.client) return;
+  const userId = user.value?.id || (user.value as any)?.sub;
+  if (!userId) {
+    onlinePaymentDiscountEligible.value = false;
+    return;
+  }
+
+  onlinePaymentDiscountLoading.value = true;
+  try {
+    const { data, error } = await (supabase as any)
+      .from("orders")
+      .select("id")
+      .eq("user_id", userId)
+      .eq("status", "paid")
+      .limit(1);
+
+    if (error) {
+      onlinePaymentDiscountEligible.value = false;
+      return;
+    }
+
+    onlinePaymentDiscountEligible.value = (data || []).length === 0;
+  } finally {
+    onlinePaymentDiscountLoading.value = false;
+  }
+}
+
 const finalTotal = computed(() => {
   const base =
     cartStore.cartSubtotal + currentDeliveryFee.value + serviceFee.value;
   const onlineDiscount =
-    fulfillmentMode.value === "delivery" && currentDeliveryFee.value > 0
+    onlinePaymentDiscountEligible.value &&
+    fulfillmentMode.value === "delivery" &&
+    currentDeliveryFee.value > 0
       ? 500
       : 0;
   return Math.max(0, base - onlineDiscount - pointsRedemptionValue.value);
@@ -1318,6 +1182,24 @@ const canSubmitPayment = computed(() => {
   return canPayOnline.value;
 });
 
+const cartItemsStoreId = computed(() => {
+  if (cartStore.items.length === 0) return null;
+  const first = cartStore.items[0]?.store_id || null;
+  if (!first) return null;
+  const allSame = cartStore.items.every((it: any) => it?.store_id === first);
+  return allSame ? String(first) : null;
+});
+
+const orderStoreId = computed(() => {
+  return (
+    cartItemsStoreId.value ||
+    cartStore.currentStoreId ||
+    branchStore.activeBranchId ||
+    selectedStoreId.value ||
+    null
+  );
+});
+
 const sortedStores = computed(() => {
   if (!userLocation.value) return stores.value;
   return [...stores.value].sort((a, b) => {
@@ -1325,11 +1207,6 @@ const sortedStores = computed(() => {
     const distB = b.distance ?? Infinity;
     return distA - distB;
   });
-});
-
-const pickupStoresVisible = computed(() => {
-  if (!showAllPickupStores.value) return [];
-  return sortedStores.value.filter((s) => s.id !== selectedStoreId.value);
 });
 
 // Generate available pickup time slots
@@ -1443,8 +1320,6 @@ async function selectFulfillment(mode: "delivery" | "pickup") {
     ) {
       selectedStoreId.value = preferredStoreId;
     }
-    previousStoreId.value = selectedStoreId.value;
-    showAllPickupStores.value = false;
     getUserLocation();
   }
 }
@@ -1452,7 +1327,6 @@ async function selectFulfillment(mode: "delivery" | "pickup") {
 function switchToDeliveryFromPickup() {
   fulfillmentMode.value = "delivery";
   currentDeliveryFee.value = 0;
-  showAllPickupStores.value = false;
 }
 
 async function loadStores() {
@@ -1487,7 +1361,6 @@ async function loadStores() {
     const firstStore = stores.value[0];
     if (firstStore && !selectedStoreId.value) {
       selectedStoreId.value = firstStore.id;
-      previousStoreId.value = firstStore.id;
     }
   }
   loadingStores.value = false;
@@ -1507,135 +1380,6 @@ function getDefaultPickupInstructions(storeName: string): string {
     if (storeName.includes(key)) return value;
   }
   return "Present your order confirmation at the pickup counter. Our staff will assist you.";
-}
-
-async function checkStoreChange(newStoreId: string) {
-  if (previousStoreId.value && previousStoreId.value !== newStoreId) {
-    const store = stores.value.find((s) => s.id === newStoreId);
-    pendingStore.value = store ? { id: store.id, name: store.name } : null;
-
-    // No cart items => switch immediately
-    if (cartStore.items.length === 0) {
-      selectedStoreId.value = newStoreId;
-      previousStoreId.value = newStoreId;
-      return;
-    }
-
-    storeChangeChecking.value = true;
-    storeChangeWarnings.value = [];
-
-    try {
-      const { data: rpcData, error: rpcError } = await (supabase.rpc as any)(
-        "check_cart_availability",
-        {
-          cart_items: cartStore.items.map((i) => ({
-            product_id: i.product_id,
-            quantity: i.quantity,
-          })),
-          new_branch_id: newStoreId,
-        },
-      );
-
-      let warnings: {
-        product_id: string;
-        name: string;
-        requested: number;
-        available: number;
-      }[] = [];
-
-      if (rpcError) {
-        console.error("Failed to check store availability via RPC:", rpcError);
-        const productIds = [
-          ...new Set(cartStore.items.map((i) => i.product_id)),
-        ];
-        const { data, error } = await supabase
-          .from("store_inventory")
-          .select("product_id, stock_level, reserved_stock")
-          .eq("store_id", newStoreId)
-          .in("product_id", productIds);
-
-        if (error) {
-          console.error("Failed to check store availability:", error);
-          // fallback: show the confirmation modal (as if warnings exist)
-          showStoreChangeModal.value = true;
-          selectedStoreId.value = previousStoreId.value;
-          return;
-        }
-
-        const invMap = new Map<
-          string,
-          { stock_level: number; reserved_stock: number }
-        >();
-        for (const row of (data || []) as any[]) {
-          invMap.set(row.product_id, {
-            stock_level: row.stock_level || 0,
-            reserved_stock: row.reserved_stock || 0,
-          });
-        }
-
-        warnings = cartStore.items
-          .map((item) => {
-            const inv = invMap.get(item.product_id);
-            const available = inv
-              ? Math.max(0, (inv.stock_level || 0) - (inv.reserved_stock || 0))
-              : 0;
-            return {
-              product_id: item.product_id,
-              name: item.name,
-              requested: item.quantity,
-              available,
-            };
-          })
-          .filter((w) => w.available < w.requested);
-      } else {
-        warnings = Array.isArray(rpcData)
-          ? (rpcData as any[]).map((row) => ({
-              product_id: row.product_id,
-              name: row.name,
-              requested: row.requested,
-              available: row.available,
-            }))
-          : [];
-      }
-
-      storeChangeWarnings.value = warnings;
-
-      if (warnings.length > 0) {
-        showStoreChangeModal.value = true;
-        selectedStoreId.value = previousStoreId.value;
-        return;
-      }
-
-      // All items available => switch immediately
-      selectedStoreId.value = newStoreId;
-      previousStoreId.value = newStoreId;
-    } finally {
-      storeChangeChecking.value = false;
-    }
-
-    return;
-  }
-  previousStoreId.value = newStoreId;
-}
-
-function confirmStoreChange() {
-  if (pendingStore.value) {
-    selectedStoreId.value = pendingStore.value.id;
-    previousStoreId.value = pendingStore.value.id;
-    if (storeChangeWarnings.value.length > 0) {
-      cartStore.clearCart();
-    }
-  }
-  showStoreChangeModal.value = false;
-  pendingStore.value = null;
-  storeChangeWarnings.value = [];
-  showAllPickupStores.value = false;
-}
-
-function cancelStoreChange() {
-  showStoreChangeModal.value = false;
-  pendingStore.value = null;
-  storeChangeWarnings.value = [];
 }
 
 function updateDeliveryFee() {
@@ -1675,13 +1419,29 @@ async function initiatePaystackPayment() {
   processingPayment.value = true;
   showPaymentModal.value = true;
 
+  if (!orderStoreId.value) {
+    throw new Error("Please select a store to continue.");
+  }
+
+  if (
+    cartStore.items.length > 0 &&
+    cartItemsStoreId.value &&
+    cartItemsStoreId.value !== orderStoreId.value
+  ) {
+    throw new Error(
+      "Your cart contains items from a different store. Please clear your cart and try again.",
+    );
+  }
+
+  if (cartStore.currentStoreId !== orderStoreId.value) {
+    cartStore.currentStoreId = orderStoreId.value;
+  }
+
   try {
     // Server-authoritative stock validation (prevents stale client stock)
-    const { data: sessionData } = await supabase.auth.getSession();
+    const { data: sessionData } = await useSupabaseClient().auth.getSession();
     const accessToken = sessionData?.session?.access_token;
-    if (!accessToken) {
-      throw new Error("Session expired. Please log in again.");
-    }
+    if (!accessToken) throw new Error("Session expired. Please log in again.");
 
     const validation: { ok: boolean; issues?: any[] } = await $fetch(
       "/api/orders/validate-cart-stock",
@@ -1691,7 +1451,7 @@ async function initiatePaystackPayment() {
           Authorization: `Bearer ${accessToken}`,
         },
         body: {
-          store_id: cartStore.currentStoreId,
+          store_id: orderStoreId.value,
           items: cartStore.items.map((i) => ({
             product_id: i.product_id,
             quantity: i.quantity,
@@ -1745,7 +1505,7 @@ async function initiatePaystackPayment() {
       .from("orders")
       .insert({
         user_id: userId,
-        store_id: cartStore.currentStoreId,
+        store_id: orderStoreId.value,
         status: "pending",
         items: cartStore.items.map((item) => ({
           product_id: item.product_id,
@@ -1803,7 +1563,7 @@ async function initiatePaystackPayment() {
           method: "POST",
           headers: { Authorization: `Bearer ${accessToken}` },
           body: {
-            store_id: cartStore.currentStoreId,
+            store_id: orderStoreId.value,
             items: cartStore.items.map((i) => ({
               product_id: i.product_id,
               quantity: i.quantity,
@@ -1834,7 +1594,7 @@ async function initiatePaystackPayment() {
             user_id: userId,
             customer_name: userDetails.value.fullName,
             customer_phone: userDetails.value.phone,
-            store_id: cartStore.currentStoreId,
+            store_id: orderStoreId.value,
             items: cartStore.items.map((item) => ({
               product_id: item.product_id,
               name: item.name,
@@ -1903,6 +1663,7 @@ async function initiatePaystackPayment() {
 onMounted(async () => {
   // Initial attempt - may fail if user not loaded yet
   await fetchProfile();
+  await fetchOnlinePaymentDiscountEligibility();
 });
 
 // Watch for user becoming available (handles timing issues)
@@ -1911,6 +1672,7 @@ watch(
   async (newUserId, oldUserId) => {
     if (newUserId && newUserId !== oldUserId) {
       await fetchProfile();
+      await fetchOnlinePaymentDiscountEligibility();
     }
   },
   { immediate: true },

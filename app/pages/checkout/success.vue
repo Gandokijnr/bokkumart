@@ -131,7 +131,7 @@
           </div>
           <div class="flex justify-between text-sm">
             <span class="text-gray-600">Store</span>
-            <span class="font-medium">{{ cartStore.currentStoreName }}</span>
+            <span class="font-medium">{{ orderStoreName }}</span>
           </div>
           <div class="flex justify-between text-sm">
             <span class="text-gray-600">Items</span>
@@ -190,6 +190,7 @@ type OrderDetailsResponse = {
 
 const orderItemsCount = ref(0);
 const orderTotalPaid = ref(0);
+const orderStoreName = ref("-");
 
 async function fetchOrderDetails() {
   if (!orderId.value) return;
@@ -202,7 +203,9 @@ async function fetchOrderDetails() {
     confirmationCode.value = String(res?.confirmation_code || "");
     isPickupOrder.value = String(res?.delivery_method || "") === "pickup";
     if (res?.store_name) {
-      cartStore.currentStoreName = String(res.store_name);
+      orderStoreName.value = String(res.store_name);
+    } else {
+      orderStoreName.value = "-";
     }
     orderItemsCount.value = Array.isArray(res?.items)
       ? res!.items.reduce(
@@ -229,10 +232,6 @@ function formatPrice(price: number): string {
 }
 
 onMounted(async () => {
-  if (orderId.value) {
-    cartStore.retainCartFor48Hours();
-  }
-
   await fetchOrderDetails();
 });
 </script>
