@@ -642,7 +642,7 @@ onMounted(() => {
       <!-- Content -->
       <div v-else-if="analytics" class="space-y-6">
         <!-- Summary Cards -->
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-4">
           <div
             class="bg-white rounded-xl shadow-sm p-6 border-l-4 border-red-600"
           >
@@ -652,32 +652,6 @@ onMounted(() => {
             </p>
             <p class="text-xs text-gray-500 mt-1">
               {{ formatNumber(summary.paidOrdersCount) }} paid orders
-            </p>
-          </div>
-
-          <div
-            class="bg-white rounded-xl shadow-sm p-6 border-l-4 border-blue-500"
-          >
-            <p class="text-sm font-medium text-gray-600">
-              Digital Platform Sales
-            </p>
-            <p class="mt-2 text-2xl font-bold text-gray-900">
-              {{ formatCurrency(summary.platformRevenue) }}
-            </p>
-            <p class="text-xs text-gray-500 mt-1">
-              {{ formatNumber(breakdowns.byChannel?.platform || 0) }} orders
-            </p>
-          </div>
-
-          <div
-            class="bg-white rounded-xl shadow-sm p-6 border-l-4 border-green-500"
-          >
-            <p class="text-sm font-medium text-gray-600">In-Store Sales</p>
-            <p class="mt-2 text-2xl font-bold text-gray-900">
-              {{ formatCurrency(summary.inStoreRevenue) }}
-            </p>
-            <p class="text-xs text-gray-500 mt-1">
-              {{ formatNumber(breakdowns.byChannel?.in_store || 0) }} orders
             </p>
           </div>
 

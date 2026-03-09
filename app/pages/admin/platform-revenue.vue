@@ -59,6 +59,23 @@ const totalGrossSales = computed(() => store.totalGrossSales);
 const isCurrentLocked = computed(() => store.isCurrentLocked);
 const canCalculate = computed(() => store.canCalculate);
 
+const branchGrossLoading = ref(false);
+const branchGrossError = ref<string | null>(null);
+const branchStores = ref<Array<{ id: string; name: string }>>([]);
+const branchGrossRows = ref<
+  Array<{
+    store_id: string;
+    store_name: string;
+    order_count: number;
+    total_sales: number;
+  }>
+>([]);
+const branchGrossTotals = ref<{
+  total_orders: number;
+  total_sales: number;
+} | null>(null);
+const selectedBranchId = ref<string>("");
+
 // Computed for audit logs
 const auditLogsForSelected = computed(() => {
   if (!selectedRevenueForAudit.value) return [];
@@ -75,6 +92,43 @@ async function fetchRevenue() {
       description: error.message || "Failed to fetch revenue data",
       color: "error",
     });
+  }
+}
+
+async function fetchAllTimeBranchGrossSales() {
+  branchGrossLoading.value = true;
+  branchGrossError.value = null;
+
+  try {
+    const { data: sessionData } = await useSupabaseClient().auth.getSession();
+    const accessToken = sessionData?.session?.access_token;
+    if (!accessToken) throw new Error("Session expired");
+
+    const res = await $fetch<{
+      stores: Array<{ id: string; name: string }>;
+      rows: Array<{
+        store_id: string;
+        store_name: string;
+        order_count: number;
+        total_sales: number;
+      }>;
+      totals: { total_orders: number; total_sales: number };
+    }>("/api/admin/finance/branch-gross-sales", {
+      method: "GET" as any,
+      headers: { Authorization: `Bearer ${accessToken}` },
+      params: selectedBranchId.value
+        ? { store_id: selectedBranchId.value }
+        : undefined,
+    });
+
+    branchStores.value = res?.stores || [];
+    branchGrossRows.value = res?.rows || [];
+    branchGrossTotals.value = res?.totals || null;
+  } catch (e: any) {
+    branchGrossError.value =
+      e?.statusMessage || e?.message || "Failed to load branch gross sales";
+  } finally {
+    branchGrossLoading.value = false;
   }
 }
 
@@ -204,6 +258,7 @@ function isGeneratingInvoice(revenueId: string) {
 
 onMounted(() => {
   fetchRevenue();
+  fetchAllTimeBranchGrossSales();
 });
 </script>
 
@@ -245,6 +300,115 @@ onMounted(() => {
         <div class="bg-white rounded-xl shadow-sm p-6">
           <p class="text-sm font-medium text-gray-600">Effective Rate</p>
           <p class="mt-2 text-2xl font-bold text-red-600">8%</p>
+        </div>
+      </div>
+
+      <div class="bg-white rounded-xl shadow-sm p-6 mb-8">
+        <div
+          class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"
+        >
+          <div>
+            <h2 class="text-lg font-bold text-gray-900">
+              Total Sales by Branch (All Time)
+            </h2>
+            <p class="mt-1 text-sm text-gray-600">
+              Aggregated sales subtotal across branches. No order-level details.
+            </p>
+          </div>
+
+          <div class="flex items-center gap-2">
+            <select
+              v-model="selectedBranchId"
+              class="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm focus:border-red-500 focus:outline-none"
+              @change="fetchAllTimeBranchGrossSales"
+            >
+              <option value="">All Branches</option>
+              <option v-for="s in branchStores" :key="s.id" :value="s.id">
+                {{ s.name }}
+              </option>
+            </select>
+
+            <button
+              type="button"
+              class="rounded-lg bg-gray-900 px-4 py-2 text-sm font-semibold text-white hover:bg-gray-800 disabled:opacity-60"
+              :disabled="branchGrossLoading"
+              @click="fetchAllTimeBranchGrossSales"
+            >
+              {{ branchGrossLoading ? "Loading..." : "Refresh" }}
+            </button>
+          </div>
+        </div>
+
+        <div
+          v-if="branchGrossError"
+          class="mt-4 rounded-lg bg-red-50 p-3 text-sm text-red-700"
+        >
+          {{ branchGrossError }}
+        </div>
+
+        <div v-else class="mt-4">
+          <div
+            v-if="branchGrossTotals"
+            class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4"
+          >
+            <div class="rounded-xl bg-gray-50 p-4">
+              <p class="text-sm text-gray-600">Total Orders</p>
+              <p class="mt-1 text-xl font-bold text-gray-900">
+                {{ formatNumber(branchGrossTotals.total_orders) }}
+              </p>
+            </div>
+            <div class="rounded-xl bg-gray-50 p-4">
+              <p class="text-sm text-gray-600">Total Sales</p>
+              <p class="mt-1 text-xl font-bold text-gray-900">
+                {{ formatCurrency(branchGrossTotals.total_sales) }}
+              </p>
+            </div>
+          </div>
+
+          <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+              <thead>
+                <tr>
+                  <th
+                    class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase"
+                  >
+                    Branch
+                  </th>
+                  <th
+                    class="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase"
+                  >
+                    Orders
+                  </th>
+                  <th
+                    class="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase"
+                  >
+                    Total Sales
+                  </th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-gray-200">
+                <tr v-for="r in branchGrossRows" :key="r.store_id">
+                  <td class="px-4 py-2 text-sm font-medium text-gray-900">
+                    {{ r.store_name }}
+                  </td>
+                  <td class="px-4 py-2 text-sm text-right text-gray-900">
+                    {{ formatNumber(r.order_count) }}
+                  </td>
+                  <td class="px-4 py-2 text-sm text-right text-gray-900">
+                    {{ formatCurrency(r.total_sales) }}
+                  </td>
+                </tr>
+                <tr v-if="branchGrossRows.length === 0">
+                  <td
+                    colspan="3"
+                    class="px-4 py-6 text-center text-sm text-gray-500"
+                  >
+                    No data.
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
 

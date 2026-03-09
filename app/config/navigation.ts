@@ -84,7 +84,7 @@ export const navigationSchema: NavItem[] = [
     label: "Platform Revenue",
     to: "/admin/platform-revenue",
     icon: "currencyNaira",
-    allowedRoles: ["super_admin"],
+    allowedRoles: ["super_admin", "finance"],
     section: "management",
   },
   {
@@ -185,6 +185,7 @@ export function getDashboardRoute(userRole: UserRole): string {
     super_admin: "/admin/global-dashboard",
     branch_manager: "/admin/branch-dashboard",
     staff: "/admin/dashboard",
+    finance: "/admin/platform-revenue",
     customer: "/",
     driver: "/",
   };

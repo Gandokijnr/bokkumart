@@ -8,6 +8,7 @@ export type UserRole =
   | "staff"
   | "branch_manager"
   | "super_admin"
+  | "finance"
   | "driver";
 
 type StoreRow = Database["public"]["Tables"]["stores"]["Row"];
@@ -95,7 +96,12 @@ export const useUserStore = defineStore("user", {
     // Has access to admin routes
     hasAdminAccess: (state): boolean => {
       const role = computeEffectiveRole(state);
-      const adminRoles: UserRole[] = ["super_admin", "branch_manager", "staff"];
+      const adminRoles: UserRole[] = [
+        "super_admin",
+        "branch_manager",
+        "staff",
+        "finance",
+      ];
       return adminRoles.includes(role as UserRole);
     },
 
@@ -568,6 +574,8 @@ export const useUserStore = defineStore("user", {
         navigateTo("/admin/branch-dashboard");
       } else if (role === "staff") {
         navigateTo("/admin/dashboard");
+      } else if (role === "finance") {
+        navigateTo("/admin/platform-revenue");
       } else if (role === "driver") {
         navigateTo("/driver/dashboard");
       } else {
@@ -603,6 +611,11 @@ export const useUserStore = defineStore("user", {
 
       // Admin routes - all admin roles
       if (route.startsWith("/admin")) {
+        const role = this.effectiveRole;
+        if (role === "finance") {
+          return route.startsWith("/admin/platform-revenue");
+        }
+
         return this.hasAdminAccess;
       }
 

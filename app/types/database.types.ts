@@ -26,6 +26,7 @@ export interface Database {
             | "manager"
             | "super_admin"
             | "branch_manager"
+            | "finance"
             | "driver";
           store_id: string | null;
           managed_store_ids: string[] | null;
@@ -50,6 +51,7 @@ export interface Database {
             | "manager"
             | "super_admin"
             | "branch_manager"
+            | "finance"
             | "driver";
           store_id?: string | null;
           managed_store_ids?: string[] | null;
@@ -74,6 +76,7 @@ export interface Database {
             | "manager"
             | "super_admin"
             | "branch_manager"
+            | "finance"
             | "driver";
           store_id?: string | null;
           managed_store_ids?: string[] | null;
@@ -806,7 +809,13 @@ export interface Database {
         Row: {
           id: string;
           user_id: string;
-          role: "customer" | "staff" | "admin" | "manager" | "driver";
+          role:
+            | "customer"
+            | "staff"
+            | "admin"
+            | "manager"
+            | "finance"
+            | "driver";
           assigned_by: string | null;
           assigned_at: string;
           is_active: boolean;
@@ -814,7 +823,13 @@ export interface Database {
         Insert: {
           id?: string;
           user_id: string;
-          role: "customer" | "staff" | "admin" | "manager" | "driver";
+          role:
+            | "customer"
+            | "staff"
+            | "admin"
+            | "manager"
+            | "finance"
+            | "driver";
           assigned_by?: string | null;
           assigned_at?: string;
           is_active?: boolean;
@@ -822,7 +837,13 @@ export interface Database {
         Update: {
           id?: string;
           user_id?: string;
-          role?: "customer" | "staff" | "admin" | "manager" | "driver";
+          role?:
+            | "customer"
+            | "staff"
+            | "admin"
+            | "manager"
+            | "finance"
+            | "driver";
           assigned_by?: string | null;
           assigned_at?: string;
           is_active?: boolean;

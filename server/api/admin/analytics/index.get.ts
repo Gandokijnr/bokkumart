@@ -94,13 +94,26 @@ export default defineEventHandler(async (event) => {
     const paidOrders = (orders || []).filter(
       (o: any) => o.payment_status === "paid",
     );
+
+    const getNetSalesExcludingDelivery = (o: any) => {
+      const subtotal = Number(o?.subtotal);
+      if (Number.isFinite(subtotal)) return subtotal;
+
+      const totalAmount = Number(o?.total_amount) || 0;
+      const deliveryFee = Number(o?.delivery_fee) || 0;
+      return totalAmount - deliveryFee;
+    };
+
     const totalRevenue = paidOrders.reduce(
-      (sum: number, o: any) => sum + (o.total_amount || 0),
+      (sum: number, o: any) => sum + getNetSalesExcludingDelivery(o),
       0,
     );
     const platformRevenue = paidOrders
       .filter((o: any) => o.channel === "platform")
-      .reduce((sum: number, o: any) => sum + (o.total_amount || 0), 0);
+      .reduce(
+        (sum: number, o: any) => sum + getNetSalesExcludingDelivery(o),
+        0,
+      );
 
     // Status breakdown
     const statusCounts: Record<string, number> = {};
@@ -132,7 +145,7 @@ export default defineEventHandler(async (event) => {
       if (!dailyRevenue[date]) {
         dailyRevenue[date] = { date, revenue: 0, orders: 0 };
       }
-      dailyRevenue[date].revenue += o.total_amount || 0;
+      dailyRevenue[date].revenue += getNetSalesExcludingDelivery(o);
       dailyRevenue[date].orders += 1;
     });
 
@@ -168,7 +181,7 @@ export default defineEventHandler(async (event) => {
       }
       const store = storeBreakdown[o.store_id]!;
       store.orders += 1;
-      store.revenue += o.total_amount || 0;
+      store.revenue += getNetSalesExcludingDelivery(o);
     });
 
     // Monthly revenue (for platform_revenue) - filter by allowed stores

@@ -30,8 +30,9 @@ export default defineNuxtRouteMiddleware(async (to, from) => {
 
   if (!isAllowed) {
     // Show unauthorized toast using Nuxt's toast if available
-    if (nuxtApp.$toast) {
-      nuxtApp.$toast.error(
+    const toast = (nuxtApp as any).$toast;
+    if (toast?.error) {
+      toast.error(
         "Unauthorized: You don't have permission to access this page",
       );
     } else {
@@ -44,21 +45,6 @@ export default defineNuxtRouteMiddleware(async (to, from) => {
     // Redirect to user's appropriate dashboard
     const dashboardRoute = getDashboardRoute(userRole);
     return navigateTo(dashboardRoute, { replace: true });
-  }
-
-  // Additional check: platform-revenue route requires super_admin
-  if (
-    to.path === "/admin/platform-revenue" ||
-    to.path.startsWith("/admin/platform-revenue/")
-  ) {
-    if (userRole !== "super_admin") {
-      if (nuxtApp.$toast) {
-        nuxtApp.$toast.error("Only Super Admins can access Platform Revenue");
-      }
-
-      const dashboardRoute = getDashboardRoute(userRole);
-      return navigateTo(dashboardRoute, { replace: true });
-    }
   }
 
   // Log access for audit (optional)

@@ -305,6 +305,7 @@ const userRoleDisplay = computed(() => {
   const roleNames = {
     super_admin: "Super Admin",
     branch_manager: "Branch Manager",
+    finance: "Finance",
     admin: "Administrator",
     manager: "Manager",
     staff: "Staff Member",
