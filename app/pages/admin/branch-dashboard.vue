@@ -3,17 +3,34 @@
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <!-- Header with Store Context -->
       <div class="mb-8">
-        <div class="flex items-start justify-between">
+        <div class="flex items-start justify-between flex-wrap gap-4">
           <div>
             <h1 class="text-3xl font-bold text-gray-900">Branch Dashboard</h1>
             <p class="text-gray-600 mt-2">Managing: {{ managedStoreNames }}</p>
           </div>
-          <div class="bg-blue-50 px-4 py-2 rounded-lg border border-blue-200">
-            <p class="text-sm font-medium text-blue-900">
-              {{ managedStores.length }} Store{{
-                managedStores.length !== 1 ? "s" : ""
-              }}
-            </p>
+          <div class="flex items-center gap-3">
+            <!-- Store Selector for multi-store managers -->
+            <select
+              v-if="managedStores.length > 1"
+              v-model="dashboard.selectedStoreId.value"
+              class="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm focus:border-red-500 focus:outline-none"
+            >
+              <option value="">All My Stores</option>
+              <option
+                v-for="store in managedStores"
+                :key="store.id"
+                :value="store.id"
+              >
+                {{ store.name }}
+              </option>
+            </select>
+            <div class="bg-blue-50 px-4 py-2 rounded-lg border border-blue-200">
+              <p class="text-sm font-medium text-blue-900">
+                {{ managedStores.length }} Store{{
+                  managedStores.length !== 1 ? "s" : ""
+                }}
+              </p>
+            </div>
           </div>
         </div>
       </div>
@@ -80,6 +97,7 @@
 <script setup lang="ts">
 import { useUserStore } from "~/stores/user";
 import { useDashboard } from "~/composables/useDashboard";
+import { watch } from "vue";
 
 const userStore = useUserStore();
 const dashboard = useDashboard();
@@ -96,6 +114,15 @@ useHead({
 
 const managedStores = computed(() => userStore.managedStores);
 const managedStoreNames = computed(() => userStore.managedStoreNames);
+
+// Watch for store selection changes and refresh stats
+watch(
+  () => dashboard.selectedStoreId.value,
+  () => {
+    dashboard.fetchDashboardStats();
+    dashboard.fetchOperationalKpis();
+  },
+);
 
 onMounted(async () => {
   const dashboard = useDashboard();

@@ -19,6 +19,12 @@ const supabase = useSupabaseClient();
 const user = useSupabaseUser();
 
 const form = ref({
+  // Account creation fields (for new users)
+  email: "",
+  password: "",
+  confirm_password: "",
+
+  // Existing fields
   full_name: "",
   phone_number: "",
   selected_branches: [] as string[],
@@ -60,10 +66,19 @@ const branches = ref<
 const branchesLoading = ref(false);
 
 const personalValid = computed(() => {
-  return (
+  const baseValid =
     String(form.value.full_name).trim().length >= 3 &&
-    String(form.value.phone_number).trim().length >= 8
-  );
+    String(form.value.phone_number).trim().length >= 8;
+
+  // If user is not authenticated, require email and password
+  if (!user.value?.id) {
+    const emailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.value.email);
+    const passwordValid = form.value.password.length >= 6;
+    const confirmValid = form.value.password === form.value.confirm_password;
+    return baseValid && emailValid && passwordValid && confirmValid;
+  }
+
+  return baseValid;
 });
 
 const branchesValid = computed(() => {
@@ -248,34 +263,44 @@ async function submitApplication() {
 
   loading.value = true;
   try {
+    const payload: any = {
+      personal: {
+        full_name: form.value.full_name,
+        phone_number: form.value.phone_number,
+      },
+      branches: {
+        selected_branches: form.value.selected_branches,
+      },
+      vehicle: {
+        vehicle_type: form.value.vehicle_type,
+        plate_number: form.value.plate_number,
+        id_card_path: idCardPath.value,
+        vehicle_registration_path: vehicleRegPath.value,
+      },
+      payout: {
+        bank_code: form.value.bank_code,
+        account_number: form.value.account_number,
+        account_name: form.value.account_name,
+        resolved_account_name: resolvedAccountName.value,
+      },
+      phone_verification: {
+        status: "skipped",
+      },
+    };
+
+    // Include account creation data for new users
+    if (!user.value?.id) {
+      payload.account = {
+        email: form.value.email,
+        password: form.value.password,
+      };
+    }
+
     const res = await $fetch<{ success: boolean; message?: string }>(
       "/api/driver/onboarding/submit",
       {
         method: "POST",
-        body: {
-          personal: {
-            full_name: form.value.full_name,
-            phone_number: form.value.phone_number,
-          },
-          branches: {
-            selected_branches: form.value.selected_branches,
-          },
-          vehicle: {
-            vehicle_type: form.value.vehicle_type,
-            plate_number: form.value.plate_number,
-            id_card_path: idCardPath.value,
-            vehicle_registration_path: vehicleRegPath.value,
-          },
-          payout: {
-            bank_code: form.value.bank_code,
-            account_number: form.value.account_number,
-            account_name: form.value.account_name,
-            resolved_account_name: resolvedAccountName.value,
-          },
-          phone_verification: {
-            status: "skipped",
-          },
-        },
+        body: payload,
       },
     );
 
@@ -315,7 +340,14 @@ async function submitApplication() {
         v-if="success"
         class="mb-4 rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-800"
       >
-        Application submitted successfully. You’ll be contacted after review.
+        Application submitted successfully. You'll be contacted after review.
+        <div v-if="!user?.id" class="mt-2 text-sm">
+          <NuxtLink
+            to="/login"
+            class="font-semibold text-emerald-700 hover:underline"
+            >Click here to log in</NuxtLink
+          >
+        </div>
       </div>
 
       <FormCard>
@@ -339,6 +371,48 @@ async function submitApplication() {
         </template>
 
         <div v-if="step === 'personal'" class="space-y-4">
+          <!-- Account creation section for non-authenticated users -->
+          <div
+            v-if="!user?.id"
+            class="rounded-xl border border-blue-200 bg-blue-50 p-4 space-y-4"
+          >
+            <p class="text-sm font-semibold text-blue-900">
+              Create Your Account
+            </p>
+            <p class="text-xs text-blue-700">
+              You'll need an account to become a driver. Please provide your
+              email and create a password.
+            </p>
+            <FormInput
+              v-model="form.email"
+              label="Email Address"
+              type="email"
+              placeholder="e.g. john@example.com"
+            />
+            <FormInput
+              v-model="form.password"
+              label="Password"
+              type="password"
+              placeholder="Min 6 characters"
+            />
+            <FormInput
+              v-model="form.confirm_password"
+              label="Confirm Password"
+              type="password"
+              placeholder="Re-enter password"
+            />
+            <p
+              v-if="
+                form.password &&
+                form.confirm_password &&
+                form.password !== form.confirm_password
+              "
+              class="text-xs text-red-600"
+            >
+              Passwords do not match
+            </p>
+          </div>
+
           <FormInput
             v-model="form.full_name"
             label="Full Name"

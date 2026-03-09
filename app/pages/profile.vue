@@ -400,7 +400,8 @@
                   <button
                     v-if="
                       order.delivery_method === 'pickup' &&
-                      order.status === 'picked_up' &&
+                      (order.status === 'picked_up' ||
+                        order.status === 'arrived') &&
                       !order.metadata?.pickup_arrived_at
                     "
                     @click="reportPickupArrival(order)"

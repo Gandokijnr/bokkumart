@@ -1,11 +1,15 @@
 import { defineEventHandler, getQuery, createError } from "h3";
 import { createClient } from "@supabase/supabase-js";
+import { serverSupabaseUser } from "#supabase/server";
 import type { Database } from "~/types/database.types";
 
 export default defineEventHandler(async (event) => {
   try {
     const config = useRuntimeConfig();
     const query = getQuery(event);
+
+    // Get authenticated user
+    const user = await serverSupabaseUser(event);
 
     const days = query.days ? parseInt(String(query.days), 10) : 30;
     const storeId = query.store_id as string | undefined;
@@ -33,18 +37,51 @@ export default defineEventHandler(async (event) => {
     const startDate = new Date(now);
     startDate.setDate(startDate.getDate() - days);
 
+    // Get user's profile to check role and managed stores
+    let allowedStoreIds: string[] = [];
+    let isBranchManager = false;
+
+    if (user) {
+      const { data: profile } = await (admin as any)
+        .from("profiles")
+        .select("role, managed_store_ids")
+        .eq("id", user.id)
+        .single();
+
+      if (profile) {
+        isBranchManager = profile.role === "branch_manager";
+        if (isBranchManager && profile.managed_store_ids) {
+          allowedStoreIds = profile.managed_store_ids;
+        }
+      }
+    }
+
     // Build base query filters
     let orderQuery = (admin as any)
       .from("orders")
       .select("*", { count: "exact" });
 
+    // Apply store filtering
     if (storeId) {
+      // If specific store requested, check if branch manager has access
+      if (isBranchManager && !allowedStoreIds.includes(storeId)) {
+        throw createError({
+          statusCode: 403,
+          statusMessage: "You don't have access to this store's analytics",
+        });
+      }
       orderQuery = orderQuery.eq("store_id", storeId);
+    } else if (isBranchManager && allowedStoreIds.length > 0) {
+      // Branch managers only see their assigned stores
+      orderQuery = orderQuery.in("store_id", allowedStoreIds);
     }
 
     // Get order statistics
-    const { data: orders, count: totalOrders, error: ordersError } = await orderQuery
-      .gte("created_at", startDate.toISOString());
+    const {
+      data: orders,
+      count: totalOrders,
+      error: ordersError,
+    } = await orderQuery.gte("created_at", startDate.toISOString());
 
     if (ordersError) {
       throw createError({
@@ -54,8 +91,13 @@ export default defineEventHandler(async (event) => {
     }
 
     // Calculate revenue metrics
-    const paidOrders = (orders || []).filter((o: any) => o.payment_status === "paid");
-    const totalRevenue = paidOrders.reduce((sum: number, o: any) => sum + (o.total_amount || 0), 0);
+    const paidOrders = (orders || []).filter(
+      (o: any) => o.payment_status === "paid",
+    );
+    const totalRevenue = paidOrders.reduce(
+      (sum: number, o: any) => sum + (o.total_amount || 0),
+      0,
+    );
     const platformRevenue = paidOrders
       .filter((o: any) => o.channel === "platform")
       .reduce((sum: number, o: any) => sum + (o.total_amount || 0), 0);
@@ -69,17 +111,22 @@ export default defineEventHandler(async (event) => {
     // Payment method breakdown
     const paymentMethodCounts: Record<string, number> = {};
     (orders || []).forEach((o: any) => {
-      paymentMethodCounts[o.payment_method] = (paymentMethodCounts[o.payment_method] || 0) + 1;
+      paymentMethodCounts[o.payment_method] =
+        (paymentMethodCounts[o.payment_method] || 0) + 1;
     });
 
     // Channel breakdown
     const channelCounts: Record<string, number> = {};
     (orders || []).forEach((o: any) => {
-      channelCounts[o.channel || "unknown"] = (channelCounts[o.channel || "unknown"] || 0) + 1;
+      channelCounts[o.channel || "unknown"] =
+        (channelCounts[o.channel || "unknown"] || 0) + 1;
     });
 
     // Daily revenue trend
-    const dailyRevenue: Record<string, { date: string; revenue: number; orders: number }> = {};
+    const dailyRevenue: Record<
+      string,
+      { date: string; revenue: number; orders: number }
+    > = {};
     paidOrders.forEach((o: any) => {
       const date = o.created_at.split("T")[0];
       if (!dailyRevenue[date]) {
@@ -89,14 +136,28 @@ export default defineEventHandler(async (event) => {
       dailyRevenue[date].orders += 1;
     });
 
-    // Store breakdown
-    const storeBreakdown: Record<string, { store_id: string; store_name: string; orders: number; revenue: number }> = {};
-    
-    // Get stores for names
-    const { data: stores } = await (admin as any).from("stores").select("id, name");
-    const storeMap = new Map((stores || []).map((s: any) => [s.id, s.name]));
+    // Store breakdown - only include stores the user has access to
+    const storeBreakdown: Record<
+      string,
+      { store_id: string; store_name: string; orders: number; revenue: number }
+    > = {};
+
+    // Get stores for names - filter by allowed stores for branch managers
+    let storesQuery = (admin as any).from("stores").select("id, name");
+    if (isBranchManager && allowedStoreIds.length > 0) {
+      storesQuery = storesQuery.in("id", allowedStoreIds);
+    }
+    const { data: stores } = await storesQuery;
+    const storeMap = new Map<string, string>(
+      (stores || []).map((s: any) => [s.id, s.name]),
+    );
 
     paidOrders.forEach((o: any) => {
+      // Only include stores the user has access to
+      if (isBranchManager && !allowedStoreIds.includes(o.store_id)) {
+        return;
+      }
+
       if (!storeBreakdown[o.store_id]) {
         storeBreakdown[o.store_id] = {
           store_id: o.store_id,
@@ -105,17 +166,27 @@ export default defineEventHandler(async (event) => {
           revenue: 0,
         };
       }
-      storeBreakdown[o.store_id].orders += 1;
-      storeBreakdown[o.store_id].revenue += o.total_amount || 0;
+      const store = storeBreakdown[o.store_id]!;
+      store.orders += 1;
+      store.revenue += o.total_amount || 0;
     });
 
-    // Monthly revenue (for platform_revenue)
-    const { data: monthlyRevenue } = await (admin as any)
+    // Monthly revenue (for platform_revenue) - filter by allowed stores
+    let monthlyRevenueQuery = (admin as any)
       .from("platform_revenue")
       .select("*")
       .order("year", { ascending: false })
       .order("month", { ascending: false })
       .limit(12);
+
+    if (isBranchManager && allowedStoreIds.length > 0) {
+      monthlyRevenueQuery = monthlyRevenueQuery.in(
+        "store_id",
+        allowedStoreIds as string[],
+      );
+    }
+
+    const { data: monthlyRevenue } = await monthlyRevenueQuery;
 
     return {
       summary: {
@@ -125,7 +196,9 @@ export default defineEventHandler(async (event) => {
         inStoreRevenue: totalRevenue - platformRevenue,
         averageOrderValue: totalOrders ? totalRevenue / totalOrders : 0,
         paidOrdersCount: paidOrders.length,
-        conversionRate: totalOrders ? (paidOrders.length / totalOrders) * 100 : 0,
+        conversionRate: totalOrders
+          ? (paidOrders.length / totalOrders) * 100
+          : 0,
       },
       breakdowns: {
         byStatus: statusCounts,
@@ -134,8 +207,14 @@ export default defineEventHandler(async (event) => {
         byStore: Object.values(storeBreakdown),
       },
       trends: {
-        daily: Object.values(dailyRevenue).sort((a: any, b: any) => a.date.localeCompare(b.date)),
+        daily: Object.values(dailyRevenue).sort((a: any, b: any) =>
+          a.date.localeCompare(b.date),
+        ),
         monthly: monthlyRevenue || [],
+      },
+      meta: {
+        isBranchManager,
+        allowedStoreIds: isBranchManager ? allowedStoreIds : null,
       },
       period: {
         days,

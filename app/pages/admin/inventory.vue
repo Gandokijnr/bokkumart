@@ -42,6 +42,7 @@
       </div>
 
       <select
+        v-if="!isBranchManager"
         v-model="storeFilter"
         class="rounded-lg border border-gray-300 px-3 py-2 focus:border-red-500 focus:outline-none"
       >
@@ -50,6 +51,26 @@
           {{ store.name }}
         </option>
       </select>
+      <select
+        v-else-if="managedStores.length > 1"
+        v-model="storeFilter"
+        class="rounded-lg border border-gray-300 px-3 py-2 focus:border-red-500 focus:outline-none"
+      >
+        <option value="">All My Stores</option>
+        <option
+          v-for="store in managedStores"
+          :key="store.id"
+          :value="store.id"
+        >
+          {{ store.name }}
+        </option>
+      </select>
+      <span
+        v-else-if="managedStores.length === 1"
+        class="px-3 py-2 text-sm text-gray-600 bg-gray-100 rounded-lg"
+      >
+        {{ managedStores[0]?.name }}
+      </span>
 
       <select
         v-model="statusFilter"
@@ -732,6 +753,8 @@ const isBranchManager = computed(() => {
   return role === "branch_manager";
 });
 
+const managedStores = computed(() => userStore.managedStores);
+
 const storeOptions = computed(() => {
   return isBranchManager.value ? userStore.managedStores || [] : stores.value;
 });
@@ -743,6 +766,8 @@ const manualForm = ref({
   store_id: "",
   name: "",
   sku: "",
+  barcode: "",
+  retailman_product_id: "",
   description: "",
   price: null as number | null,
   cost_price: null as number | null,
@@ -857,6 +882,8 @@ const openManualModal = () => {
     store_id: "",
     name: "",
     sku: "",
+    barcode: "",
+    retailman_product_id: "",
     description: "",
     price: null,
     cost_price: null,
@@ -983,6 +1010,9 @@ const saveManualEntry = async () => {
         store_id: manualForm.value.store_id,
         name: manualForm.value.name,
         sku: manualForm.value.sku || undefined,
+        barcode: manualForm.value.barcode || undefined,
+        retailman_product_id:
+          manualForm.value.retailman_product_id || undefined,
         description: manualForm.value.description || undefined,
         price: manualForm.value.price ?? undefined,
         cost_price: manualForm.value.cost_price ?? undefined,
@@ -1088,7 +1118,7 @@ const uploadFile = async () => {
 };
 
 const fetchInventory = async () => {
-  const { data, error } = await supabase
+  let query = supabase
     .from("store_inventory")
     .select(
       `
@@ -1098,6 +1128,22 @@ const fetchInventory = async () => {
     `,
     )
     .order("updated_at", { ascending: false });
+
+  // Branch managers only see inventory for their assigned stores
+  if (isBranchManager.value) {
+    const allowedStoreIds = (userStore.managedStores || []).map(
+      (s: any) => s.id,
+    );
+    if (allowedStoreIds.length > 0) {
+      query = query.in("store_id", allowedStoreIds);
+    } else {
+      // No stores assigned, return empty
+      inventory.value = [];
+      return;
+    }
+  }
+
+  const { data, error } = await query;
 
   if (error) {
     console.error("Error fetching inventory:", error);

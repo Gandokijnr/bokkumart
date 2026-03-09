@@ -234,6 +234,12 @@ export const useUserStore = defineStore("user", {
             roles: ["branch_manager"],
           },
           {
+            label: "Store Analytics",
+            icon: "📊",
+            to: "/admin/analytics",
+            roles: ["branch_manager"],
+          },
+          {
             label: "My Activity Log",
             icon: "📝",
             to: "/admin/my-audit-logs",

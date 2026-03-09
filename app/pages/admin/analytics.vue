@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, watch } from "vue";
+import { useUserStore } from "~/stores/user";
 
 definePageMeta({
   layout: "admin",
@@ -17,6 +18,11 @@ const selectedDays = ref(30);
 const selectedStore = ref("");
 const stores = ref<any[]>([]);
 const toast = useToast();
+const userStore = useUserStore();
+
+// Check if user is branch manager
+const isBranchManager = computed(() => userStore.isBranchManager);
+const managedStores = computed(() => userStore.managedStores);
 
 const daysOptions = [
   { label: "Last 7 days", value: 7 },
@@ -26,6 +32,10 @@ const daysOptions = [
 ];
 
 const storeOptions = computed(() => {
+  // For branch managers, only show their assigned stores
+  if (isBranchManager.value) {
+    return managedStores.value.map((s) => ({ label: s.name, value: s.id }));
+  }
   return [
     { label: "All Stores", value: "" },
     ...stores.value.map((s) => ({ label: s.name, value: s.id })),
@@ -560,14 +570,20 @@ onMounted(() => {
         class="flex flex-col md:flex-row md:items-center md:justify-between mb-8 gap-4"
       >
         <div>
-          <h1 class="text-2xl font-bold text-gray-900">Analytics Dashboard</h1>
+          <h1 class="text-2xl font-bold text-gray-900">
+            {{ isBranchManager ? "My Store Analytics" : "Analytics Dashboard" }}
+          </h1>
           <p class="mt-2 text-sm text-gray-600">
-            Monitor revenue, orders, and platform performance metrics
+            {{
+              isBranchManager
+                ? `Viewing analytics for your assigned ${managedStores.length} store${managedStores.length > 1 ? "s" : ""}`
+                : "Monitor revenue, orders, and platform performance metrics"
+            }}
           </p>
         </div>
 
         <!-- Filters -->
-        <div class="flex flex-wrap gap-3">
+        <div class="flex flex-wrap gap-3 items-center">
           <select
             v-model.number="selectedDays"
             class="w-40 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500"
@@ -581,7 +597,7 @@ onMounted(() => {
             </option>
           </select>
           <select
-            v-if="stores.length > 0"
+            v-if="!isBranchManager && stores.length > 0"
             v-model="selectedStore"
             class="w-48 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500"
           >
@@ -593,6 +609,26 @@ onMounted(() => {
               {{ opt.label }}
             </option>
           </select>
+          <select
+            v-if="isBranchManager && managedStores.length > 1"
+            v-model="selectedStore"
+            class="w-48 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500"
+          >
+            <option value="">All My Stores</option>
+            <option
+              v-for="opt in storeOptions"
+              :key="opt.value"
+              :value="opt.value"
+            >
+              {{ opt.label }}
+            </option>
+          </select>
+          <span
+            v-if="isBranchManager && managedStores.length === 1"
+            class="px-3 py-2 text-sm text-gray-600 bg-gray-100 rounded-lg"
+          >
+            {{ managedStores[0]?.name }}
+          </span>
         </div>
       </div>
 
@@ -757,7 +793,11 @@ onMounted(() => {
 
           <div class="bg-white rounded-xl shadow-sm p-6">
             <h3 class="text-lg font-semibold text-gray-900 mb-4">
-              Top Stores by Revenue
+              {{
+                isBranchManager
+                  ? "My Stores by Revenue"
+                  : "Top Stores by Revenue"
+              }}
             </h3>
             <div class="space-y-3 max-h-48 overflow-y-auto">
               <div
@@ -811,6 +851,7 @@ onMounted(() => {
           </h3>
           <div class="flex flex-wrap gap-3">
             <NuxtLink
+              v-if="!isBranchManager"
               to="/admin/platform-revenue"
               class="inline-flex items-center justify-center rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-red-700"
             >
@@ -820,9 +861,10 @@ onMounted(() => {
               to="/admin/orders"
               class="inline-flex items-center justify-center rounded-lg bg-blue-50 px-4 py-2 text-sm font-semibold text-blue-700 ring-1 ring-inset ring-blue-200 hover:bg-blue-100"
             >
-              View All Orders
+              View {{ isBranchManager ? "My Store" : "All" }} Orders
             </NuxtLink>
             <NuxtLink
+              v-if="!isBranchManager"
               to="/admin/global-dashboard"
               class="inline-flex items-center justify-center rounded-lg bg-green-50 px-4 py-2 text-sm font-semibold text-green-700 ring-1 ring-inset ring-green-200 hover:bg-green-100"
             >
