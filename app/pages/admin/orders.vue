@@ -677,6 +677,7 @@ import { ref, computed, onMounted, onUnmounted } from "vue";
 import { useSupabaseClient } from "#imports";
 import type { Database } from "~/types/database.types";
 import { useUserStore } from "~/stores/user";
+import { useAdminStore } from "~/stores/admin";
 import {
   getStatusLabel,
   type FulfillmentType,
@@ -693,10 +694,14 @@ definePageMeta({
 const supabase = useSupabaseClient();
 const toast = useToast();
 const userStore = useUserStore();
+const adminStore = useAdminStore();
 
 // Get current user role
 const currentUserRole = computed(() => userStore.profile?.role || "customer");
 const currentUserStoreId = computed(() => userStore.profile?.store_id);
+
+// Super admin branch filter from admin store
+const adminStoreFilter = computed(() => adminStore.currentStoreId);
 
 const orders = ref<any[]>([]);
 const stores = ref<any[]>([]);
@@ -1445,7 +1450,15 @@ const getNextStatusLabel = (orderOrStatus: any) => {
 };
 
 const filteredOrders = computed(() => {
-  return orders.value.filter((order) => {
+  // First apply super admin branch filter if set
+  let baseOrders = orders.value;
+  if (userStore.isSuperAdmin && adminStoreFilter.value) {
+    baseOrders = baseOrders.filter(
+      (o) => o.store_id === adminStoreFilter.value,
+    );
+  }
+
+  return baseOrders.filter((order) => {
     const matchesSearch =
       !searchQuery.value ||
       order.id.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
@@ -1549,7 +1562,12 @@ const fetchOrders = async () => {
     // Branch managers only see orders for their assigned store
     query = query.eq("store_id", currentUserStoreId.value);
   }
-  // Super admins see all orders (no additional filter)
+
+  // Super admins: apply branch filter if selected in admin store
+  if (userStore.isSuperAdmin && adminStore.currentStoreId) {
+    query = query.eq("store_id", adminStore.currentStoreId);
+  }
+  // Super admins see all orders when no branch filter is set
 
   const { data, error } = await query;
 
@@ -1804,6 +1822,21 @@ const setupRealtime = () => {
     )
     .subscribe();
 };
+
+// Watch for admin store branch filter changes (for super admin)
+watch(
+  () => adminStore.currentStoreId,
+  (newStoreId) => {
+    if (userStore.isSuperAdmin) {
+      console.log(
+        "Super Admin branch filter changed:",
+        newStoreId || "All Stores",
+      );
+      fetchOrders();
+    }
+  },
+  { immediate: true },
+);
 
 onMounted(() => {
   fetchOrders();

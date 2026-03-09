@@ -292,7 +292,7 @@ onMounted(() => {
           </p>
         </div>
         <div class="bg-white rounded-xl shadow-sm p-6">
-          <p class="text-sm font-medium text-gray-600">Total Gross Sales</p>
+          <p class="text-sm font-medium text-gray-600">Total Sales</p>
           <p class="mt-2 text-2xl font-bold text-gray-900">
             {{ formatCurrency(totalGrossSales) }}
           </p>
