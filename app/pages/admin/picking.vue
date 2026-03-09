@@ -115,12 +115,15 @@
           <div
             v-for="order in filteredOrders"
             :key="order.id"
-            class="p-6 hover:bg-gray-50 transition-colors"
+            class="p-6 hover:bg-gray-50 transition-colors max-h-[400px] overflow-y-auto"
           >
             <div class="flex items-start justify-between">
-              <div class="flex-1">
-                <div class="flex items-center gap-3 mb-2">
-                  <h3 class="font-semibold text-gray-900">
+              <div class="flex-1 min-w-0">
+                <div class="flex items-center gap-3 mb-2 flex-wrap">
+                  <h3
+                    class="font-semibold text-gray-900 truncate"
+                    :title="'Order #' + order.id.slice(-8).toUpperCase()"
+                  >
                     Order #{{ order.id.slice(-8).toUpperCase() }}
                   </h3>
                   <span
@@ -137,16 +140,20 @@
                   </span>
                   <span
                     v-if="order.pickup_time"
-                    class="px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-700"
+                    class="px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-700 truncate"
+                    :title="order.pickup_time"
                   >
                     {{ order.pickup_time }}
                   </span>
                 </div>
 
                 <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm mb-4">
-                  <div>
+                  <div class="min-w-0">
                     <p class="text-gray-500">Customer</p>
-                    <p class="font-medium text-gray-900">
+                    <p
+                      class="font-medium text-gray-900 truncate"
+                      :title="order.customer_name || 'N/A'"
+                    >
                       {{ order.customer_name || "N/A" }}
                     </p>
                   </div>
@@ -156,9 +163,12 @@
                       {{ order.item_count }} items
                     </p>
                   </div>
-                  <div>
+                  <div class="min-w-0">
                     <p class="text-gray-500">Store</p>
-                    <p class="font-medium text-gray-900">
+                    <p
+                      class="font-medium text-gray-900 truncate"
+                      :title="order.store_name"
+                    >
                       {{ order.store_name }}
                     </p>
                   </div>
@@ -206,8 +216,11 @@
                             />
                           </svg>
                         </button>
-                        <div>
-                          <p class="font-medium text-gray-900">
+                        <div class="max-h-[100px] overflow-y-auto">
+                          <p
+                            class="font-medium text-gray-900 truncate"
+                            :title="item.name"
+                          >
                             {{ item.name }}
                           </p>
                           <p class="text-sm text-gray-500">
@@ -215,7 +228,8 @@
                           </p>
                           <p
                             v-if="item.location"
-                            class="text-xs font-medium text-red-600 mt-0.5"
+                            class="text-xs font-medium text-red-600 mt-0.5 truncate"
+                            :title="item.location"
                           >
                             📍 {{ item.location }}
                           </p>
@@ -263,7 +277,8 @@
                     v-if="order.status === 'confirmed'"
                     @click="updateOrderStatus(order.id, 'ready_for_pos')"
                     :disabled="processing.has(order.id)"
-                    class="px-4 py-2 bg-cyan-600 text-white text-sm font-medium rounded-lg hover:bg-cyan-700 disabled:opacity-50"
+                    class="px-4 py-2 bg-cyan-600 text-white text-sm font-medium rounded-lg hover:bg-cyan-700 disabled:opacity-50 truncate"
+                    title="Mark Ready for POS"
                   >
                     Mark Ready for POS
                   </button>
@@ -274,7 +289,8 @@
                       processing.has(order.id) ||
                       !isOrderFullyPicked(order.id, order.items.length)
                     "
-                    class="px-4 py-2 bg-teal-600 text-white text-sm font-medium rounded-lg hover:bg-teal-700 disabled:opacity-50"
+                    class="px-4 py-2 bg-teal-600 text-white text-sm font-medium rounded-lg hover:bg-teal-700 disabled:opacity-50 truncate"
+                    title="Mark POS Done"
                   >
                     Mark POS Done
                   </button>
@@ -285,7 +301,8 @@
                     "
                     @click="updateOrderStatus(order.id, 'picked_up')"
                     :disabled="processing.has(order.id)"
-                    class="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 disabled:opacity-50"
+                    class="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 disabled:opacity-50 truncate"
+                    title="Mark Ready for Pickup"
                   >
                     Mark Ready for Pickup
                   </button>
@@ -296,7 +313,8 @@
                     "
                     @click="updateOrderStatus(order.id, 'assigned')"
                     :disabled="processing.has(order.id)"
-                    class="px-4 py-2 bg-purple-600 text-white text-sm font-medium rounded-lg hover:bg-purple-700 disabled:opacity-50"
+                    class="px-4 py-2 bg-purple-600 text-white text-sm font-medium rounded-lg hover:bg-purple-700 disabled:opacity-50 truncate"
+                    title="Assign Rider"
                   >
                     Assign Rider
                   </button>

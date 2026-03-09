@@ -129,11 +129,11 @@
           </span>
         </div>
 
-        <div class="space-y-3">
+        <div class="space-y-3 max-h-[calc(100vh-280px)] overflow-y-auto">
           <div
             v-for="order in getOrdersByStatus(column.status)"
             :key="order.id"
-            class="relative cursor-pointer rounded-lg bg-white p-3 shadow-sm transition-shadow hover:shadow-md overflow-hidden"
+            class="relative cursor-pointer rounded-lg bg-white p-3 shadow-sm transition-shadow hover:shadow-md overflow-hidden max-h-[350px] overflow-y-auto"
             :class="{
               'border-l-4 border-red-500': order.fraudRisk?.isHighRisk,
               'ring-2 ring-emerald-300':
@@ -162,7 +162,9 @@
             </div>
 
             <div class="flex items-start justify-between">
-              <span class="font-mono text-xs font-bold text-gray-900">
+              <span
+                class="font-mono text-xs font-bold text-gray-900 truncate max-w-[70px]"
+              >
                 #{{ order.id.slice(-8).toUpperCase() }}
               </span>
               <div class="flex items-center gap-2">
@@ -184,10 +186,15 @@
               </div>
             </div>
 
-            <p class="mt-1 text-sm font-medium text-gray-900">
+            <p
+              class="mt-1 text-sm font-medium text-gray-900 truncate"
+              :title="order.customer_name || 'N/A'"
+            >
               {{ order.customer_name || "N/A" }}
             </p>
-            <p class="text-xs text-gray-500">{{ order.store_name }}</p>
+            <p class="text-xs text-gray-500 truncate" :title="order.store_name">
+              {{ order.store_name }}
+            </p>
 
             <div class="mt-2 flex items-center justify-between">
               <span class="font-bold text-gray-900"
@@ -214,7 +221,8 @@
                 <button
                   @click.stop="handleStatusUpdateWithVerify(order)"
                   :disabled="processing.has(order.id)"
-                  class="flex-1 rounded-lg bg-red-600 px-2 py-1.5 text-xs font-bold text-white hover:bg-red-700 disabled:cursor-not-allowed disabled:bg-gray-300"
+                  class="flex-1 rounded-lg bg-red-600 px-2 py-1.5 text-xs font-bold text-white hover:bg-red-700 disabled:cursor-not-allowed disabled:bg-gray-300 truncate"
+                  :title="getNextStatusLabel(order)"
                 >
                   {{
                     processing.has(order.id) ? "..." : getNextStatusLabel(order)
@@ -277,7 +285,7 @@
           </thead>
           <tbody class="divide-y divide-gray-200">
             <tr
-              v-for="order in filteredOrders"
+              v-for="order in paginatedTableOrders"
               :key="order.id"
               class="hover:bg-gray-50"
               :class="{
@@ -359,6 +367,37 @@
             </tr>
           </tbody>
         </table>
+      </div>
+
+      <!-- Table Pagination -->
+      <div
+        v-if="viewMode === 'table' && filteredOrders.length > 0"
+        class="flex items-center justify-between px-4 py-3 border-t border-gray-200"
+      >
+        <div class="text-sm text-gray-500">
+          Showing {{ (tablePage - 1) * tablePageSize + 1 }} -
+          {{ Math.min(tablePage * tablePageSize, filteredOrders.length) }} of
+          {{ filteredOrders.length }} orders
+        </div>
+        <div class="flex items-center gap-2">
+          <button
+            @click="tablePage--"
+            :disabled="tablePage <= 1"
+            class="rounded-lg border border-gray-300 px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            Previous
+          </button>
+          <span class="text-sm text-gray-600">
+            Page {{ tablePage }} of {{ totalTablePages }}
+          </span>
+          <button
+            @click="tablePage++"
+            :disabled="tablePage >= totalTablePages"
+            class="rounded-lg border border-gray-300 px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            Next
+          </button>
+        </div>
       </div>
     </div>
 
@@ -668,6 +707,10 @@ const searchQuery = ref("");
 const storeFilter = ref("");
 const paymentFilter = ref("");
 const viewMode = ref<"kanban" | "table">("kanban");
+
+// Pagination state for table view
+const tablePage = ref(1);
+const tablePageSize = ref(20);
 
 const selectedOrder = ref<any>(null);
 
@@ -1418,6 +1461,17 @@ const filteredOrders = computed(() => {
 
     return matchesSearch && matchesStore && matchesPayment;
   });
+});
+
+// Paginated orders for table view
+const paginatedTableOrders = computed(() => {
+  const start = (tablePage.value - 1) * tablePageSize.value;
+  const end = start + tablePageSize.value;
+  return filteredOrders.value.slice(start, end);
+});
+
+const totalTablePages = computed(() => {
+  return Math.ceil(filteredOrders.value.length / tablePageSize.value);
 });
 
 const formatNumber = (num: number) => {
