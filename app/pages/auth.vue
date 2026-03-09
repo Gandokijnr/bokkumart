@@ -3,7 +3,7 @@
     <div class="w-full max-w-md">
       <!-- Redirect Notice -->
       <div
-        v-if="unauthorizedReason"
+        v-if="false"
         class="mb-6 p-4 bg-amber-50 border border-amber-200 rounded-xl"
       >
         <div class="flex items-start gap-3">
@@ -30,6 +30,16 @@
             </p>
           </div>
         </div>
+      </div>
+
+      <div class="mb-4">
+        <NuxtLink
+          to="/"
+          class="inline-flex items-center gap-2 text-sm font-medium text-gray-600 hover:text-gray-900"
+        >
+          <span aria-hidden="true">←</span>
+          Home
+        </NuxtLink>
       </div>
 
       <div class="text-center mb-8">
@@ -429,6 +439,13 @@ const handleAuth = async () => {
       // Now fetch the profile (it will use the user we just set)
       await userStore.fetchProfile();
 
+      if (!userStore.profile?.phone_number?.trim()) {
+        return navigateTo({
+          path: "/onboarding/phone",
+          query: { redirect: redirectPath.value },
+        });
+      }
+
       // Load user's cart from server
       const cartStore = useCartStore();
       const sessionRes = await supabase.auth.getSession();
@@ -473,6 +490,13 @@ const handleAuth = async () => {
 
       // Now fetch the profile (it will use the user we just set)
       await userStore.fetchProfile();
+
+      if (!userStore.profile?.phone_number?.trim()) {
+        return navigateTo({
+          path: "/onboarding/phone",
+          query: { redirect: redirectPath.value },
+        });
+      }
 
       // Load user's cart from server
       const cartStore = useCartStore();

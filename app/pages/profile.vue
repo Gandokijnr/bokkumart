@@ -32,9 +32,9 @@
                   :style="{ width: profileCompletion + '%' }"
                 ></div>
               </div>
-              <span class="text-sm font-bold text-yellow-400"
-                >{{ profileCompletion }}%</span
-              >
+              <span class="text-sm font-bold text-yellow-400">
+                {{ profileCompletion }}%
+              </span>
             </div>
           </div>
         </div>
@@ -112,9 +112,9 @@
                       ? loyaltyProgress.currentTier + " Tier"
                       : "Progress to " + loyaltyProgress.nextTier
                   }}</span>
-                  <span class="font-medium text-yellow-600"
-                    >{{ loyaltyProgress.progressPercentage }}%</span
-                  >
+                  <span class="font-medium text-yellow-600">
+                    {{ loyaltyProgress.progressPercentage }}%
+                  </span>
                 </div>
                 <div
                   class="mt-2 h-2 overflow-hidden rounded-full bg-yellow-200"
@@ -252,12 +252,12 @@
                       getStatusBadge(order.status, order.delivery_method).label
                     }}
                   </span>
-                  <button
-                    @click="viewOrderDetails(order)"
+                  <NuxtLink
+                    :to="`/order/pending-${order.id}`"
                     class="rounded-lg bg-red-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-red-700"
                   >
                     Track
-                  </button>
+                  </NuxtLink>
                 </div>
               </div>
             </div>
@@ -419,18 +419,17 @@
                     </span>
                     <span v-else> I've Arrived at the Store </span>
                   </button>
-                  <button
-                    @click="viewOrderDetails(order)"
+                  <NuxtLink
+                    :to="`/order/pending-${order.id}`"
                     class="rounded-xl bg-red-600 px-4 py-2 font-medium text-white hover:bg-red-700"
                   >
                     Details
-                  </button>
+                  </NuxtLink>
                 </div>
               </div>
 
-              <!-- Status Progress Tracker -->
-              <div class="mt-4 pt-4 border-t border-gray-100">
-                <div class="flex items-center justify-between">
+              <div class="mt-4 rounded-xl bg-gray-50 p-4">
+                <div class="flex items-center gap-2">
                   <div
                     v-for="(step, index) in getOrderStatusSteps(
                       order.status,

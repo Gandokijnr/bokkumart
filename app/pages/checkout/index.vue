@@ -650,54 +650,6 @@
 
       <!-- Step 2: User Details -->
       <div v-if="step === 2" class="space-y-6">
-        <!-- Profile Phone Warning -->
-        <div
-          v-if="!hasProfilePhone"
-          class="rounded-xl border-2 border-amber-200 bg-amber-50 p-4"
-        >
-          <div class="flex items-start gap-3">
-            <svg
-              class="h-5 w-5 text-amber-600 flex-shrink-0 mt-0.5"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
-              />
-            </svg>
-            <div>
-              <p class="font-bold text-amber-900">Phone Number Required</p>
-              <p class="text-sm text-amber-800 mt-1">
-                You must add a phone number to your profile before completing
-                checkout.
-              </p>
-              <NuxtLink
-                to="/profile"
-                class="mt-2 inline-flex items-center text-sm font-bold text-amber-700 hover:text-amber-900"
-              >
-                Go to Profile
-                <svg
-                  class="ml-1 h-4 w-4"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M9 5l7 7-7 7"
-                  />
-                </svg>
-              </NuxtLink>
-            </div>
-          </div>
-        </div>
-
         <div class="text-center">
           <h1 class="text-xl sm:text-2xl font-bold text-gray-900">
             Your Details
@@ -1297,11 +1249,8 @@ const toast = ref({
 });
 
 // Profile phone validation - required before checkout
-const profilePhoneNumber = ref<string>("");
-
-const hasProfilePhone = computed(() => {
-  return !!profilePhoneNumber.value?.trim();
-});
+const profileFetchPending = ref(false);
+let profileFetchPromise: Promise<void> | null = null;
 
 interface Store {
   id: string;
@@ -1703,15 +1652,8 @@ function goToStep2() {
   step.value = 2;
 }
 
-function goToStep3() {
-  // Validate that user has a phone number on their profile
-  if (!hasProfilePhone.value) {
-    alert(
-      "Please add a phone number to your profile before proceeding to payment.",
-    );
-    navigateTo("/profile");
-    return;
-  }
+async function goToStep3() {
+  await fetchProfile();
   step.value = 3;
 }
 
@@ -1959,179 +1901,58 @@ async function initiatePaystackPayment() {
 }
 
 onMounted(async () => {
-  if (user.value?.id) {
-    const { data } = await supabase
-      .from("profiles")
-      .select("full_name, phone_number, loyalty_points")
-      .eq("id", user.value.id)
-      .single();
-    if (data) {
-      // Store profile phone separately for validation
-      profilePhoneNumber.value = (data as any).phone_number || "";
-      // Pre-fill checkout form
-      userDetails.value.fullName = (data as any).full_name || "";
-      userDetails.value.phone = (data as any).phone_number || "";
-      availableLoyaltyPoints.value = (data as any).loyalty_points || 0;
-    }
-  }
+  // Initial attempt - may fail if user not loaded yet
+  await fetchProfile();
 });
 
-// POD/COD logic (temporarily disabled)
-// async function checkUserCancellationRate() {
-//   if (!user.value?.id) return;
-//
-//   const { data: orders } = await supabase
-//     .from("orders")
-//     .select("status, payment_method")
-//     .eq("user_id", user.value.id);
-//
-//   if (orders && orders.length > 0) {
-//     const podOrders = orders.filter((o: any) => o.payment_method === "pod");
-//     const cancelledPodOrders = podOrders.filter(
-//       (o: any) => o.status === "cancelled",
-//     );
-//
-//     if (podOrders.length > 0) {
-//       userCancellationRate.value = cancelledPodOrders.length / podOrders.length;
-//       canUsePOD.value = userCancellationRate.value <= 0.2;
-//     }
-//   }
-// }
-//
-// async function initiatePODOrder() {
-//   console.log("[POD] Starting order initiation...");
-//
-//   if (userLoading.value) {
-//     await new Promise((resolve) => {
-//       const unwatch = watch(user, (newUser) => {
-//         if (newUser !== undefined) {
-//           unwatch();
-//           resolve(newUser);
-//         }
-//       });
-//       setTimeout(() => {
-//         unwatch();
-//         resolve(null);
-//       }, 5000);
-//     });
-//   }
-//
-//   if (fulfillmentMode.value === "pickup") {
-//     alert("Store Pickup requires upfront payment. Please select Pay Online.");
-//     paymentMethod.value = "paystack";
-//     return;
-//   }
-//
-//   const userId = user.value?.id || user.value?.sub;
-//   if (!userId) {
-//     alert("Please log in to place an order");
-//     return;
-//   }
-//
-//   if (!cartStore.items.length) {
-//     alert("Your cart is empty");
-//     return;
-//   }
-//
-//   if (!userDetails.value.fullName || !userDetails.value.phone) {
-//     alert("Please fill in your name and phone number");
-//     return;
-//   }
-//
-//   if (fulfillmentMode.value === "delivery" && !selectedArea.value) {
-//     alert("Please select a delivery area");
-//     return;
-//   }
-//
-//   processingPayment.value = true;
-//   showPaymentModal.value = true;
-//
-//   try {
-//     const { data: sessionData } = await supabase.auth.getSession();
-//     const accessToken = sessionData?.session?.access_token;
-//     if (!accessToken) {
-//       throw new Error("Session expired. Please log in again.");
-//     }
-//
-//     const validation: { ok: boolean; issues?: any[] } = await $fetch(
-//       "/api/orders/validate-cart-stock",
-//       {
-//         method: "POST",
-//         headers: {
-//           Authorization: `Bearer ${accessToken}`,
-//         },
-//         body: {
-//           store_id: cartStore.currentStoreId,
-//           items: cartStore.items.map((i) => ({
-//             product_id: i.product_id,
-//             quantity: i.quantity,
-//           })),
-//         },
-//       },
-//     );
-//
-//     if (!validation?.ok) {
-//       throw new Error(
-//         "Some items are no longer available. Please refresh your cart.",
-//       );
-//     }
-//
-//     const reserved = await cartStore.createReservation(supabase);
-//     if (!reserved) {
-//       alert("Some items are no longer available");
-//       processingPayment.value = false;
-//       showPaymentModal.value = false;
-//       return;
-//     }
-//
-//     const orderItems = cartStore.items.map((item) => ({
-//       product_id: item.product_id,
-//       name: item.name,
-//       quantity: item.quantity,
-//       unit_price: item.price,
-//       total_price: item.price * item.quantity,
-//       options: item.options || {},
-//     }));
-//
-//     const createRes: { success: boolean; order_id: string } = await $fetch(
-//       "/api/orders/create-pod",
-//       {
-//         method: "POST",
-//         headers: {
-//           Authorization: `Bearer ${accessToken}`,
-//         },
-//         body: {
-//           store_id: cartStore.currentStoreId,
-//           delivery_method: fulfillmentMode.value,
-//           delivery_zone: selectedArea.value,
-//           contact_name: userDetails.value.fullName,
-//           contact_phone: userDetails.value.phone,
-//           items: orderItems,
-//           subtotal: cartStore.cartSubtotal,
-//           delivery_fee: currentDeliveryFee.value,
-//           service_fee: serviceFee.value,
-//           total_amount: finalTotal.value,
-//         },
-//       },
-//     );
-//
-//     showToast(
-//       "Order placed! Our team will call you shortly to confirm.",
-//       "success",
-//     );
-//
-//     cartStore.retainCartFor48Hours();
-//     navigateTo(`/order/pending-${createRes?.order_id}`);
-//   } catch (error: any) {
-//     const message = getUserFacingErrorMessage(
-//       error,
-//       "Order failed. Please try again.",
-//     );
-//     alert(message);
-//     processingPayment.value = false;
-//     showPaymentModal.value = false;
-//   }
-// }
+// Watch for user becoming available (handles timing issues)
+watch(
+  () => user.value?.id,
+  async (newUserId, oldUserId) => {
+    if (newUserId && newUserId !== oldUserId) {
+      await fetchProfile();
+    }
+  },
+  { immediate: true },
+);
+
+async function fetchProfile() {
+  if (!user.value?.id) return;
+
+  if (profileFetchPromise) {
+    await profileFetchPromise;
+    return;
+  }
+
+  profileFetchPromise = (async () => {
+    profileFetchPending.value = true;
+
+    try {
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("full_name, phone_number, loyalty_points")
+        .eq("id", user.value!.id)
+        .single();
+
+      if (error) {
+        console.error("[Checkout] Failed to fetch profile:", error);
+        return;
+      }
+
+      if (data) {
+        // Pre-fill checkout form
+        userDetails.value.fullName = (data as any).full_name || "";
+        userDetails.value.phone = (data as any).phone_number || "";
+        availableLoyaltyPoints.value = (data as any).loyalty_points || 0;
+      }
+    } finally {
+      profileFetchPending.value = false;
+      profileFetchPromise = null;
+    }
+  })();
+
+  await profileFetchPromise;
+}
 
 definePageMeta({ middleware: ["auth"] });
 

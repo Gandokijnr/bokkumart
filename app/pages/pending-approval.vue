@@ -2,20 +2,36 @@
   <div class="min-h-screen bg-gray-50 flex items-center justify-center p-4">
     <div class="w-full max-w-md text-center space-y-6">
       <!-- Icon -->
-      <div class="w-20 h-20 bg-amber-100 rounded-full mx-auto flex items-center justify-center">
-        <svg class="w-10 h-10 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+      <div
+        class="w-20 h-20 bg-amber-100 rounded-full mx-auto flex items-center justify-center"
+      >
+        <svg
+          class="w-10 h-10 text-amber-600"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+          />
         </svg>
       </div>
 
       <!-- Message -->
       <div class="space-y-3">
-        <h1 class="text-2xl font-bold text-gray-900">Account Pending Approval</h1>
+        <h1 class="text-2xl font-bold text-gray-900">
+          Account Pending Approval
+        </h1>
         <p class="text-gray-600">
-          Your account has been created successfully, but a role has not been assigned yet.
+          Your account has been created successfully, but a role has not been
+          assigned yet.
         </p>
         <p class="text-sm text-gray-500">
-          Please contact your administrator to assign you a role. You will be able to access the system once your role is approved.
+          Please contact your administrator to assign you a role. You will be
+          able to access the system once your role is approved.
         </p>
       </div>
 
@@ -28,7 +44,9 @@
           </div>
           <div class="flex items-center justify-between text-sm">
             <span class="text-gray-500">Status:</span>
-            <span class="inline-flex px2 py-1 text-xs font-medium bg-amber-100 text-amber-800 rounded">
+            <span
+              class="inline-flex px2 py-1 text-xs font-medium bg-amber-100 text-amber-800 rounded"
+            >
               Pending Role Assignment
             </span>
           </div>
@@ -42,7 +60,7 @@
           :disabled="loading"
           class="w-full px-4 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          {{ loading ? 'Checking...' : 'Check Status' }}
+          {{ loading ? "Checking..." : "Check Status" }}
         </button>
 
         <button
@@ -55,56 +73,57 @@
 
       <!-- Help Text -->
       <p class="text-xs text-gray-400">
-        If you believe this is an error, please contact your system administrator.
+        If you believe this is an error, please contact your system
+        administrator.
       </p>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
-import { useUserStore } from '~/stores/user'
+import { ref } from "vue";
+import { useUserStore } from "~/stores/user";
 
 definePageMeta({
-  middleware: 'auth'
-})
+  middleware: "auth",
+});
 
-const userStore = useUserStore()
-const toast = useToast()
-const loading = ref(false)
+const userStore = useUserStore();
+const toast = useToast();
+const loading = ref(false);
 
-const user = computed(() => userStore.user)
+const user = computed(() => userStore.user);
 
 // Check if role has been assigned
 const checkStatus = async () => {
-  loading.value = true
+  loading.value = true;
   try {
-    await userStore.fetchProfile()
-    
+    await userStore.fetchProfile();
+
     if (userStore.profile?.role) {
       toast.add({
-        title: 'Role Assigned!',
+        title: "Role Assigned!",
         description: `You have been assigned the ${userStore.profile.role} role.`,
-        color: 'green'
-      })
-      
+        color: "success",
+      });
+
       // Redirect to appropriate dashboard
-      userStore.handleRedirectAfterLogin()
+      userStore.handleRedirectAfterLogin();
     } else {
       toast.add({
-        title: 'Still Pending',
-        description: 'Your account is still awaiting role assignment.',
-        color: 'amber'
-      })
+        title: "Still Pending",
+        description: "Your account is still awaiting role assignment.",
+        color: "warning",
+      });
     }
   } finally {
-    loading.value = false
+    loading.value = false;
   }
-}
+};
 
 // Sign out
 const signOut = async () => {
-  await userStore.signOut()
-  navigateTo('/auth')
-}
+  await userStore.signOut();
+  navigateTo("/auth");
+};
 </script>

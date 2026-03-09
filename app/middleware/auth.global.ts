@@ -6,7 +6,13 @@ import { useUserStore } from "~/stores/user";
 
 export default defineNuxtRouteMiddleware(async (to, from) => {
   // Public routes that don't require authentication
-  const publicRoutes = ["/", "/auth", "/", "/driver/onboarding"];
+  const publicRoutes = [
+    "/",
+    "/auth",
+    "/",
+    "/driver/onboarding",
+    "/onboarding/phone",
+  ];
   const isPublicRoute = publicRoutes.some(
     (route) =>
       to.path === route ||
@@ -57,8 +63,22 @@ export default defineNuxtRouteMiddleware(async (to, from) => {
     await userStore.fetchProfile();
   }
 
-  // DRIVER-SPECIFIC ROUTING LOGIC
+  // CUSTOMER ONBOARDING GUARD: phone number is required to proceed
+  // Skip driver routes and the onboarding page itself to avoid loops
   const isDriver = userStore.profile?.role === "driver";
+  const requiresPhoneOnboarding =
+    userStore.isAuthenticated &&
+    !isDriver &&
+    !userStore.profile?.phone_number?.trim();
+
+  if (requiresPhoneOnboarding && to.path !== "/onboarding/phone") {
+    return navigateTo({
+      path: "/onboarding/phone",
+      query: { redirect: to.fullPath },
+    });
+  }
+
+  // DRIVER-SPECIFIC ROUTING LOGIC
 
   // Handle root path redirect for authenticated users
   if (to.path === "/" && userStore.isAuthenticated && userStore.profile) {
@@ -73,7 +93,7 @@ export default defineNuxtRouteMiddleware(async (to, from) => {
 
   // HARD GUARD: Prevent drivers from accessing admin and shop routes
   if (isDriver) {
-    const restrictedPaths = ["/admin", "/shop"];
+    const restrictedPaths = ["/admin", "/"];
     const isRestricted = restrictedPaths.some((path) =>
       to.path.startsWith(path),
     );
