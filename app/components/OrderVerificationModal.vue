@@ -47,7 +47,7 @@
             <input
               ref="codeInput"
               v-model="localCode"
-              inputmode="numeric"
+              type="text"
               :maxlength="maxLength"
               :placeholder="inputPlaceholder"
               class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-center text-lg tracking-widest focus:border-blue-500 focus:outline-none"
@@ -169,7 +169,7 @@ const inputLabel = computed(() => {
 });
 
 const inputPlaceholder = computed(() => {
-  if (isPickup.value) return "Enter 6-digit code";
+  if (isPickup.value) return "Enter code";
   return "Enter PIN";
 });
 
@@ -218,7 +218,7 @@ function onCancel() {
 
 function onVerify() {
   if (!canVerify.value) {
-    localError.value = `Please enter a valid code (${props.minLength}-${props.maxLength} digits).`;
+    localError.value = `Please enter a valid code (${props.minLength}-${props.maxLength} characters).`;
     return;
   }
   localError.value = "";

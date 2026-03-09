@@ -1207,7 +1207,13 @@ async function onVerifyModalSubmit(code: string) {
     }
 
     showVerifyModal.value = false;
-    await updateStatus(order, "delivered");
+    // For pickup: pass verification code to updateStatus
+    // For delivery: verify-delivery-pin API already updates status, just refresh
+    if (isPickup) {
+      await updateStatus(order, "delivered", code);
+    } else {
+      await fetchOrders();
+    }
   } catch (e: any) {
     verifyModalError.value =
       e?.statusMessage || e?.message || "Verification failed";
@@ -1247,7 +1253,7 @@ async function onVerifyCollectionSubmit(code: string) {
 
     stopVerifyScanner();
     showVerifyCollection.value = false;
-    await updateStatus(selectedOrder.value, "delivered");
+    await updateStatus(selectedOrder.value, "delivered", code);
   } catch (e: any) {
     verifyError.value = e?.statusMessage || e?.message || "Validation failed";
   } finally {
@@ -1285,7 +1291,8 @@ async function onVerifyDeliverySubmit(pin: string) {
     });
 
     showVerifyDeliveryPin.value = false;
-    await updateStatus(selectedOrder.value, "delivered");
+    // verify-delivery-pin API already updates status to delivered
+    await fetchOrders();
   } catch (e: any) {
     deliveryPinError.value =
       e?.statusMessage || e?.message || "Validation failed";
@@ -1549,7 +1556,11 @@ const fetchStores = async () => {
   if (data) stores.value = data;
 };
 
-const updateStatus = async (order: any, newStatus: string) => {
+const updateStatus = async (
+  order: any,
+  newStatus: string,
+  verificationCode?: string,
+) => {
   processing.value.add(order.id);
 
   let updateError: any = null;
@@ -1577,6 +1588,7 @@ const updateStatus = async (order: any, newStatus: string) => {
       body: {
         orderId: order.id,
         status: newStatus,
+        verificationCode,
       },
     });
   } catch (err: any) {

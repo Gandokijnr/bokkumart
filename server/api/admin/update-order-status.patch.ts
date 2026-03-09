@@ -6,6 +6,7 @@ interface UpdateOrderStatusBody {
   orderId: string;
   newStatus?: Database["public"]["Tables"]["orders"]["Row"]["status"];
   status?: Database["public"]["Tables"]["orders"]["Row"]["status"];
+  verificationCode?: string;
 }
 
 function normalizePhoneToE164(phone: string): string {
@@ -124,6 +125,39 @@ export default defineEventHandler(async (event) => {
 
   const oldStatus = String(existingOrder.status);
   const newStatus = String(desiredStatus);
+
+  // Enforce PIN/code verification when marking as delivered
+  if (oldStatus !== "delivered" && newStatus === "delivered") {
+    const verificationCode = String(body?.verificationCode || "").trim();
+    if (!verificationCode) {
+      throw createError({
+        statusCode: 400,
+        statusMessage:
+          "Verification code is required to confirm delivery/collection",
+      });
+    }
+
+    // Validate the verification code against the order's confirmation_code
+    const { count, error: verifyErr } = await (admin as any)
+      .from("orders")
+      .select("id", { count: "exact", head: true })
+      .eq("id", body.orderId)
+      .eq("confirmation_code", verificationCode);
+
+    if (verifyErr) {
+      throw createError({
+        statusCode: 500,
+        statusMessage: verifyErr.message,
+      });
+    }
+
+    if (Number(count || 0) !== 1) {
+      throw createError({
+        statusCode: 400,
+        statusMessage: "Invalid verification code",
+      });
+    }
+  }
 
   const items = Array.isArray(existingOrder.items) ? existingOrder.items : [];
 
