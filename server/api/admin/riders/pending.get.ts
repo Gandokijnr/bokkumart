@@ -14,7 +14,10 @@ export default defineEventHandler(async (event) => {
     (process.env.SUPABASE_SERVICE_ROLE_KEY as string | undefined);
 
   if (!supabaseUrl || !serviceRoleKey) {
-    throw createError({ statusCode: 500, statusMessage: "Server not configured" });
+    throw createError({
+      statusCode: 500,
+      statusMessage: "Server not configured",
+    });
   }
 
   const authHeader = event.node.req.headers["authorization"];
@@ -35,7 +38,8 @@ export default defineEventHandler(async (event) => {
     auth: { persistSession: false, autoRefreshToken: false },
   }) as unknown as ReturnType<typeof createClient<Database>>;
 
-  const { data: callerData, error: callerErr } = await admin.auth.getUser(token);
+  const { data: callerData, error: callerErr } =
+    await admin.auth.getUser(token);
   if (callerErr || !callerData?.user) {
     throw createError({ statusCode: 401, statusMessage: "Invalid session" });
   }
@@ -57,7 +61,9 @@ export default defineEventHandler(async (event) => {
 
   const { data: rows, error } = await (admin as any)
     .from("rider_onboarding_applications")
-    .select("id, user_id, status, personal, vehicle, payout, phone_verification, created_at, updated_at")
+    .select(
+      "id, user_id, status, personal, branches, vehicle, payout, phone_verification, created_at, updated_at",
+    )
     .eq("status", "pending")
     .order("created_at", { ascending: false });
 
@@ -73,7 +79,9 @@ export default defineEventHandler(async (event) => {
       const vehicleRegPath = r?.vehicle?.vehicle_registration_path || null;
 
       const idCard = idCardPath
-        ? await admin.storage.from(bucket).createSignedUrl(String(idCardPath), 10 * 60)
+        ? await admin.storage
+            .from(bucket)
+            .createSignedUrl(String(idCardPath), 10 * 60)
         : null;
       const vehicleReg = vehicleRegPath
         ? await admin.storage
