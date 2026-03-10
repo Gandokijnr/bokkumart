@@ -2,13 +2,18 @@
   "name": "HomeAffairs",
   "short_name": "HomeAffairs",
   "description": "Your local grocery delivery service",
-  "theme_color": "#dc2626",
+  "theme_color": "#ED1C24",
   "background_color": "#ffffff",
   "display": "standalone",
   "orientation": "portrait",
   "start_url": "/",
   "scope": "/",
   "icons": [
+    {
+      "src": "/pwa-64x64.png",
+      "sizes": "64x64",
+      "type": "image/png"
+    },
     {
       "src": "/pwa-192x192.png",
       "sizes": "192x192",

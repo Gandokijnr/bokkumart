@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, watch } from "vue";
+import { computed, onMounted, watch } from "vue";
 import { useCartStore } from "~/stores/useCartStore";
 
 useHead({
@@ -8,7 +8,7 @@ useHead({
       name: "viewport",
       content: "width=device-width, initial-scale=1, viewport-fit=cover",
     },
-    { name: "theme-color", content: "#dc2626" },
+    { name: "theme-color", content: "#ED1C24" },
     { name: "apple-mobile-web-app-capable", content: "yes" },
     { name: "apple-mobile-web-app-status-bar-style", content: "default" },
     { name: "apple-mobile-web-app-title", content: "HomeAffairs" },
@@ -20,6 +20,9 @@ useHead({
   ],
 });
 
+const nuxtLoading = useLoadingIndicator();
+const isNavigating = computed(() => nuxtLoading.isLoading.value);
+
 const cartStore = useCartStore();
 const supabase = useSupabaseClient();
 const user = useSupabaseUser();
@@ -30,6 +33,9 @@ const roleGateRedirecting = useState<boolean>(
 
 onMounted(() => {
   if (!import.meta.client) return;
+
+  const splash = document.getElementById("__ha-splash");
+  if (splash) splash.remove();
 
   watch(
     () => (user.value as any)?.id || (user.value as any)?.sub || null,
@@ -50,6 +56,17 @@ onMounted(() => {
 <template>
   <div>
     <NuxtRouteAnnouncer />
+
+    <div
+      v-if="isNavigating"
+      class="fixed inset-0 z-[9998] flex items-center justify-center bg-white"
+    >
+      <div class="flex items-center gap-3 text-[#ED1C24] animate-pulse">
+        <Icon name="lucide:shopping-cart" size="24" />
+        <div class="text-lg font-extrabold tracking-tight">Home Affairs</div>
+      </div>
+    </div>
+
     <div
       v-if="roleGateRedirecting"
       class="fixed inset-0 z-[9999] flex items-center justify-center bg-white/70 backdrop-blur-sm"

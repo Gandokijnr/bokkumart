@@ -7,6 +7,25 @@ export default defineNuxtConfig({
   ssr: true,
   css: ["~/assets/css/main.css"],
 
+  app: {
+    head: {
+      style: [
+        {
+          innerHTML: `:root{--ha-red:#ED1C24;}
+html,body{background:#fff;}
+.ha-splash{position:fixed;inset:0;z-index:100000;background:#fff;display:flex;align-items:center;justify-content:center;}
+.ha-splash__inner{display:flex;align-items:center;justify-content:center;padding:24px;}
+.ha-splash__brand{display:flex;align-items:center;gap:10px;color:var(--ha-red);animation:haPulse 1.2s ease-in-out infinite;}
+.ha-splash__icon{width:24px;height:24px;}
+.ha-splash__text{font-weight:800;letter-spacing:.2px;font-size:20px;}
+@keyframes haPulse{0%,100%{opacity:1;transform:scale(1);}50%{opacity:.6;transform:scale(.985);}}
+@media (prefers-reduced-motion: reduce){.ha-splash__brand{animation:none;}}
+`,
+        },
+      ],
+    },
+  },
+
   modules: ["@nuxtjs/supabase", "@nuxt/icon", "@vite-pwa/nuxt"],
 
   pwa: {
@@ -67,13 +86,18 @@ export default defineNuxtConfig({
       name: "HomeAffairs",
       short_name: "HomeAffairs",
       description: "Your local grocery delivery service",
-      theme_color: "#dc2626",
+      theme_color: "#ED1C24",
       background_color: "#ffffff",
       display: "standalone",
       orientation: "portrait",
       start_url: "/",
       scope: "/",
       icons: [
+        {
+          src: "/pwa-64x64.png",
+          sizes: "64x64",
+          type: "image/png",
+        },
         {
           src: "/pwa-192x192.png",
           sizes: "192x192",
