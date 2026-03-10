@@ -1207,7 +1207,11 @@ const uploadFile = async () => {
     interface UploadResult {
       success: boolean;
       processed?: number;
-      processingErrors?: Array<{ row: number; error: string }>;
+      inventoryCreated?: number;
+      inventoryUpdated?: number;
+      productsCreated?: number;
+      processingErrors?: Array<{ row: number; message: string }>;
+      parseErrors?: Array<{ row: number; message: string }>;
       error?: string;
     }
 

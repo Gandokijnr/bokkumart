@@ -38,22 +38,6 @@
             </div>
           </div>
         </div>
-
-        <!-- Loyalty Tier Badge -->
-        <div class="mt-6 flex flex-wrap items-center gap-3">
-          <span
-            class="rounded-full bg-yellow-400/20 px-4 py-1.5 text-sm font-semibold text-yellow-300 backdrop-blur-sm"
-          >
-            {{ loyaltyTier }} Member
-          </span>
-          <span
-            v-if="loyaltyProgress.pointsToNextTier > 0"
-            class="text-sm text-red-100"
-          >
-            Only {{ formatCurrency(loyaltyProgress.pointsToNextTier) }} away
-            from {{ loyaltyProgress.nextTier }}
-          </span>
-        </div>
       </div>
 
       <!-- Tab Navigation -->
@@ -88,45 +72,6 @@
         <div v-if="activeTab === 'overview'" class="space-y-6">
           <!-- Quick Stats -->
           <div class="grid gap-4 sm:grid-cols-3">
-            <!-- Loyalty Points Card -->
-            <div
-              class="rounded-2xl border-2 border-yellow-200 bg-yellow-50 p-5 shadow-sm"
-            >
-              <div class="flex items-center gap-3">
-                <div
-                  class="flex h-12 w-12 items-center justify-center rounded-xl bg-yellow-400 text-xl"
-                >
-                  🏆
-                </div>
-                <div>
-                  <p class="text-sm text-gray-600">Loyalty Points</p>
-                  <p class="text-2xl font-bold text-gray-900">
-                    {{ profile?.loyalty_points || 0 }}
-                  </p>
-                </div>
-              </div>
-              <div class="mt-4">
-                <div class="flex justify-between text-xs">
-                  <span class="text-gray-500">{{
-                    loyaltyProgress.nextTier === "Max"
-                      ? loyaltyProgress.currentTier + " Tier"
-                      : "Progress to " + loyaltyProgress.nextTier
-                  }}</span>
-                  <span class="font-medium text-yellow-600">
-                    {{ loyaltyProgress.progressPercentage }}%
-                  </span>
-                </div>
-                <div
-                  class="mt-2 h-2 overflow-hidden rounded-full bg-yellow-200"
-                >
-                  <div
-                    class="h-full rounded-full bg-yellow-500 transition-all duration-500"
-                    :style="{ width: loyaltyProgress.progressPercentage + '%' }"
-                  ></div>
-                </div>
-              </div>
-            </div>
-
             <!-- Last Order Card -->
             <div
               class="rounded-2xl border-2 border-red-200 bg-red-50 p-5 shadow-sm"
@@ -985,43 +930,6 @@ const profileCompletion = computed(() => {
   return score;
 });
 
-const loyaltyTier = computed(() => {
-  const points = profile.value?.loyalty_points || 0;
-  if (points >= 50000) return "Platinum";
-  if (points >= 25000) return "Gold";
-  if (points >= 10000) return "Silver";
-  return "Bronze";
-});
-
-const loyaltyProgress = computed(() => {
-  const points = profile.value?.loyalty_points || 0;
-  const tiers = [
-    { name: "Bronze", min: 0, max: 10000 },
-    { name: "Silver", min: 10000, max: 25000 },
-    { name: "Gold", min: 25000, max: 50000 },
-    { name: "Platinum", min: 50000, max: 100000 },
-  ];
-
-  const fallbackTier = tiers[tiers.length - 1]!;
-  const currentTier =
-    tiers.find((t) => points >= t.min && points < t.max) ?? fallbackTier;
-  const nextTier = tiers.find((t) => t.min > points);
-
-  const progressInTier = points - currentTier.min;
-  const tierRange = currentTier.max - currentTier.min;
-  const progressPercentage = Math.min(
-    100,
-    Math.round((progressInTier / tierRange) * 100),
-  );
-
-  return {
-    progressPercentage,
-    pointsToNextTier: nextTier ? nextTier.max - points : 0,
-    nextTier: nextTier?.name || "Max",
-    currentTier: currentTier.name,
-  };
-});
-
 // Methods
 const fetchProfile = async () => {
   const userId = user.value?.id || (user.value as any)?.sub;
@@ -1504,8 +1412,7 @@ useHead({
   meta: [
     {
       name: "description",
-      content:
-        "Manage your HomeAffairs account, orders, addresses, and loyalty rewards",
+      content: "Manage your HomeAffairs account, orders, and addresses",
     },
   ],
 });

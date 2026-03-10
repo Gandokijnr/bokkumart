@@ -756,109 +756,12 @@
               <span class="font-bold">-₦500</span>
             </div>
 
-            <!-- Loyalty Points Discount -->
-            <div
-              v-if="pointsToRedeem > 0"
-              class="flex justify-between text-sm text-purple-600"
-            >
-              <span class="font-medium"
-                >Loyalty Points ({{ pointsToRedeem }} pts)</span
-              >
-              <span class="font-bold"
-                >-{{ formatPrice(pointsRedemptionValue) }}</span
-              >
-            </div>
-
             <div class="border-t pt-3">
               <div class="flex justify-between items-center">
                 <span class="text-base font-bold text-gray-900">Total</span>
                 <span class="text-2xl font-bold text-red-600">{{
                   formatPrice(finalTotal)
                 }}</span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Loyalty Points Redemption -->
-        <div
-          v-if="availableLoyaltyPoints > 0 && step === 3"
-          class="rounded-xl border-2 border-purple-200 bg-purple-50 p-5"
-        >
-          <div class="flex items-start gap-3">
-            <div
-              class="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-purple-500 text-white"
-            >
-              🏆
-            </div>
-            <div class="flex-1">
-              <div class="flex items-center justify-between">
-                <div>
-                  <p class="font-bold text-purple-900">
-                    Loyalty Points Available
-                  </p>
-                  <p class="text-sm text-purple-700">
-                    You have
-                    <span class="font-bold">{{ availableLoyaltyPoints }}</span>
-                    points
-                    <span class="text-xs"
-                      >(worth
-                      {{ formatPrice(availableLoyaltyPoints * 10) }})</span
-                    >
-                  </p>
-                </div>
-              </div>
-
-              <div v-if="pointsToRedeem === 0" class="mt-3">
-                <p class="text-xs text-purple-600 mb-2">
-                  Redeem points for instant discount (1 pt = ₦10)
-                </p>
-                <div class="flex gap-2">
-                  <button
-                    @click="
-                      pointsToRedeem = Math.min(
-                        availableLoyaltyPoints,
-                        Math.floor(finalTotal / 10),
-                      )
-                    "
-                    class="rounded-lg bg-purple-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-purple-700"
-                  >
-                    Use Max ({{
-                      Math.min(
-                        availableLoyaltyPoints,
-                        Math.floor(finalTotal / 10),
-                      )
-                    }}
-                    pts)
-                  </button>
-                  <button
-                    @click="
-                      pointsToRedeem = Math.min(100, availableLoyaltyPoints)
-                    "
-                    class="rounded-lg border border-purple-300 bg-white px-3 py-1.5 text-xs font-medium text-purple-700 hover:bg-purple-100"
-                  >
-                    Use 100 pts
-                  </button>
-                </div>
-              </div>
-
-              <div v-else class="mt-3 rounded-lg bg-white p-3">
-                <div class="flex items-center justify-between">
-                  <div>
-                    <p class="text-sm font-medium text-purple-900">
-                      {{ pointsToRedeem }} points applied
-                    </p>
-                    <p class="text-xs text-purple-600">
-                      Saving {{ formatPrice(pointsRedemptionValue) }}
-                    </p>
-                  </div>
-                  <button
-                    @click="pointsToRedeem = 0"
-                    class="rounded-lg border border-purple-300 px-3 py-1.5 text-xs font-medium text-purple-700 hover:bg-purple-50"
-                  >
-                    Remove
-                  </button>
-                </div>
               </div>
             </div>
           </div>
@@ -1118,11 +1021,6 @@ const { serviceFee, serviceFeeKobo } = useFees({
   fulfillmentMode,
 });
 
-// Loyalty Points State
-const availableLoyaltyPoints = ref(0);
-const pointsToRedeem = ref(0);
-const pointsRedemptionValue = computed(() => pointsToRedeem.value * 10); // 1 point = ₦10
-
 const onlinePaymentDiscountEligible = ref(false);
 const onlinePaymentDiscountLoading = ref(false);
 
@@ -1163,7 +1061,7 @@ const finalTotal = computed(() => {
     currentDeliveryFee.value > 0
       ? 500
       : 0;
-  return Math.max(0, base - onlineDiscount - pointsRedemptionValue.value);
+  return Math.max(0, base - onlineDiscount);
 });
 
 const selectedStore = computed(() => {
@@ -1519,8 +1417,6 @@ async function initiatePaystackPayment() {
         subtotal: cartStore.cartSubtotal,
         delivery_fee: currentDeliveryFee.value,
         total_amount: finalTotal.value,
-        points_redeemed: pointsToRedeem.value,
-        points_discount_amount: pointsRedemptionValue.value,
         payment_method: "paystack",
         contact_name: userDetails.value.fullName,
         contact_phone: userDetails.value.phone,
@@ -1692,7 +1588,7 @@ async function fetchProfile() {
     try {
       const { data, error } = await supabase
         .from("profiles")
-        .select("full_name, phone_number, loyalty_points")
+        .select("full_name, phone_number")
         .eq("id", user.value!.id)
         .single();
 
@@ -1705,7 +1601,6 @@ async function fetchProfile() {
         // Pre-fill checkout form
         userDetails.value.fullName = (data as any).full_name || "";
         userDetails.value.phone = (data as any).phone_number || "";
-        availableLoyaltyPoints.value = (data as any).loyalty_points || 0;
       }
     } finally {
       profileFetchPending.value = false;

@@ -533,6 +533,26 @@ export const useProducts = () => {
 
       const productIds = searchResults.map((p) => p.id);
 
+      // Get category IDs from search results
+      const categoryIds = [
+        ...new Set(
+          searchResults?.map((p) => p.category_id).filter(Boolean) || [],
+        ),
+      ];
+
+      // Fetch categories for the searched products
+      let categoriesMap: Record<string, any> = {};
+      if (categoryIds.length > 0) {
+        const { data: categoriesData } = (await supabase
+          .from("categories")
+          .select("id, name, slug")
+          .in("id", categoryIds)) as { data: any[] | null };
+
+        categoriesData?.forEach((cat) => {
+          categoriesMap[cat.id] = cat;
+        });
+      }
+
       // Check inventory at current branch
       const { data: currentBranchInventory } = (await supabase
         .from("store_inventory")
@@ -577,6 +597,7 @@ export const useProducts = () => {
         .filter((p) => currentBranchProductIds.has(p.id))
         .map((product) => {
           const inventory = currentBranchInventoryMap[product.id];
+          const category = categoriesMap[product.category_id];
           const effectiveStock = Math.max(
             0,
             (inventory?.available_stock || 0) -
@@ -602,6 +623,9 @@ export const useProducts = () => {
             unit: product.unit,
             sku: product.sku,
             metadata: product.metadata,
+            categoryId: product.category_id,
+            categoryName: category?.name,
+            categorySlug: category?.slug,
             stockLevel: inventory?.stock_level || 0,
             availableStock: effectiveStock,
             digitalBuffer: inventory?.digital_buffer || 2,
@@ -631,6 +655,8 @@ export const useProducts = () => {
             }))
             .sort((a, b) => b.quantity - a.quantity);
 
+          const category = categoriesMap[product.category_id];
+
           let imageUrl = product.image_url;
           if (imageUrl && !imageUrl.startsWith("http")) {
             const {
@@ -648,6 +674,9 @@ export const useProducts = () => {
               imageUrl: imageUrl,
               unit: product.unit,
               sku: product.sku,
+              categoryId: product.category_id,
+              categoryName: category?.name,
+              categorySlug: category?.slug,
               stockLevel: 0,
               availableStock: 0,
               digitalBuffer: 2,

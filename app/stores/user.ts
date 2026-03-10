@@ -21,7 +21,6 @@ interface UserProfile {
   role: UserRole;
   store_id: string | null;
   managed_store_ids: string[] | null;
-  loyalty_points: number;
   created_at: string;
   updated_at: string;
 }
@@ -343,12 +342,6 @@ export const useUserStore = defineStore("user", {
             roles: ["customer"],
           },
           {
-            label: "Loyalty Points",
-            icon: "⭐",
-            to: "/loyalty",
-            roles: ["customer"],
-          },
-          {
             label: "Saved Addresses",
             icon: "📍",
             to: "/addresses",
@@ -453,7 +446,6 @@ export const useUserStore = defineStore("user", {
               role: jwtRole,
               store_id: null,
               managed_store_ids: null,
-              loyalty_points: 0,
               created_at: new Date().toISOString(),
               updated_at: new Date().toISOString(),
             };
