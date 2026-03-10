@@ -140,6 +140,44 @@
             </div>
           </div>
 
+          <div
+            v-else-if="payoutForm.accountNumber"
+            class="bg-slate-900/50 rounded-xl p-3 mb-4 border border-green-500/30"
+          >
+            <div class="flex items-center gap-2 mb-2">
+              <svg
+                class="w-5 h-5 text-green-400"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
+              </svg>
+              <p class="text-sm text-green-400 font-medium">
+                Payout Details Ready
+              </p>
+            </div>
+            <div class="space-y-1 text-sm">
+              <p class="text-slate-300">
+                <span class="text-slate-500">Bank:</span>
+                {{ payoutForm.bankName }}
+              </p>
+              <p class="text-slate-300">
+                <span class="text-slate-500">Account:</span>
+                {{ payoutForm.accountName }}
+              </p>
+              <p class="text-slate-300">
+                <span class="text-slate-500">Number:</span>
+                {{ payoutForm.accountNumber }}
+              </p>
+            </div>
+          </div>
+
           <button
             v-else
             @click="showPayoutModal = true"
@@ -463,6 +501,59 @@ const payoutForm = reactive({
   accountName: "",
 });
 
+// Bank name mapping from code to name
+const bankCodeToName: Record<string, string> = {
+  "044": "Access Bank",
+  "023": "Citibank Nigeria",
+  "050": "Ecobank Nigeria",
+  "070": "Fidelity Bank",
+  "011": "First Bank of Nigeria",
+  "214": "First City Monument Bank (FCMB)",
+  "030": "Heritage Bank",
+  "301": "Jaiz Bank",
+  "082": "Keystone Bank",
+  "076": "Polaris Bank",
+  "101": "Providus Bank",
+  "221": "Stanbic IBTC Bank",
+  "068": "Standard Chartered Bank",
+  "232": "Sterling Bank",
+  "100": "Suntrust Bank",
+  "032": "Union Bank of Nigeria",
+  "033": "United Bank for Africa (UBA)",
+  "215": "Unity Bank",
+  "035": "Wema Bank",
+  "057": "Zenith Bank",
+  "999": "Paystack Titan",
+};
+
+// Load saved payout details from onboarding
+async function fetchPayoutDetails() {
+  try {
+    const headers = session.value?.access_token
+      ? { Authorization: `Bearer ${session.value.access_token}` }
+      : undefined;
+
+    const data = await $fetch<{
+      bankDetails: {
+        bank_code: string;
+        account_number: string;
+        account_name: string;
+      } | null;
+    }>("/api/driver/payout-details", { headers });
+
+    if (data?.bankDetails) {
+      payoutForm.bankName =
+        bankCodeToName[data.bankDetails.bank_code] ||
+        data.bankDetails.bank_code ||
+        "";
+      payoutForm.accountNumber = data.bankDetails.account_number || "";
+      payoutForm.accountName = data.bankDetails.account_name || "";
+    }
+  } catch (err) {
+    console.error("Error fetching payout details:", err);
+  }
+}
+
 function formatMoney(amount: number): string {
   return new Intl.NumberFormat("en-NG").format(amount);
 }
@@ -616,5 +707,6 @@ async function submitPayout() {
 
 onMounted(() => {
   fetchEarnings();
+  fetchPayoutDetails();
 });
 </script>
