@@ -10,9 +10,30 @@ interface DeliveryDetails {
     street?: string;
     houseNumber?: string;
     landmark?: string;
+    lat?: number;
+    latitude?: number;
+    lng?: number;
+    longitude?: number;
   };
   contactPhone?: string;
   deliveryZone?: string;
+  coordinates?: {
+    lat?: number;
+    latitude?: number;
+    lng?: number;
+    longitude?: number;
+  };
+  location?: {
+    lat?: number;
+    latitude?: number;
+    lng?: number;
+    longitude?: number;
+  };
+  geo?: { lat?: number; latitude?: number; lng?: number; longitude?: number };
+  lat?: number;
+  latitude?: number;
+  lng?: number;
+  longitude?: number;
 }
 
 interface ActiveOrder {
@@ -40,7 +61,7 @@ interface ActiveOrder {
 }
 
 interface DriverState {
-  activeOrder: ActiveOrder | null;
+  activeOrders: ActiveOrder[]; // Changed from single activeOrder to array
   orderHistory: ActiveOrder[];
   driverStatus: "offline" | "available" | "on_delivery";
   loading: boolean;
@@ -53,6 +74,7 @@ interface DriverState {
   minimumPayout: number;
   canRequestPayout: boolean;
   hasPendingPayoutRequest: boolean;
+  maxOrdersPerDriver: number; // Configurable limit
 }
 
 interface OfflineAction {
@@ -65,7 +87,7 @@ interface OfflineAction {
 
 export const useDriverStore = defineStore("driver", {
   state: (): DriverState => ({
-    activeOrder: null,
+    activeOrders: [], // Changed from null to empty array
     orderHistory: [],
     driverStatus: "offline",
     loading: false,
@@ -78,21 +100,36 @@ export const useDriverStore = defineStore("driver", {
     minimumPayout: 2000,
     canRequestPayout: false,
     hasPendingPayoutRequest: false,
+    maxOrdersPerDriver: 6, // Default: allow up to 3 orders at once
   }),
 
   getters: {
-    hasActiveOrder: (state) => !!state.activeOrder,
+    // Check if driver has any active orders
+    hasActiveOrder: (state) => state.activeOrders.length > 0,
+
+    // Count of active orders
+    activeOrderCount: (state) => state.activeOrders.length,
+
+    // Check if driver can take more orders (under the limit)
+    canTakeMoreOrders: (state) =>
+      state.activeOrders.length < state.maxOrdersPerDriver,
 
     isAvailable: (state) => state.driverStatus === "available",
 
-    isOnDelivery: (state) => state.driverStatus === "on_delivery",
+    isOnDelivery: (state) =>
+      state.driverStatus === "on_delivery" || state.activeOrders.length > 0,
 
-    currentOrderStatus: (state) => state.activeOrder?.status || null,
+    // Get the current (first) active order status
+    currentOrderStatus: (state) => state.activeOrders[0]?.status || null,
+
+    // Get first active order for backward compatibility
+    activeOrder: (state) => state.activeOrders[0] || null,
 
     // Get customer location for navigation
-    customerLocation: (state): { lat?: number; lng?: number } | null => {
-      if (!state.activeOrder?.delivery_details) return null;
-      const details: any = state.activeOrder.delivery_details;
+    customerLocation(state): { lat?: number; lng?: number } | null {
+      const order = this.activeOrder;
+      if (!order?.delivery_details) return null;
+      const details: any = order.delivery_details;
       const addr: any = details?.address;
       const coords: any =
         details?.coordinates || details?.location || details?.geo;
@@ -162,10 +199,11 @@ export const useDriverStore = defineStore("driver", {
     isPayOnDelivery: () => false,
 
     // Get next action button text based on status
-    nextActionText: (state) => {
-      if (!state.activeOrder) return null;
+    nextActionText(state) {
+      const order = this.activeOrder;
+      if (!order) return null;
 
-      const status = state.activeOrder.status;
+      const status = order.status;
 
       switch (status) {
         case "assigned":
@@ -305,8 +343,8 @@ export const useDriverStore = defineStore("driver", {
           this.driverStatus = profile.driver_status as any;
         }
 
-        // Fetch active order
-        await this.fetchActiveOrder();
+        // Fetch active orders (multiple)
+        await this.fetchActiveOrders();
 
         // Fetch order history for performance metrics
         await this.fetchOrderHistory();
@@ -336,8 +374,8 @@ export const useDriverStore = defineStore("driver", {
       }
     },
 
-    // Fetch the driver's currently assigned order
-    async fetchActiveOrder() {
+    // Fetch the driver's currently assigned orders (multiple)
+    async fetchActiveOrders() {
       const supabase = useSupabaseClient<Database>();
       const userId = await this.resolveUserId();
       if (!userId) return;
@@ -348,37 +386,49 @@ export const useDriverStore = defineStore("driver", {
           .select("*")
           .eq("driver_id", userId)
           .in("status", ["assigned", "picked_up", "arrived"])
-          .order("assigned_at", { ascending: false })
-          .limit(1)
-          .single();
+          .order("assigned_at", { ascending: false });
 
-        if (error && error.code !== "PGRST116") {
-          // PGRST116 = no rows returned
-          throw error;
-        }
+        if (error) throw error;
 
-        this.activeOrder = data as any;
+        const orders = (data || []) as ActiveOrder[];
 
-        if (this.activeOrder?.user_id) {
-          const { data: customerProfile } = await supabase
+        // Fetch customer profiles for all orders
+        const userIds = Array.from(
+          new Set(orders.map((o) => o.user_id).filter(Boolean)),
+        );
+        let customerMap = new Map<string, any>();
+
+        if (userIds.length > 0) {
+          const { data: customers } = await supabase
             .from("profiles")
-            .select("full_name, phone_number")
-            .eq("id", this.activeOrder.user_id)
-            .single();
+            .select("id, full_name, phone_number")
+            .in("id", userIds);
 
-          if (customerProfile && this.activeOrder) {
-            this.activeOrder.customer = customerProfile as any;
+          for (const c of (customers || []) as any[]) {
+            customerMap.set(c.id, c);
           }
         }
 
-        if (this.activeOrder) {
+        // Attach customer data to orders
+        this.activeOrders = orders.map((o) => ({
+          ...o,
+          customer: o.user_id ? customerMap.get(o.user_id) || null : null,
+        }));
+
+        // Update driver status based on active orders
+        if (this.activeOrders.length > 0) {
           this.driverStatus = "on_delivery";
         } else if (this.driverStatus !== "offline") {
           this.driverStatus = "available";
         }
       } catch (err: any) {
-        console.error("Failed to fetch active order:", err);
+        console.error("Failed to fetch active orders:", err);
       }
+    },
+
+    // Deprecated: kept for backward compatibility, use fetchActiveOrders
+    async fetchActiveOrder() {
+      return this.fetchActiveOrders();
     },
 
     // Fetch order history with pagination support
@@ -513,16 +563,27 @@ export const useDriverStore = defineStore("driver", {
       return transitions[currentStatus]?.includes(newStatus) || false;
     },
 
-    // Get current status in state machine
+    // Get current status in state machine for the first active order
     getCurrentState(): OrderStatus | null {
-      return this.activeOrder?.status || null;
+      return this.activeOrders[0]?.status || null;
+    },
+
+    // Get status of a specific order by ID
+    getOrderStatus(orderId: string): OrderStatus | null {
+      const order = this.activeOrders.find((o) => o.id === orderId);
+      return order?.status || null;
     },
 
     // Strict State Machine: Update order status with validation
-    async updateOrderStatus(newStatus: OrderStatus) {
+    async updateOrderStatus(newStatus: OrderStatus, orderId?: string) {
       const supabase = useSupabaseClient<Database>();
 
-      if (!this.activeOrder) {
+      // Find the specific order if orderId provided, otherwise use first active order
+      const targetOrder = orderId
+        ? this.activeOrders.find((o) => o.id === orderId)
+        : this.activeOrders[0];
+
+      if (!targetOrder) {
         const toast = useToast();
         toast.add({
           title: "Error",
@@ -532,7 +593,7 @@ export const useDriverStore = defineStore("driver", {
         return;
       }
 
-      const currentStatus = this.activeOrder.status;
+      const currentStatus = targetOrder.status;
 
       // STRICT VALIDATION: Prevent status skipping
       if (!this.isValidStatusTransition(currentStatus, newStatus)) {
@@ -571,18 +632,18 @@ export const useDriverStore = defineStore("driver", {
 
       // If offline, queue the action with full payload including timestamps
       if (!this.isOnline) {
-        this.queueOfflineAction("status_update", this.activeOrder.id, {
+        this.queueOfflineAction("status_update", targetOrder.id, {
           status: newStatus,
           ...updateData,
         });
 
         // Optimistically update local state
-        this.activeOrder.status = newStatus;
+        targetOrder.status = newStatus;
         if (updateData.picked_up_at) {
-          this.activeOrder.picked_up_at = updateData.picked_up_at;
+          targetOrder.picked_up_at = updateData.picked_up_at;
         }
         if (updateData.arrived_at) {
-          this.activeOrder.arrived_at = updateData.arrived_at;
+          targetOrder.arrived_at = updateData.arrived_at;
         }
 
         const toast = useToast();
@@ -598,17 +659,17 @@ export const useDriverStore = defineStore("driver", {
       try {
         const { error } = await (supabase.from("orders").update as any)(
           updateData,
-        ).eq("id", this.activeOrder.id);
+        ).eq("id", targetOrder.id);
 
         if (error) throw error;
 
         // Update local state
-        this.activeOrder.status = newStatus;
+        targetOrder.status = newStatus;
         if (updateData.picked_up_at) {
-          this.activeOrder.picked_up_at = updateData.picked_up_at;
+          targetOrder.picked_up_at = updateData.picked_up_at;
         }
         if (updateData.arrived_at) {
-          this.activeOrder.arrived_at = updateData.arrived_at;
+          targetOrder.arrived_at = updateData.arrived_at;
         }
 
         const toast = useToast();
@@ -631,17 +692,20 @@ export const useDriverStore = defineStore("driver", {
       }
     },
 
-    // Verify delivery PIN and complete delivery
+    // Verify delivery PIN and complete delivery for a specific order
     async verifyDeliveryPIN(
       pin: string,
+      orderId: string,
     ): Promise<"success" | "failed" | "queued"> {
       const supabase = useSupabaseClient<Database>();
 
-      if (!this.activeOrder) return "failed";
+      // Find the specific order
+      const targetOrder = this.activeOrders.find((o) => o.id === orderId);
+      if (!targetOrder) return "failed";
 
       // If offline, queue the action
       if (!this.isOnline) {
-        this.queueOfflineAction("delivery_confirm", this.activeOrder.id, {
+        this.queueOfflineAction("delivery_confirm", targetOrder.id, {
           pin,
         });
 
@@ -670,19 +734,22 @@ export const useDriverStore = defineStore("driver", {
             Authorization: `Bearer ${accessToken}`,
           },
           body: {
-            orderId: this.activeOrder.id,
+            orderId: targetOrder.id,
             pin,
           },
         });
 
         {
-          // Clear active order
-          this.activeOrder = null;
-          this.driverStatus = "available";
+          // Remove completed order from active orders
+          this.activeOrders = this.activeOrders.filter((o) => o.id !== orderId);
 
-          await (supabase.from("profiles").update as any)({
-            driver_status: "available",
-          }).eq("id", (useSupabaseUser().value as any)?.id);
+          // If no more active orders, set status back to available
+          if (this.activeOrders.length === 0) {
+            this.driverStatus = "available";
+            await (supabase.from("profiles").update as any)({
+              driver_status: "available",
+            }).eq("id", (useSupabaseUser().value as any)?.id);
+          }
 
           // Refresh order history
           await this.fetchOrderHistory();
@@ -852,8 +919,8 @@ export const useDriverStore = defineStore("driver", {
         );
       }
 
-      // Refresh active order after sync
-      await this.fetchActiveOrder();
+      // Refresh active orders after sync
+      await this.fetchActiveOrders();
     },
 
     // Load offline actions from localStorage

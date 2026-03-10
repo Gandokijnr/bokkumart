@@ -16,6 +16,7 @@
         <option v-for="driver in drivers" :key="driver.id" :value="driver.id">
           {{ driver.full_name || "Unnamed Driver" }}
           {{ driver.phone_number ? `(${driver.phone_number})` : "" }}
+          {{ driver.active_count ? `- ${driver.active_count} active` : "" }}
         </option>
       </select>
       <button
@@ -62,6 +63,7 @@ interface Driver {
   phone_number: string | null;
   driver_status: "offline" | "available" | "on_delivery";
   store_id: string | null;
+  active_count?: number; // Number of active orders
 }
 
 interface Props {
@@ -102,12 +104,13 @@ const currentUserStoreId = computed(() => userStore.profile?.store_id);
 const fetchDrivers = async () => {
   error.value = "";
 
-  // Build base query for available drivers
+  // Build base query for drivers who can take orders
+  // Include both "available" and "on_delivery" (if under max limit)
   let query = supabase
     .from("profiles")
     .select("id, full_name, phone_number, driver_status, store_id")
     .eq("role", "driver")
-    .eq("driver_status", "available");
+    .in("driver_status", ["available", "on_delivery"]);
 
   // Apply role-based filtering for branch managers and staff
   if (
@@ -129,7 +132,37 @@ const fetchDrivers = async () => {
     return;
   }
 
-  drivers.value = (data || []) as Driver[];
+  const driverRows = (data || []) as Driver[];
+
+  // Count active orders for each driver (simple approach)
+  const driverIds = driverRows.map((d) => d.id);
+  let countsMap = new Map<string, number>();
+
+  if (driverIds.length > 0) {
+    const { data: activeOrders, error: activeError } = await supabase
+      .from("orders")
+      .select("id, driver_id, status")
+      .in("driver_id", driverIds)
+      .in("status", ["assigned", "picked_up", "arrived"]);
+
+    if (activeError) {
+      console.error("Error counting active orders:", activeError);
+    }
+
+    for (const o of (activeOrders || []) as any[]) {
+      const id = o.driver_id;
+      countsMap.set(id, (countsMap.get(id) || 0) + 1);
+    }
+  }
+
+  // Filter drivers who are under the max limit (default 3)
+  const MAX_ORDERS_PER_DRIVER = 3;
+  drivers.value = driverRows
+    .map((d: Driver) => ({
+      ...d,
+      active_count: countsMap.get(d.id) || 0,
+    }))
+    .filter((d: Driver) => (d.active_count || 0) < MAX_ORDERS_PER_DRIVER);
 };
 
 const assignDriver = async (driverId: string) => {

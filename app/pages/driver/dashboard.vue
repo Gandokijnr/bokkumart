@@ -113,7 +113,7 @@
     <div class="max-w-2xl mx-auto px-4 py-6 pb-24">
       <!-- Loading State -->
       <div
-        v-if="driverStore.loading && !driverStore.activeOrder"
+        v-if="driverStore.loading && driverStore.activeOrders.length === 0"
         class="flex flex-col items-center justify-center py-20"
       >
         <div
@@ -174,6 +174,77 @@
 
       <!-- Active Order Card -->
       <div v-else class="space-y-4">
+        <!-- Multiple Orders Selector -->
+        <div
+          v-if="hasMultipleOrders"
+          class="bg-slate-800 rounded-2xl p-4 border border-slate-700/50"
+        >
+          <h3
+            class="text-sm font-bold text-slate-300 mb-3 flex items-center gap-2"
+          >
+            <svg
+              class="w-4 h-4 text-blue-400"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
+              />
+            </svg>
+            Active Orders ({{ driverStore.activeOrders.length }})
+          </h3>
+          <div class="grid grid-cols-1 gap-2">
+            <button
+              v-for="order in driverStore.activeOrders"
+              :key="order.id"
+              @click="selectOrder(order.id)"
+              class="flex items-center justify-between p-3 rounded-xl border transition-all"
+              :class="
+                selectedOrder?.id === order.id
+                  ? 'bg-blue-500/20 border-blue-500/50'
+                  : 'bg-slate-700/30 border-slate-600/30 hover:bg-slate-700/50'
+              "
+            >
+              <div class="flex items-center gap-3">
+                <div
+                  class="w-10 h-10 rounded-lg flex items-center justify-center font-bold text-sm"
+                  :class="
+                    selectedOrder?.id === order.id
+                      ? 'bg-blue-500/30 text-blue-400'
+                      : 'bg-slate-600/30 text-slate-400'
+                  "
+                >
+                  #{{ order.id.slice(0, 6).toUpperCase() }}
+                </div>
+                <div class="text-left">
+                  <p class="text-sm font-medium text-white">
+                    {{ order.customer?.full_name || "Customer" }}
+                  </p>
+                  <p class="text-xs text-slate-400">
+                    {{ getOrderStatusLabel(order.status) }} • ₦{{
+                      formatMoney(order.delivery_fee || 0)
+                    }}
+                  </p>
+                </div>
+              </div>
+              <div
+                class="w-3 h-3 rounded-full"
+                :class="
+                  order.status === 'assigned'
+                    ? 'bg-blue-400'
+                    : order.status === 'picked_up'
+                      ? 'bg-yellow-400'
+                      : 'bg-green-400'
+                "
+              ></div>
+            </button>
+          </div>
+        </div>
+
         <!-- The Job Card -->
         <div
           class="bg-slate-800 rounded-3xl p-6 border border-slate-700/50 shadow-2xl"
@@ -185,7 +256,15 @@
                 <span
                   class="px-3 py-1 bg-blue-500/20 text-blue-400 text-xs font-bold rounded-full border border-blue-500/30"
                 >
-                  ACTIVE DELIVERY
+                  ACTIVE DELIVERY{{
+                    hasMultipleOrders
+                      ? " #" +
+                        (driverStore.activeOrders.findIndex(
+                          (o) => o.id === selectedOrder?.id,
+                        ) +
+                          1)
+                      : ""
+                  }}
                 </span>
                 <span
                   v-if="!isNetworkOnline"
@@ -204,7 +283,7 @@
             >
               <p class="text-xs font-medium text-slate-400">Delivery Fee</p>
               <p class="text-2xl font-bold text-white mt-1">
-                ₦{{ formatMoney(driverStore.activeOrder?.delivery_fee || 0) }}
+                ₦{{ formatMoney(selectedOrder?.delivery_fee || 0) }}
               </p>
             </div>
           </div>
@@ -716,6 +795,7 @@ const showPinModal = ref(false);
 const pinDigits = ref(["", "", "", ""]);
 const pinInputs = ref<any[]>([]);
 const pinError = ref("");
+const selectedOrderId = ref<string>(""); // Track selected order for multi-order support
 
 // Slide to Confirm Ref
 const slideToConfirmRef = ref<InstanceType<typeof SlideToConfirm> | null>(null);
@@ -740,33 +820,46 @@ const deliverySteps = [
 ];
 
 // Computed Properties
+const hasMultipleOrders = computed(() => driverStore.activeOrders.length > 1);
+
+const selectedOrder = computed(() => {
+  if (selectedOrderId.value) {
+    return (
+      driverStore.activeOrders.find((o) => o.id === selectedOrderId.value) ||
+      driverStore.activeOrders[0] ||
+      null
+    );
+  }
+  return driverStore.activeOrders[0] || null;
+});
+
 const customerName = computed(() => {
-  return driverStore.activeOrder?.customer?.full_name || "Customer";
+  return selectedOrder.value?.customer?.full_name || "Customer";
 });
 
 const customerPhone = computed(() => {
   return (
-    driverStore.activeOrder?.customer?.phone_number ||
-    driverStore.activeOrder?.delivery_details?.contactPhone ||
+    selectedOrder.value?.customer?.phone_number ||
+    selectedOrder.value?.delivery_details?.contactPhone ||
     ""
   );
 });
 
 const shortOrderId = computed(() => {
-  if (!driverStore.activeOrder?.id) return "";
-  return driverStore.activeOrder.id.slice(0, 8).toUpperCase();
+  if (!selectedOrder.value?.id) return "";
+  return selectedOrder.value.id.slice(0, 8).toUpperCase();
 });
 
 const nearestLandmark = computed(() => {
   return (
-    driverStore.activeOrder?.nearest_landmark ||
-    driverStore.activeOrder?.delivery_details?.address?.landmark ||
+    selectedOrder.value?.nearest_landmark ||
+    selectedOrder.value?.delivery_details?.address?.landmark ||
     "No landmark provided"
   );
 });
 
 const deliveryAddress = computed(() => {
-  const details = driverStore.activeOrder?.delivery_details;
+  const details = selectedOrder.value?.delivery_details;
   if (!details?.address) return "";
 
   const { houseNumber, street, area } = details.address;
@@ -775,7 +868,7 @@ const deliveryAddress = computed(() => {
 });
 
 const orderItems = computed(() => {
-  return driverStore.activeOrder?.items || [];
+  return selectedOrder.value?.items || [];
 });
 
 const statusProgress = computed(() => {
@@ -798,9 +891,9 @@ const isPinComplete = computed(() => {
   return pinDigits.value.every((digit) => digit.length === 1);
 });
 
-// Current order status from store
+// Current order status from store (for selected order)
 const currentOrderStatus = computed(() => {
-  return driverStore.currentOrderStatus;
+  return selectedOrder.value?.status || null;
 });
 
 // WhatsApp message pre-filled
@@ -808,6 +901,22 @@ const whatsappMessage = computed(() => {
   const orderId = shortOrderId.value;
   return `Hi, this is your HomeAffairs delivery driver. I'm outside with your order #${orderId}. Could you please guide me to your location?`;
 });
+
+// Select an order to work on
+function selectOrder(orderId: string) {
+  selectedOrderId.value = orderId;
+}
+
+// Get status label for order list
+function getOrderStatusLabel(status: string): string {
+  const labels: Record<string, string> = {
+    assigned: "Assigned",
+    picked_up: "Picked Up",
+    arrived: "Arrived",
+    delivered: "Delivered",
+  };
+  return labels[status] || status;
+}
 
 // Methods
 function formatMoney(amount: number): string {
@@ -851,15 +960,35 @@ async function loadMoreOrders() {
 }
 
 function openMaps() {
-  const loc = driverStore.customerLocation;
-  if (loc?.lat != null && loc?.lng != null) {
+  const order = selectedOrder.value;
+  if (!order) return;
+
+  // Try to get coordinates from the order
+  const details = order.delivery_details;
+  const addr = details?.address;
+  const coords = details?.coordinates || details?.location || details?.geo;
+
+  const lat =
+    (addr && (addr.lat ?? addr.latitude)) ??
+    (coords && (coords.lat ?? coords.latitude)) ??
+    details?.lat ??
+    details?.latitude;
+
+  const lng =
+    (addr && (addr.lng ?? addr.longitude)) ??
+    (coords && (coords.lng ?? coords.longitude)) ??
+    details?.lng ??
+    details?.longitude;
+
+  if (typeof lat === "number" && typeof lng === "number") {
     window.open(
-      `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(`${loc.lat},${loc.lng}`)}`,
+      `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(`${lat},${lng}`)}`,
       "_blank",
     );
     return;
   }
 
+  // Fallback to landmark search
   const query = encodeURIComponent(nearestLandmark.value);
   window.open(
     `https://www.google.com/maps/search/?api=1&query=${query}`,
@@ -869,12 +998,14 @@ function openMaps() {
 
 // Handle Confirm Pickup (assigned status)
 async function handleConfirmPickup() {
-  await driverStore.updateOrderStatus("picked_up");
+  if (!selectedOrder.value) return;
+  await driverStore.updateOrderStatus("picked_up", selectedOrder.value.id);
 }
 
 // Handle Mark Arrived with slide confirmation (picked_up status)
 async function handleMarkArrived() {
-  await driverStore.updateOrderStatus("arrived");
+  if (!selectedOrder.value) return;
+  await driverStore.updateOrderStatus("arrived", selectedOrder.value.id);
 }
 
 function handlePinInput(event: Event, index: number) {
@@ -914,12 +1045,24 @@ async function submitPin() {
     return;
   }
 
-  const result = await driverStore.verifyDeliveryPIN(pin);
+  if (!selectedOrder.value) {
+    pinError.value = "No order selected";
+    return;
+  }
+
+  const result = await driverStore.verifyDeliveryPIN(
+    pin,
+    selectedOrder.value.id,
+  );
 
   if (result === "success") {
     showPinModal.value = false;
     pinDigits.value = ["", "", "", ""];
     pinError.value = "";
+    // Reset selected order if the completed order was selected
+    if (!driverStore.activeOrders.find((o) => o.id === selectedOrderId.value)) {
+      selectedOrderId.value = "";
+    }
     return;
   }
 
