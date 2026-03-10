@@ -6,18 +6,12 @@ import { useUserStore } from "~/stores/user";
 
 export default defineNuxtRouteMiddleware(async (to, from) => {
   // Public routes that don't require authentication
-  const publicRoutes = [
-    "/",
-    "/auth",
-    "/",
-    "/driver/onboarding",
-    "/onboarding/phone",
-  ];
+  const publicRoutes = ["/", "/auth", "/driver/auth", "/onboarding/phone"];
   const isPublicRoute = publicRoutes.some(
     (route) =>
       to.path === route ||
       to.path.startsWith("/product") ||
-      to.path.startsWith("/driver/onboarding"),
+      to.path.startsWith("/driver/auth"),
   );
 
   // Skip middleware for public routes on initial load
@@ -58,6 +52,28 @@ export default defineNuxtRouteMiddleware(async (to, from) => {
     });
   }
 
+  if (userStore.isAuthenticated) {
+    const { data, error } = await supabase.auth.getUser();
+    if (error || !data?.user) {
+      await supabase.auth.signOut();
+      userStore.clearUser();
+      if (!isPublicRoute) {
+        return navigateTo({
+          path: "/auth",
+          query: { redirect: to.fullPath, reason: "session_invalid" },
+        });
+      }
+    }
+  }
+
+  // DRIVER ONBOARDING: Redirect to auth page if trying to access onboarding without being logged in
+  if (to.path === "/driver/onboarding" && !userStore.isAuthenticated) {
+    return navigateTo({
+      path: "/driver/auth",
+      query: { redirect: to.fullPath },
+    });
+  }
+
   // Ensure profile is loaded for authenticated users
   if (userStore.isAuthenticated && !userStore.profile) {
     await userStore.fetchProfile();
@@ -68,8 +84,10 @@ export default defineNuxtRouteMiddleware(async (to, from) => {
   const isDriver = userStore.profile?.role === "driver";
   const requiresPhoneOnboarding =
     userStore.isAuthenticated &&
+    !!userStore.profile &&
+    !to.path.startsWith("/driver") &&
     !isDriver &&
-    !userStore.profile?.phone_number?.trim();
+    !userStore.profile.phone_number?.trim();
 
   if (requiresPhoneOnboarding && to.path !== "/onboarding/phone") {
     return navigateTo({
@@ -93,10 +111,7 @@ export default defineNuxtRouteMiddleware(async (to, from) => {
 
   // HARD GUARD: Prevent drivers from accessing admin and shop routes
   if (isDriver) {
-    const restrictedPaths = ["/admin", "/"];
-    const isRestricted = restrictedPaths.some((path) =>
-      to.path.startsWith(path),
-    );
+    const isRestricted = to.path === "/" || to.path.startsWith("/admin");
 
     if (isRestricted) {
       const toast = useToast();

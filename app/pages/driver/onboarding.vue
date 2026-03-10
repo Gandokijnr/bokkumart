@@ -15,16 +15,30 @@ const loading = ref(false);
 const error = ref<string>("");
 const success = ref(false);
 
+const checkingSession = ref(true);
+const authedUserId = ref<string | null>(null);
+
 const supabase = useSupabaseClient();
 const user = useSupabaseUser();
 
-const form = ref({
-  // Account creation fields (for new users)
-  email: "",
-  password: "",
-  confirm_password: "",
+onMounted(async () => {
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
 
-  // Existing fields
+  authedUserId.value = session?.user?.id || null;
+
+  checkingSession.value = false;
+
+  if (!authedUserId.value) {
+    await navigateTo({
+      path: "/driver/auth",
+      query: { redirect: "/driver/onboarding" },
+    });
+  }
+});
+
+const form = ref({
   full_name: "",
   phone_number: "",
   selected_branches: [] as string[],
@@ -66,19 +80,10 @@ const branches = ref<
 const branchesLoading = ref(false);
 
 const personalValid = computed(() => {
-  const baseValid =
+  return (
     String(form.value.full_name).trim().length >= 3 &&
-    String(form.value.phone_number).trim().length >= 8;
-
-  // If user is not authenticated, require email and password
-  if (!user.value?.id) {
-    const emailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.value.email);
-    const passwordValid = form.value.password.length >= 6;
-    const confirmValid = form.value.password === form.value.confirm_password;
-    return baseValid && emailValid && passwordValid && confirmValid;
-  }
-
-  return baseValid;
+    String(form.value.phone_number).trim().length >= 8
+  );
 });
 
 const branchesValid = computed(() => {
@@ -86,11 +91,19 @@ const branchesValid = computed(() => {
 });
 
 const vehicleValid = computed(() => {
+  const hasVehicleType = String(form.value.vehicle_type).trim().length > 0;
+  const hasIdCard = !!idCardPath.value;
+  const hasVehicleReg = !!vehicleRegPath.value;
+
+  // Bicycles don't need plate numbers
+  const needsPlateNumber = form.value.vehicle_type !== "bicycle";
+  const hasPlateNumber = String(form.value.plate_number).trim().length >= 3;
+
   return (
-    String(form.value.vehicle_type).trim().length > 0 &&
-    String(form.value.plate_number).trim().length >= 3 &&
-    !!idCardPath.value &&
-    !!vehicleRegPath.value
+    hasVehicleType &&
+    hasIdCard &&
+    hasVehicleReg &&
+    (!needsPlateNumber || hasPlateNumber)
   );
 });
 
@@ -118,12 +131,14 @@ async function uploadPrivateDoc(
   kind: "id_card" | "vehicle_registration",
   file: File,
 ) {
-  if (!user.value?.id) {
+  const userId = authedUserId.value || user.value?.id;
+
+  if (!userId) {
     throw new Error("Please sign in again to continue");
   }
 
   const ext = file.name.includes(".") ? file.name.split(".").pop() : "bin";
-  const path = `${user.value.id}/${kind}-${Date.now()}.${ext}`;
+  const path = `${userId}/${kind}-${Date.now()}.${ext}`;
 
   const { error: uploadErr } = await supabase.storage
     .from(bucketName)
@@ -212,11 +227,19 @@ async function resolveAccount() {
 async function fetchBranches() {
   branchesLoading.value = true;
   try {
-    const res =
-      await $fetch<
-        Array<{ id: string; name: string; address: string; city: string }>
-      >("/api/branches");
-    branches.value = res || [];
+    const res = await $fetch<
+      | {
+          branches: Array<{
+            id: string;
+            name: string;
+            address: string;
+            city: string;
+          }>;
+        }
+      | Array<{ id: string; name: string; address: string; city: string }>
+    >("/api/branches");
+
+    branches.value = Array.isArray(res) ? res : res?.branches || [];
   } catch (e: any) {
     error.value = e?.message || "Failed to load branches";
   } finally {
@@ -263,6 +286,14 @@ async function submitApplication() {
 
   loading.value = true;
   try {
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
+    const token = session?.access_token;
+    if (!token) {
+      throw new Error("Invalid session. Please sign in again.");
+    }
+
     const payload: any = {
       personal: {
         full_name: form.value.full_name,
@@ -289,18 +320,16 @@ async function submitApplication() {
     };
 
     // Include account creation data for new users
-    if (!user.value?.id) {
-      payload.account = {
-        email: form.value.email,
-        password: form.value.password,
-      };
-    }
+    // Note: User is now always authenticated before reaching this page
+    // Account creation happens in /driver/auth
 
     const res = await $fetch<{ success: boolean; message?: string }>(
       "/api/driver/onboarding/submit",
       {
         method: "POST",
         body: payload,
+        credentials: "include",
+        headers: { Authorization: `Bearer ${token}` },
       },
     );
 
@@ -308,7 +337,7 @@ async function submitApplication() {
       throw new Error(res?.message || "Failed to submit application");
     }
 
-    success.value = true;
+    await navigateTo("/driver/thank-you", { replace: true });
   } catch (e: any) {
     error.value =
       e?.statusMessage || e?.message || "Failed to submit application";
@@ -324,8 +353,8 @@ async function submitApplication() {
       <div class="mb-5">
         <h1 class="text-2xl font-bold text-gray-900">Rider Onboarding</h1>
         <p class="mt-1 text-sm text-gray-600">
-          Complete your details. A Super Admin will review your documents before
-          you go live.
+          Complete your details. The branch manager will review your documents
+          before you go live.
         </p>
       </div>
 
@@ -340,13 +369,15 @@ async function submitApplication() {
         v-if="success"
         class="mb-4 rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-800"
       >
-        Application submitted successfully. You'll be contacted after review.
-        <div v-if="!user?.id" class="mt-2 text-sm">
+        <p class="font-semibold">Application submitted successfully!</p>
+        <p class="mt-1">You'll be contacted after review.</p>
+        <div class="mt-3">
           <NuxtLink
-            to="/login"
+            to="/"
             class="font-semibold text-emerald-700 hover:underline"
-            >Click here to log in</NuxtLink
           >
+            ← Back to home
+          </NuxtLink>
         </div>
       </div>
 
@@ -370,66 +401,53 @@ async function submitApplication() {
           </div>
         </template>
 
-        <div v-if="step === 'personal'" class="space-y-4">
-          <!-- Account creation section for non-authenticated users -->
+        <div
+          v-if="checkingSession"
+          class="py-8 text-center text-sm text-gray-500"
+        >
+          Checking session...
+        </div>
+
+        <div v-else-if="step === 'personal'" class="space-y-4">
+          <!-- Auth guard for non-authenticated users -->
           <div
-            v-if="!user?.id"
-            class="rounded-xl border border-blue-200 bg-blue-50 p-4 space-y-4"
+            v-if="!authedUserId"
+            class="rounded-xl border border-amber-200 bg-amber-50 p-4 text-center"
           >
-            <p class="text-sm font-semibold text-blue-900">
-              Create Your Account
+            <p class="text-sm font-semibold text-amber-900 mb-2">
+              Please Sign In
             </p>
-            <p class="text-xs text-blue-700">
-              You'll need an account to become a driver. Please provide your
-              email and create a password.
+            <p class="text-xs text-amber-700 mb-3">
+              You need to create an account or log in before completing your
+              driver application.
             </p>
-            <FormInput
-              v-model="form.email"
-              label="Email Address"
-              type="email"
-              placeholder="e.g. john@example.com"
-            />
-            <FormInput
-              v-model="form.password"
-              label="Password"
-              type="password"
-              placeholder="Min 6 characters"
-            />
-            <FormInput
-              v-model="form.confirm_password"
-              label="Confirm Password"
-              type="password"
-              placeholder="Re-enter password"
-            />
-            <p
-              v-if="
-                form.password &&
-                form.confirm_password &&
-                form.password !== form.confirm_password
-              "
-              class="text-xs text-red-600"
+            <NuxtLink
+              to="/driver/auth?redirect=/driver/onboarding"
+              class="inline-flex items-center px-4 py-2 bg-red-600 text-white text-sm font-medium rounded-lg hover:bg-red-700 transition-colors"
             >
-              Passwords do not match
-            </p>
+              Sign In / Create Account
+            </NuxtLink>
           </div>
 
-          <FormInput
-            v-model="form.full_name"
-            label="Full Name"
-            placeholder="e.g. John Doe"
-          />
-          <FormInput
-            v-model="form.phone_number"
-            label="Phone Number"
-            placeholder="e.g. 08012345678"
-            inputmode="tel"
-          />
+          <template v-else>
+            <FormInput
+              v-model="form.full_name"
+              label="Full Name"
+              placeholder="e.g. John Doe"
+            />
+            <FormInput
+              v-model="form.phone_number"
+              label="Phone Number"
+              placeholder="e.g. 08012345678"
+              inputmode="tel"
+            />
 
-          <div
-            class="rounded-xl border border-amber-200 bg-amber-50 p-3 text-xs text-amber-800"
-          >
-            Phone OTP verification is not enforced yet in this build.
-          </div>
+            <div
+              class="rounded-xl border border-amber-200 bg-amber-50 p-3 text-xs text-amber-800"
+            >
+              Phone OTP verification is not enforced yet in this build.
+            </div>
+          </template>
         </div>
 
         <div v-else-if="step === 'branches'" class="space-y-4">
@@ -530,6 +548,15 @@ async function submitApplication() {
             label="Plate Number"
             placeholder="e.g. ABC-1234"
           />
+          <p
+            v-if="
+              form.vehicle_type !== 'bicycle' &&
+              String(form.plate_number).trim().length < 3
+            "
+            class="text-xs text-red-600"
+          >
+            Plate number is required for this vehicle type.
+          </p>
 
           <div class="space-y-2">
             <label class="block text-sm font-medium text-gray-700"
@@ -538,23 +565,36 @@ async function submitApplication() {
             <input
               type="file"
               accept="image/*,application/pdf"
-              class="block w-full text-sm"
+              class="block w-full cursor-pointer rounded-xl border-2 border-gray-200 bg-white text-sm text-gray-900 transition-all outline-none focus:border-red-500 focus:ring-2 focus:ring-red-200 file:mr-4 file:rounded-lg file:border-0 file:bg-red-50 file:px-4 file:py-2.5 file:text-sm file:font-semibold file:text-red-700 hover:file:bg-red-100"
               @change="onPickIdCard"
             />
-            <p v-if="idCardPath" class="text-xs text-gray-600">Uploaded.</p>
+            <p v-if="idCardPath" class="text-xs font-medium text-emerald-700">
+              Uploaded.
+            </p>
+            <p v-else class="text-xs text-red-600">
+              ID card upload is required.
+            </p>
           </div>
 
           <div class="space-y-2">
             <label class="block text-sm font-medium text-gray-700"
-              >Vehicle Registration (Upload)</label
+              >Vehicle Photo (Upload)</label
             >
             <input
               type="file"
-              accept="image/*,application/pdf"
-              class="block w-full text-sm"
+              accept="image/*"
+              class="block w-full cursor-pointer rounded-xl border-2 border-gray-200 bg-white text-sm text-gray-900 transition-all outline-none focus:border-red-500 focus:ring-2 focus:ring-red-200 file:mr-4 file:rounded-lg file:border-0 file:bg-red-50 file:px-4 file:py-2.5 file:text-sm file:font-semibold file:text-red-700 hover:file:bg-red-100"
               @change="onPickVehicleReg"
             />
-            <p v-if="vehicleRegPath" class="text-xs text-gray-600">Uploaded.</p>
+            <p
+              v-if="vehicleRegPath"
+              class="text-xs font-medium text-emerald-700"
+            >
+              Uploaded.
+            </p>
+            <p v-else class="text-xs text-red-600">
+              Vehicle photo upload is required.
+            </p>
           </div>
         </div>
 

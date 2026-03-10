@@ -1,4 +1,4 @@
-import { defineEventHandler, readBody, createError } from "h3";
+import { defineEventHandler, readBody, createError, getHeader } from "h3";
 import { serverSupabaseClient, serverSupabaseUser } from "#supabase/server";
 import type { Database } from "~/types/database.types";
 
@@ -33,8 +33,52 @@ type SubmitBody = {
 
 export default defineEventHandler(async (event) => {
   const supabase = await serverSupabaseClient<Database>(event);
-  const existingUser = await serverSupabaseUser(event);
+  let existingUser = await serverSupabaseUser(event);
+  console.log(
+    "[Driver Onboarding] serverSupabaseUser result:",
+    JSON.stringify(existingUser),
+  );
   const runtimeConfig = useRuntimeConfig();
+
+  // Fallback: try Authorization header if cookie-based user is missing OR invalid
+  if (!existingUser?.id) {
+    const authHeader = getHeader(event, "authorization");
+    console.log(
+      "[Driver Onboarding] Auth header:",
+      authHeader ? "present" : "missing",
+    );
+    const token = authHeader?.startsWith("Bearer ")
+      ? authHeader.slice(7)
+      : null;
+    if (token) {
+      console.log(
+        "[Driver Onboarding] Attempting token validation, token length:",
+        token.length,
+      );
+      const { data, error } = await supabase.auth.getUser(token);
+      if (error) {
+        console.error(
+          "[Driver Onboarding] Token validation error:",
+          error.message,
+        );
+      }
+      if (data?.user?.id) {
+        console.log("[Driver Onboarding] Token validated, user:", data.user.id);
+        existingUser = data.user as any;
+      } else {
+        console.log(
+          "[Driver Onboarding] Token validation returned no valid user with id",
+        );
+      }
+    } else {
+      console.log("[Driver Onboarding] No Bearer token found");
+    }
+  }
+
+  console.log(
+    "[Driver Onboarding] Final existingUser:",
+    existingUser ? "found " + existingUser.id : "null",
+  );
 
   const body = await readBody<SubmitBody>(event);
 
@@ -55,9 +99,12 @@ export default defineEventHandler(async (event) => {
   const idCardPath = body?.vehicle?.id_card_path || null;
   const vehicleRegPath = body?.vehicle?.vehicle_registration_path || null;
 
+  // Bicycles don't need plate numbers
+  const needsPlateNumber = vehicleType !== "bicycle";
+
   if (
     !vehicleType ||
-    plateNumber.length < 3 ||
+    (needsPlateNumber && plateNumber.length < 3) ||
     !idCardPath ||
     !vehicleRegPath
   ) {
@@ -184,6 +231,13 @@ export default defineEventHandler(async (event) => {
     }
   } else {
     // Use existing authenticated user
+    if (!existingUser?.id) {
+      console.log("[Driver Onboarding] No valid user id found, rejecting");
+      throw createError({
+        statusCode: 401,
+        statusMessage: "Invalid session. Please sign in again.",
+      });
+    }
     userId = existingUser.id;
     userEmail = existingUser.email || "";
 
@@ -207,8 +261,10 @@ export default defineEventHandler(async (event) => {
   const payload = {
     user_id: userId,
     status: "pending",
-    personal: body.personal,
-    branches: { selected_branches: selectedBranches },
+    personal: {
+      ...body.personal,
+      branches: { selected_branches: selectedBranches },
+    },
     vehicle: body.vehicle,
     payout: body.payout,
     phone_verification: body.phone_verification,

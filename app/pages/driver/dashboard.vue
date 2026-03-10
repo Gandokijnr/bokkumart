@@ -37,23 +37,36 @@
             </div>
           </div>
 
-          <!-- Online/Offline Toggle -->
-          <button
-            @click="driverStore.toggleAvailability()"
-            :disabled="driverStore.isAvailable && driverStore.hasActiveOrder"
-            class="flex items-center gap-2 px-4 py-2 rounded-xl font-semibold text-sm transition-all"
-            :class="
-              driverStore.isAvailable
-                ? 'bg-green-500/20 text-green-400 border border-green-500/30'
-                : 'bg-slate-700/50 text-slate-400 border border-slate-600/30'
-            "
-          >
-            <span
-              class="w-2 h-2 rounded-full animate-pulse"
-              :class="driverStore.isAvailable ? 'bg-green-400' : 'bg-slate-500'"
-            ></span>
-            {{ driverStore.isAvailable ? "Online" : "Offline" }}
-          </button>
+          <div class="flex items-center gap-2">
+            <!-- Online/Offline Toggle -->
+            <button
+              @click="driverStore.toggleAvailability()"
+              :disabled="driverStore.isAvailable && driverStore.hasActiveOrder"
+              class="flex items-center gap-2 px-4 py-2 rounded-xl font-semibold text-sm transition-all"
+              :class="
+                driverStore.isAvailable
+                  ? 'bg-green-500/20 text-green-400 border border-green-500/30'
+                  : 'bg-slate-700/50 text-slate-400 border border-slate-600/30'
+              "
+            >
+              <span
+                class="w-2 h-2 rounded-full animate-pulse"
+                :class="
+                  driverStore.isAvailable ? 'bg-green-400' : 'bg-slate-500'
+                "
+              ></span>
+              {{ driverStore.isAvailable ? "Online" : "Offline" }}
+            </button>
+
+            <!-- Logout -->
+            <button
+              @click="logout"
+              :disabled="logoutLoading"
+              class="px-4 py-2 rounded-xl font-semibold text-sm transition-all border border-slate-600/30 bg-slate-700/30 text-slate-200 hover:bg-slate-700/50 disabled:opacity-60 disabled:cursor-not-allowed"
+            >
+              {{ logoutLoading ? "Signing out..." : "Logout" }}
+            </button>
+          </div>
         </div>
 
         <!-- Stats Bar -->
@@ -681,6 +694,22 @@ definePageMeta({
 
 const driverStore = useDriverStore();
 const userStore = useUserStore();
+
+const logoutLoading = ref(false);
+
+const logout = async () => {
+  if (logoutLoading.value) return;
+  logoutLoading.value = true;
+  try {
+    if (driverStore.isAvailable) {
+      await driverStore.toggleAvailability();
+    }
+    await userStore.signOut();
+    await navigateTo("/driver/auth", { replace: true });
+  } finally {
+    logoutLoading.value = false;
+  }
+};
 
 // PIN Modal State
 const showPinModal = ref(false);

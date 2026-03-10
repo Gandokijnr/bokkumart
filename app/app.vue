@@ -23,6 +23,10 @@ useHead({
 const cartStore = useCartStore();
 const supabase = useSupabaseClient();
 const user = useSupabaseUser();
+const roleGateRedirecting = useState<boolean>(
+  "role_gate_redirecting",
+  () => false,
+);
 
 onMounted(() => {
   if (!import.meta.client) return;
@@ -46,6 +50,23 @@ onMounted(() => {
 <template>
   <div>
     <NuxtRouteAnnouncer />
+    <div
+      v-if="roleGateRedirecting"
+      class="fixed inset-0 z-[9999] flex items-center justify-center bg-white/70 backdrop-blur-sm"
+    >
+      <div
+        class="rounded-2xl border border-gray-200 bg-white px-6 py-5 shadow-sm"
+      >
+        <div class="flex items-center gap-3">
+          <div
+            class="h-4 w-4 animate-spin rounded-full border-2 border-gray-300 border-t-red-600"
+          />
+          <div class="text-sm font-semibold text-gray-900">
+            Redirecting to your workspace...
+          </div>
+        </div>
+      </div>
+    </div>
     <NuxtLayout>
       <NuxtPage />
     </NuxtLayout>

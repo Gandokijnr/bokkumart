@@ -106,7 +106,7 @@
             </li>
             <li>
               <NuxtLink
-                to="/driver/onboarding"
+                to="/driver/auth"
                 class="text-gray-400 transition-colors hover:text-white"
               >
                 Become a Driver
