@@ -121,6 +121,17 @@ const isLoadingMore = ref(false);
 onMounted(async () => {
   await adminStore.initialize();
 
+  // For staff/branch managers: auto-set store from profile if not already set
+  const role = userStore.profile?.role;
+  const userStoreId = userStore.profile?.store_id;
+  if (
+    (role === "staff" || role === "branch_manager") &&
+    userStoreId &&
+    !adminStore.currentStoreId
+  ) {
+    adminStore.setCurrentStore(userStoreId);
+  }
+
   await dashboard.startDashboard();
 
   // Setup infinite scroll after DOM is ready

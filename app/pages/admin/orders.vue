@@ -68,10 +68,19 @@
         />
       </div>
 
-      <!-- Store Filter - Hidden for branch managers, shows only their store -->
+      <!-- Store Filter - Hidden for staff and branch managers, shows only their store -->
       <ClientOnly>
+        <div
+          v-if="currentUserRole === 'staff' && userStore.profile?.store_id"
+          class="rounded-lg border border-gray-300 px-3 py-2 bg-gray-100 text-gray-700 text-sm"
+        >
+          {{
+            stores.find((s) => s.id === userStore.profile?.store_id)?.name ||
+            "My Branch"
+          }}
+        </div>
         <select
-          v-if="currentUserRole !== 'branch_manager'"
+          v-else-if="currentUserRole !== 'branch_manager'"
           v-model="storeFilter"
           class="rounded-lg border border-gray-300 px-3 py-2 focus:border-red-500 focus:outline-none"
         >
@@ -1608,7 +1617,26 @@ const fetchOrders = async () => {
     currentUserStoreIds.value,
   );
 
-  if (currentUserRole.value === "branch_manager") {
+  if (currentUserRole.value === "staff") {
+    // Staff only see orders for their assigned store
+    if (userStore.profile?.store_id) {
+      console.log(
+        "[Orders] Applying staff filter for store:",
+        userStore.profile.store_id,
+      );
+      query = query.eq("store_id", userStore.profile.store_id);
+    } else {
+      console.error("[Orders] Staff has no store_id assigned!");
+      toast.add({
+        title: "Configuration Error",
+        description:
+          "Your account is not assigned to a branch. Please contact the administrator.",
+        color: "error",
+      });
+      orders.value = [];
+      return;
+    }
+  } else if (currentUserRole.value === "branch_manager") {
     if (currentUserStoreIds.value.length > 0) {
       // Branch managers see orders for ALL their assigned stores
       console.log(
@@ -1688,6 +1716,20 @@ const fetchOrders = async () => {
 };
 
 const fetchStores = async () => {
+  // Staff: fetch only their assigned store
+  if (currentUserRole.value === "staff" && userStore.profile?.store_id) {
+    const { data } = await supabase
+      .from("stores")
+      .select("id, name")
+      .eq("id", userStore.profile.store_id)
+      .eq("is_active", true);
+    if (data) {
+      stores.value = data;
+      storeFilter.value = userStore.profile.store_id;
+    }
+    return;
+  }
+
   // Branch managers: fetch ALL their assigned stores
   if (
     currentUserRole.value === "branch_manager" &&

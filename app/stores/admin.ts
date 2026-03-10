@@ -1,6 +1,7 @@
 // Admin ERP Store - Comprehensive Order & Operations Management
 import { defineStore } from "pinia";
 import type { Database } from "~/types/database.types";
+import { useUserStore } from "~/stores/user";
 
 export type AdminOrderStatus =
   | "awaiting_call"
@@ -136,9 +137,15 @@ export const useAdminStore = defineStore("admin", {
 
   getters: {
     processingOrders: (state) => {
-      const filtered = state.orders.filter((o) =>
-        ["processing", "paid", "confirmed", "picked_up"].includes(o.status),
-      );
+      const filtered = state.orders.filter((o) => {
+        // Filter by currentStoreId if set (for staff/branch manager branch filtering)
+        if (state.currentStoreId && o.store_id !== state.currentStoreId) {
+          return false;
+        }
+        return ["processing", "paid", "confirmed", "picked_up"].includes(
+          o.status,
+        );
+      });
       console.log(
         "processingOrders:",
         filtered.length,
@@ -149,15 +156,25 @@ export const useAdminStore = defineStore("admin", {
     },
 
     deliveryOrders: (state) => {
-      const filtered = state.orders.filter((o) => o.status === "picked_up");
+      const filtered = state.orders.filter((o) => {
+        // Filter by currentStoreId if set (for staff/branch manager branch filtering)
+        if (state.currentStoreId && o.store_id !== state.currentStoreId) {
+          return false;
+        }
+        return o.status === "picked_up";
+      });
       console.log("deliveryOrders:", filtered.length, "orders");
       return filtered;
     },
 
     completedOrders: (state) => {
-      const filtered = state.orders.filter((o) =>
-        ["delivered", "cancelled", "refunded"].includes(o.status),
-      );
+      const filtered = state.orders.filter((o) => {
+        // Filter by currentStoreId if set (for staff/branch manager branch filtering)
+        if (state.currentStoreId && o.store_id !== state.currentStoreId) {
+          return false;
+        }
+        return ["delivered", "cancelled", "refunded"].includes(o.status);
+      });
       console.log("completedOrders:", filtered.length, "orders");
       return filtered;
     },
@@ -174,10 +191,19 @@ export const useAdminStore = defineStore("admin", {
     // ============================================
 
     async initialize() {
-      // Restore persisted branch selection
-      const persistedStoreId = localStorage.getItem("admin_current_store_id");
-      if (persistedStoreId) {
-        this.currentStoreId = persistedStoreId;
+      const userStore = useUserStore();
+      const role = userStore.profile?.role;
+      const userStoreId = userStore.profile?.store_id;
+
+      // For staff/branch_manager, auto-set their assigned store FIRST
+      if ((role === "staff" || role === "branch_manager") && userStoreId) {
+        this.currentStoreId = userStoreId;
+      } else {
+        // Restore persisted branch selection for others (super admin)
+        const persistedStoreId = localStorage.getItem("admin_current_store_id");
+        if (persistedStoreId) {
+          this.currentStoreId = persistedStoreId;
+        }
       }
 
       await this.fetchAvailableStores();
@@ -220,7 +246,13 @@ export const useAdminStore = defineStore("admin", {
           break;
 
         case "INSERT":
-          this.orders.unshift(payload.new as AdminOrder);
+          // Only add order if it belongs to current store (for staff/branch filtering)
+          if (
+            !this.currentStoreId ||
+            payload.new.store_id === this.currentStoreId
+          ) {
+            this.orders.unshift(payload.new as AdminOrder);
+          }
           break;
 
         case "DELETE":
@@ -251,7 +283,7 @@ export const useAdminStore = defineStore("admin", {
         const { data, error } = await (supabase.rpc as any)(
           "get_admin_dashboard_stats",
           {
-            p_store_id: this.currentStoreId,
+            target_branch_id: this.currentStoreId,
           },
         );
 
