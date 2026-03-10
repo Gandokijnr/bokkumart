@@ -19,6 +19,7 @@ const { searchProductWithBranchFallback, formatPrice } = useProducts();
 // Search state
 const searchQuery = ref("");
 const isSearching = ref(false);
+const addedProducts = ref<Set<string>>(new Set());
 const searchResults = ref<{
   localProducts: any[];
   unavailableAtCurrentBranch: Array<{
@@ -30,6 +31,27 @@ const searchResults = ref<{
     }>;
   }>;
 }>({ localProducts: [], unavailableAtCurrentBranch: [] });
+
+// Add to cart from search results
+const addToCart = (product: any) => {
+  cartStore.addItem({
+    id: product.id,
+    product_id: product.id,
+    name: product.name,
+    price: product.price,
+    store_id: product.storeId,
+    store_name: product.storeName,
+    image_url: product.imageUrl,
+    availableStock: product.availableStock,
+    digitalBuffer: product.digitalBuffer,
+  });
+
+  // Show success state
+  addedProducts.value.add(product.id);
+  setTimeout(() => {
+    addedProducts.value.delete(product.id);
+  }, 2000);
+};
 
 // Debounce search
 let searchTimeout: NodeJS.Timeout | null = null;
@@ -280,21 +302,15 @@ watch(
                     <div
                       v-for="product in searchResults.localProducts"
                       :key="product.id"
-                      class="flex items-center gap-4 p-3 rounded-xl hover:bg-gray-50 transition-colors cursor-pointer group"
-                      @click="
-                        navigateTo(`/product/${product.id}`);
-                        close();
-                      "
+                      class="flex items-center gap-3 p-3 rounded-xl bg-white border border-gray-100 shadow-sm"
                     >
                       <img
                         :src="product.imageUrl || '/placeholder-product.png'"
                         :alt="product.name"
-                        class="w-16 h-16 rounded-lg object-cover bg-gray-100"
+                        class="w-16 h-16 rounded-lg object-cover bg-gray-100 flex-shrink-0"
                       />
                       <div class="flex-1 min-w-0">
-                        <p
-                          class="font-medium text-gray-900 truncate group-hover:text-red-600 transition-colors"
-                        >
+                        <p class="font-medium text-gray-900 truncate">
                           {{ product.name }}
                         </p>
                         <p class="text-sm text-gray-500">
@@ -307,19 +323,64 @@ watch(
                           Out of stock
                         </p>
                       </div>
-                      <svg
-                        class="h-5 w-5 text-gray-400 group-hover:text-red-600 transition-colors"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
+                      <!-- Add to Cart Button -->
+                      <button
+                        v-if="product.isAvailable"
+                        @click="addToCart(product)"
+                        class="flex-shrink-0 flex items-center justify-center w-10 h-10 rounded-full bg-red-600 text-white hover:bg-red-700 active:scale-95 transition-all"
+                        :class="{
+                          'bg-green-600 hover:bg-green-700': addedProducts.has(
+                            product.id,
+                          ),
+                        }"
                       >
-                        <path
-                          stroke-linecap="round"
-                          stroke-linejoin="round"
-                          stroke-width="2"
-                          d="M9 5l7 7-7 7"
-                        />
-                      </svg>
+                        <svg
+                          v-if="!addedProducts.has(product.id)"
+                          class="h-5 w-5"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"
+                          />
+                        </svg>
+                        <svg
+                          v-else
+                          class="h-5 w-5"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M5 13l4 4L19 7"
+                          />
+                        </svg>
+                      </button>
+                      <div
+                        v-else
+                        class="flex-shrink-0 flex items-center justify-center w-10 h-10 rounded-full bg-gray-100 text-gray-400"
+                      >
+                        <svg
+                          class="h-5 w-5"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"
+                          />
+                        </svg>
+                      </div>
                     </div>
                   </div>
                 </div>

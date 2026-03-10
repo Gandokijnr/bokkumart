@@ -190,8 +190,9 @@
             </NuxtLink>
           </ClientOnly>
 
+          <!-- Mobile Menu Button - Hidden when bottom nav is present -->
           <button
-            class="flex h-10 w-10 items-center justify-center rounded-xl border border-gray-200 bg-white text-gray-700 shadow-sm transition-all hover:border-gray-300 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-red-600 focus:ring-offset-1 lg:hidden"
+            class="hidden h-10 w-10 items-center justify-center rounded-xl border border-gray-200 bg-white text-gray-700 shadow-sm transition-all hover:border-gray-300 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-red-600 focus:ring-offset-1 lg:hidden"
             type="button"
             aria-label="Menu"
             :aria-expanded="mobileMenuOpen ? 'true' : 'false'"
