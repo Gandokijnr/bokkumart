@@ -41,20 +41,22 @@
     </div>
 
     <!-- Mobile Overlay -->
-    <Transition
-      enter-active-class="transition-opacity duration-300"
-      enter-from-class="opacity-0"
-      enter-to-class="opacity-100"
-      leave-active-class="transition-opacity duration-200"
-      leave-from-class="opacity-100"
-      leave-to-class="opacity-0"
-    >
-      <div
-        v-if="isMobileMenuOpen"
-        class="lg:hidden fixed inset-0 bg-black/50 z-40 backdrop-blur-sm"
-        @click="isMobileMenuOpen = false"
-      />
-    </Transition>
+    <ClientOnly>
+      <Transition
+        enter-active-class="transition-opacity duration-300"
+        enter-from-class="opacity-0"
+        enter-to-class="opacity-100"
+        leave-active-class="transition-opacity duration-200"
+        leave-from-class="opacity-100"
+        leave-to-class="opacity-0"
+      >
+        <div
+          v-if="isMobileMenuOpen"
+          class="lg:hidden fixed inset-0 bg-black/50 z-40 backdrop-blur-sm"
+          @click="isMobileMenuOpen = false"
+        />
+      </Transition>
+    </ClientOnly>
 
     <!-- Sidebar -->
     <aside
@@ -84,43 +86,47 @@
         </div>
 
         <!-- Branch Manager Store Badge -->
-        <div
-          v-if="userStore.isBranchManager && currentStoreDisplay"
-          class="mt-3 px-3 py-2 bg-red-50 border border-red-200 rounded-lg"
-        >
-          <div class="flex items-center gap-2">
-            <span class="text-sm">📍</span>
-            <div class="flex-1 min-w-0">
-              <p class="text-xs text-red-600 font-medium">Current Store</p>
-              <p class="text-sm font-semibold text-red-900 truncate">
-                {{ currentStoreDisplay }}
-              </p>
+        <ClientOnly>
+          <div
+            v-if="userStore.isBranchManager && currentStoreDisplay"
+            class="mt-3 px-3 py-2 bg-red-50 border border-red-200 rounded-lg"
+          >
+            <div class="flex items-center gap-2">
+              <span class="text-sm">📍</span>
+              <div class="flex-1 min-w-0">
+                <p class="text-xs text-red-600 font-medium">Current Store</p>
+                <p class="text-sm font-semibold text-red-900 truncate">
+                  {{ currentStoreDisplay }}
+                </p>
+              </div>
             </div>
           </div>
-        </div>
+        </ClientOnly>
 
         <!-- Super Admin Store Switcher -->
-        <div v-if="userStore.isSuperAdmin && stores.length > 0" class="mt-3">
-          <label class="block text-xs font-medium text-gray-700 mb-1"
-            >Switch Branch View</label
-          >
-          <select
-            v-model="selectedStoreId"
-            @change="handleStoreSwitch"
-            class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 bg-white"
-          >
-            <option value="">All Stores</option>
-            <option v-for="store in stores" :key="store.id" :value="store.id">
-              {{ store.name }}
-            </option>
-          </select>
-          <p
-            v-if="selectedStoreId"
-            class="mt-1 text-xs text-red-600 font-medium"
-          >
-            Viewing: {{ selectedStoreName }}
-          </p>
-        </div>
+        <ClientOnly>
+          <div v-if="userStore.isSuperAdmin && stores.length > 0" class="mt-3">
+            <label class="block text-xs font-medium text-gray-700 mb-1"
+              >Switch Branch View</label
+            >
+            <select
+              v-model="selectedStoreId"
+              @change="handleStoreSwitch"
+              class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 bg-white"
+            >
+              <option value="">All Stores</option>
+              <option v-for="store in stores" :key="store.id" :value="store.id">
+                {{ store.name }}
+              </option>
+            </select>
+            <p
+              v-if="selectedStoreId"
+              class="mt-1 text-xs text-red-600 font-medium"
+            >
+              Viewing: {{ selectedStoreName }}
+            </p>
+          </div>
+        </ClientOnly>
       </div>
 
       <!-- Navigation -->
@@ -177,30 +183,32 @@
       </nav>
 
       <!-- Session Info (for staff/admin) -->
-      <div
-        v-if="userStore.hasAdminAccess"
-        class="px-4 py-3 border-t border-gray-200 bg-gray-50"
-      >
-        <div class="flex items-center gap-2 text-xs text-gray-600">
-          <svg
-            class="w-4 h-4 text-green-500"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
-            />
-          </svg>
-          <span class="font-medium">Secure Session</span>
+      <ClientOnly>
+        <div
+          v-if="userStore.hasAdminAccess"
+          class="px-4 py-3 border-t border-gray-200 bg-gray-50"
+        >
+          <div class="flex items-center gap-2 text-xs text-gray-600">
+            <svg
+              class="w-4 h-4 text-green-500"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
+              />
+            </svg>
+            <span class="font-medium">Secure Session</span>
+          </div>
+          <p class="text-xs text-gray-500 mt-1 ml-6">
+            Auto-logout: 30 min inactive
+          </p>
         </div>
-        <p class="text-xs text-gray-500 mt-1 ml-6">
-          Auto-logout: 30 min inactive
-        </p>
-      </div>
+      </ClientOnly>
 
       <!-- Sign Out Button -->
       <div class="p-4 border-t border-gray-200 bg-white">

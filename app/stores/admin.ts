@@ -174,6 +174,12 @@ export const useAdminStore = defineStore("admin", {
     // ============================================
 
     async initialize() {
+      // Restore persisted branch selection
+      const persistedStoreId = localStorage.getItem("admin_current_store_id");
+      if (persistedStoreId) {
+        this.currentStoreId = persistedStoreId;
+      }
+
       await this.fetchAvailableStores();
       await this.fetchDashboardStats();
       await this.fetchOrders(true);
@@ -387,6 +393,12 @@ export const useAdminStore = defineStore("admin", {
 
     setCurrentStore(storeId: string | null) {
       this.currentStoreId = storeId;
+      // Persist to localStorage
+      if (storeId) {
+        localStorage.setItem("admin_current_store_id", storeId);
+      } else {
+        localStorage.removeItem("admin_current_store_id");
+      }
       this.fetchOrders(true);
       this.fetchDashboardStats();
     },

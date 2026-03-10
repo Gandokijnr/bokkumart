@@ -68,15 +68,33 @@
         />
       </div>
 
-      <select
-        v-model="storeFilter"
-        class="rounded-lg border border-gray-300 px-3 py-2 focus:border-red-500 focus:outline-none"
-      >
-        <option value="">All Stores</option>
-        <option v-for="store in stores" :key="store.id" :value="store.id">
-          {{ store.name }}
-        </option>
-      </select>
+      <!-- Store Filter - Hidden for branch managers, shows only their store -->
+      <ClientOnly>
+        <select
+          v-if="currentUserRole !== 'branch_manager'"
+          v-model="storeFilter"
+          class="rounded-lg border border-gray-300 px-3 py-2 focus:border-red-500 focus:outline-none"
+        >
+          <option value="">All Stores</option>
+          <option v-for="store in stores" :key="store.id" :value="store.id">
+            {{ store.name }}
+          </option>
+        </select>
+        <div
+          v-else-if="currentUserStoreId"
+          class="rounded-lg border border-gray-300 px-3 py-2 bg-gray-100 text-gray-700 text-sm"
+        >
+          {{
+            stores.find((s) => s.id === currentUserStoreId)?.name || "My Branch"
+          }}
+        </div>
+        <div
+          v-else
+          class="rounded-lg border border-red-300 px-3 py-2 bg-red-50 text-red-700 text-sm font-medium"
+        >
+          No branch assigned - contact admin
+        </div>
+      </ClientOnly>
 
       <select
         v-model="paymentFilter"
@@ -698,7 +716,18 @@ const adminStore = useAdminStore();
 
 // Get current user role
 const currentUserRole = computed(() => userStore.profile?.role || "customer");
-const currentUserStoreId = computed(() => userStore.profile?.store_id);
+// Branch manager store_id - check profile.store_id first, fallback to first managed store
+const currentUserStoreId = computed(() => {
+  // First try profile.store_id
+  if (userStore.profile?.store_id) {
+    return userStore.profile.store_id;
+  }
+  // Fallback to first managed store (for branch managers with managed_store_ids but no store_id)
+  if (userStore.managedStores?.length > 0) {
+    return userStore.managedStores[0]?.id ?? null;
+  }
+  return null;
+});
 
 // Super admin branch filter from admin store
 const adminStoreFilter = computed(() => adminStore.currentStoreId);
@@ -1558,9 +1587,33 @@ const fetchOrders = async () => {
     .order("created_at", { ascending: true });
 
   // Apply role-based filtering
-  if (currentUserRole.value === "branch_manager" && currentUserStoreId.value) {
-    // Branch managers only see orders for their assigned store
-    query = query.eq("store_id", currentUserStoreId.value);
+  console.log(
+    "[Orders] Role:",
+    currentUserRole.value,
+    "Store ID:",
+    currentUserStoreId.value,
+  );
+
+  if (currentUserRole.value === "branch_manager") {
+    if (currentUserStoreId.value) {
+      // Branch managers only see orders for their assigned store
+      console.log(
+        "[Orders] Applying branch manager filter for store:",
+        currentUserStoreId.value,
+      );
+      query = query.eq("store_id", currentUserStoreId.value);
+    } else {
+      // No store assigned - show warning and return empty (should not happen)
+      console.error("[Orders] Branch manager has no store_id assigned!");
+      toast.add({
+        title: "Configuration Error",
+        description:
+          "Your account is not assigned to a branch. Please contact the administrator.",
+        color: "error",
+      });
+      orders.value = [];
+      return;
+    }
   }
 
   // Super admins: apply branch filter if selected in admin store
@@ -1621,6 +1674,20 @@ const fetchOrders = async () => {
 };
 
 const fetchStores = async () => {
+  // Branch managers: only fetch their assigned store
+  if (currentUserRole.value === "branch_manager" && currentUserStoreId.value) {
+    const { data } = await supabase
+      .from("stores")
+      .select("id, name")
+      .eq("id", currentUserStoreId.value)
+      .eq("is_active", true);
+    if (data) stores.value = data;
+    // Auto-set the store filter to their branch
+    storeFilter.value = currentUserStoreId.value;
+    return;
+  }
+
+  // Super admins and others: fetch all stores
   const { data } = await supabase
     .from("stores")
     .select("id, name")
