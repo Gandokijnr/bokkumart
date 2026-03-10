@@ -72,38 +72,64 @@ export default defineEventHandler(async (event) => {
   const orderId = body?.orderId;
   const code = String(body?.code || "").trim();
 
-  if (!orderId || !code) {
+  if (!orderId) {
     throw createError({
       statusCode: 400,
-      statusMessage: "orderId and code are required",
+      statusMessage: "Order ID is required",
     });
   }
 
-  const { count, error: verifyErr } = await (admin as any)
-    .from("orders")
-    .select("id", { count: "exact", head: true })
-    .eq("id", orderId)
-    .eq("confirmation_code", code);
-
-  if (verifyErr) {
-    throw createError({ statusCode: 500, statusMessage: verifyErr.message });
+  if (!code) {
+    throw createError({
+      statusCode: 400,
+      statusMessage: "Please enter a verification code",
+    });
   }
 
-  const isValid = Number(count || 0) === 1;
+  // First check if order exists
+  const { data: orderData, error: orderErr } = await (admin as any)
+    .from("orders")
+    .select("id, confirmation_code")
+    .eq("id", orderId)
+    .single();
 
-  if (!isValid) {
+  if (orderErr || !orderData) {
+    throw createError({
+      statusCode: 404,
+      statusMessage: "Order not found",
+    });
+  }
+
+  // Check if order has a confirmation code set
+  if (!orderData.confirmation_code) {
+    throw createError({
+      statusCode: 400,
+      statusMessage:
+        "This order does not have a pickup code. Please contact support.",
+    });
+  }
+
+  // Verify the code matches
+  if (orderData.confirmation_code !== code) {
+    // Log failed attempt
     try {
       await (admin as any).from("security_logs").insert({
         actor_id: callerId,
         action: "pickup_collection_failed",
         order_id: orderId,
-        metadata: { code_length: code.length },
+        metadata: {
+          code_length: code.length,
+          reason: "invalid_code",
+        },
       });
     } catch {
       // ignore if table does not exist
     }
 
-    throw createError({ statusCode: 400, statusMessage: "Validation failed" });
+    throw createError({
+      statusCode: 400,
+      statusMessage: `Invalid pickup code. Please check the code and try again.`,
+    });
   }
 
   return { ok: true };
