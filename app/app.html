@@ -1,7 +1,63 @@
-<!DOCTYPE html>
+<!doctype html>
 <html {{ HTML_ATTRS }}>
   <head {{ HEAD_ATTRS }}>
     {{ HEAD }}
+    <style>
+      :root {
+        --ha-red: #ed1c24;
+      }
+      html,
+      body {
+        background: #fff;
+      }
+      .ha-splash {
+        position: fixed;
+        inset: 0;
+        z-index: 100000;
+        background: #fff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .ha-splash__inner {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 24px;
+      }
+      .ha-splash__brand {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        color: var(--ha-red);
+        animation: haPulse 1.2s ease-in-out infinite;
+      }
+      .ha-splash__icon {
+        width: 24px;
+        height: 24px;
+      }
+      .ha-splash__text {
+        font-weight: 800;
+        letter-spacing: 0.2px;
+        font-size: 20px;
+      }
+      @keyframes haPulse {
+        0%,
+        100% {
+          opacity: 1;
+          transform: scale(1);
+        }
+        50% {
+          opacity: 0.6;
+          transform: scale(0.985);
+        }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .ha-splash__brand {
+          animation: none;
+        }
+      }
+    </style>
   </head>
   <body {{ BODY_ATTRS }}>
     <div id="__ha-splash" class="ha-splash">
