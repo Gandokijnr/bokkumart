@@ -35,6 +35,8 @@ html,body{background:#fff;}
     },
     workbox: {
       cleanupOutdatedCaches: true,
+      skipWaiting: true,
+      clientsClaim: true,
       runtimeCaching: [
         {
           urlPattern:

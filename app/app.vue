@@ -56,6 +56,7 @@ onMounted(() => {
 <template>
   <div>
     <NuxtRouteAnnouncer />
+    <PwaUpdatePrompt />
 
     <div
       v-if="isNavigating"
