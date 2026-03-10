@@ -266,10 +266,8 @@ export default defineEventHandler(async (event) => {
   const payload = {
     user_id: userId,
     status: "pending",
-    personal: {
-      ...body.personal,
-      branches: { selected_branches: selectedBranches },
-    },
+    personal: body.personal,
+    branches: { selected_branches: selectedBranches },
     vehicle: body.vehicle,
     payout: body.payout,
     phone_verification: body.phone_verification,
