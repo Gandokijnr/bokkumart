@@ -13,6 +13,7 @@ export default defineEventHandler(async (event) => {
 
     const days = query.days ? parseInt(String(query.days), 10) : 30;
     const storeId = query.store_id as string | undefined;
+    const storeIdsParam = query.store_ids as string | undefined;
 
     const supabaseUrl =
       ((config.public as any)?.supabase?.url as string | undefined) ||
@@ -71,6 +72,31 @@ export default defineEventHandler(async (event) => {
         });
       }
       orderQuery = orderQuery.eq("store_id", storeId);
+    } else if (storeIdsParam) {
+      // Frontend passed specific store IDs (comma-separated) - validate and use them
+      const requestedStoreIds = storeIdsParam
+        .split(",")
+        .filter((id) => id.trim());
+
+      // Validate all requested stores are allowed for branch managers
+      if (isBranchManager) {
+        const hasUnauthorizedStore = requestedStoreIds.some(
+          (id) => !allowedStoreIds.includes(id),
+        );
+        if (hasUnauthorizedStore) {
+          throw createError({
+            statusCode: 403,
+            statusMessage:
+              "You don't have access to one or more requested stores",
+          });
+        }
+      }
+
+      if (requestedStoreIds.length > 0) {
+        orderQuery = orderQuery.in("store_id", requestedStoreIds);
+        // Update allowedStoreIds for downstream filtering
+        allowedStoreIds = requestedStoreIds;
+      }
     } else if (isBranchManager && allowedStoreIds.length > 0) {
       // Branch managers only see their assigned stores
       orderQuery = orderQuery.in("store_id", allowedStoreIds);

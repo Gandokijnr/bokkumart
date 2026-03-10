@@ -20,9 +20,34 @@ const stores = ref<any[]>([]);
 const toast = useToast();
 const userStore = useUserStore();
 
-// Check if user is branch manager
-const isBranchManager = computed(() => userStore.isBranchManager);
-const managedStores = computed(() => userStore.managedStores);
+// Get all store IDs for the current branch manager (supports multiple branches)
+const currentUserStoreIds = computed(() => {
+  const storeIds: string[] = [];
+
+  // First try profile.store_id
+  if (userStore.profile?.store_id) {
+    storeIds.push(userStore.profile.store_id);
+  }
+
+  // Add all managed stores (for branch managers with managed_store_ids)
+  if (userStore.managedStores?.length > 0) {
+    for (const store of userStore.managedStores) {
+      if (store?.id && !storeIds.includes(store.id)) {
+        storeIds.push(store.id);
+      }
+    }
+  }
+
+  return storeIds;
+});
+
+// Check if current user is a branch manager
+const isBranchManager = computed(() => {
+  return userStore.profile?.role === "branch_manager";
+});
+
+// Managed stores from user store
+const managedStores = computed(() => userStore.managedStores || []);
 
 const daysOptions = [
   { label: "Last 7 days", value: 7 },
@@ -507,7 +532,19 @@ async function fetchAnalytics() {
   loading.value = true;
   try {
     const params: any = { days: selectedDays.value };
-    if (selectedStore.value) {
+
+    if (isBranchManager.value) {
+      // For branch managers, pass all their store IDs
+      // If a specific store is selected, only pass that one
+      // Otherwise pass all managed store IDs
+      if (selectedStore.value) {
+        params.store_id = selectedStore.value;
+      } else if (currentUserStoreIds.value.length > 0) {
+        // Pass all managed store IDs (comma-separated for API)
+        params.store_ids = currentUserStoreIds.value.join(",");
+      }
+    } else if (selectedStore.value) {
+      // Super admin selected a specific store
       params.store_id = selectedStore.value;
     }
 
