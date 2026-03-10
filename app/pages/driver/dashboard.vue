@@ -705,7 +705,7 @@ const logout = async () => {
       await driverStore.toggleAvailability();
     }
     await userStore.signOut();
-    await navigateTo("/driver/auth", { replace: true });
+    await navigateTo("/auth", { replace: true });
   } finally {
     logoutLoading.value = false;
   }
