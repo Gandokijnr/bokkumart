@@ -18,7 +18,10 @@ export default defineEventHandler(async (event) => {
     (process.env.SUPABASE_SERVICE_ROLE_KEY as string | undefined);
 
   if (!supabaseUrl || !serviceRoleKey) {
-    throw createError({ statusCode: 500, statusMessage: "Server not configured" });
+    throw createError({
+      statusCode: 500,
+      statusMessage: "Server not configured",
+    });
   }
 
   const authHeader = event.node.req.headers["authorization"];
@@ -39,7 +42,8 @@ export default defineEventHandler(async (event) => {
     auth: { persistSession: false, autoRefreshToken: false },
   }) as unknown as ReturnType<typeof createClient<Database>>;
 
-  const { data: callerData, error: callerErr } = await admin.auth.getUser(token);
+  const { data: callerData, error: callerErr } =
+    await admin.auth.getUser(token);
   if (callerErr || !callerData?.user) {
     throw createError({ statusCode: 401, statusMessage: "Invalid session" });
   }
@@ -70,7 +74,7 @@ export default defineEventHandler(async (event) => {
 
   const { data: appRow, error: appErr } = await (admin as any)
     .from("rider_onboarding_applications")
-    .select("id, user_id, status")
+    .select("id, user_id, status, branches")
     .eq("id", applicationId)
     .single();
 
@@ -89,16 +93,26 @@ export default defineEventHandler(async (event) => {
   }
 
   const userId = String(appRow.user_id);
+  const selectedBranches = appRow?.branches?.selected_branches || [];
+  const primaryStoreId =
+    selectedBranches.length > 0 ? selectedBranches[0] : null;
 
   const now = new Date().toISOString();
 
+  const profileUpdate: any = {
+    role: "driver",
+    driver_status: "available",
+    updated_at: now,
+  };
+
+  // Assign store_id from the first selected branch
+  if (primaryStoreId) {
+    profileUpdate.store_id = primaryStoreId;
+  }
+
   const { error: updateProfileErr } = await (admin as any)
     .from("profiles")
-    .update({
-      role: "driver",
-      driver_status: "available",
-      updated_at: now,
-    })
+    .update(profileUpdate)
     .eq("id", userId);
 
   if (updateProfileErr) {
@@ -108,18 +122,16 @@ export default defineEventHandler(async (event) => {
     });
   }
 
-  const { error: roleErr } = await (admin as any)
-    .from("user_roles")
-    .upsert(
-      {
-        user_id: userId,
-        role: "driver",
-        is_active: true,
-        assigned_by: callerId,
-        assigned_at: now,
-      },
-      { onConflict: "user_id,role" },
-    );
+  const { error: roleErr } = await (admin as any).from("user_roles").upsert(
+    {
+      user_id: userId,
+      role: "driver",
+      is_active: true,
+      assigned_by: callerId,
+      assigned_at: now,
+    },
+    { onConflict: "user_id,role" },
+  );
 
   if (roleErr) {
     throw createError({ statusCode: 400, statusMessage: roleErr.message });
