@@ -473,6 +473,7 @@
 
 <script setup lang="ts">
 import { useUserStore } from "~/stores/user";
+import { getSafeErrorMessage } from "~/utils/errorHandler";
 
 definePageMeta({
   layout: "admin",
@@ -652,8 +653,8 @@ const createPaystackSubaccount = async () => {
     paystackOnboarding.value.success = `Subaccount saved: ${res?.subaccount_code || "OK"}`;
     await fetchStores();
   } catch (e: any) {
-    paystackOnboarding.value.error =
-      e?.data?.message || e?.message || "Failed to create subaccount";
+    // Use centralized error handler for safe, user-friendly messages
+    paystackOnboarding.value.error = getSafeErrorMessage(e);
   } finally {
     paystackOnboarding.value.loading = false;
   }

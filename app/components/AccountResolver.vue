@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { getSafeErrorMessage } from "~/utils/errorHandler";
+
 const props = defineProps<{
   modelValue: {
     bankCode: string;
@@ -10,7 +12,10 @@ const props = defineProps<{
 }>();
 
 const emit = defineEmits<{
-  (e: "update:modelValue", value: { bankCode: string; accountNumber: string; accountName: string }): void;
+  (
+    e: "update:modelValue",
+    value: { bankCode: string; accountNumber: string; accountName: string },
+  ): void;
   (e: "resolved", accountName: string): void;
   (e: "error", message: string): void;
 }>();
@@ -20,17 +25,20 @@ const error = ref("");
 
 const bankCode = computed({
   get: () => props.modelValue.bankCode,
-  set: (val) => emit("update:modelValue", { ...props.modelValue, bankCode: val }),
+  set: (val) =>
+    emit("update:modelValue", { ...props.modelValue, bankCode: val }),
 });
 
 const accountNumber = computed({
   get: () => props.modelValue.accountNumber,
-  set: (val) => emit("update:modelValue", { ...props.modelValue, accountNumber: val }),
+  set: (val) =>
+    emit("update:modelValue", { ...props.modelValue, accountNumber: val }),
 });
 
 const accountName = computed({
   get: () => props.modelValue.accountName,
-  set: (val) => emit("update:modelValue", { ...props.modelValue, accountName: val }),
+  set: (val) =>
+    emit("update:modelValue", { ...props.modelValue, accountName: val }),
 });
 
 const normalized = (s: string) =>
@@ -42,7 +50,9 @@ const normalized = (s: string) =>
 
 const namesMatch = computed(() => {
   if (!props.resolvedAccountName || !accountName.value) return true;
-  return normalized(props.resolvedAccountName) === normalized(accountName.value);
+  return (
+    normalized(props.resolvedAccountName) === normalized(accountName.value)
+  );
 });
 
 const canResolve = computed(() => {
@@ -83,8 +93,10 @@ async function resolveAccount() {
 
     emit("resolved", res.account_name);
   } catch (e: any) {
-    error.value = e?.statusMessage || e?.message || "Failed to resolve account";
-    emit("error", error.value);
+    // Use centralized error handler for safe, user-friendly messages
+    const safeMessage = getSafeErrorMessage(e);
+    error.value = safeMessage;
+    emit("error", safeMessage);
   } finally {
     isResolving.value = false;
   }
@@ -146,10 +158,7 @@ watch(bankCode, () => {
     >
       Resolved Name:
       <span class="font-semibold">{{ resolvedAccountName }}</span>
-      <div
-        v-if="!namesMatch"
-        class="mt-1 text-red-600"
-      >
+      <div v-if="!namesMatch" class="mt-1 text-red-600">
         Account name does not match resolved name.
       </div>
     </div>

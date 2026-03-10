@@ -89,7 +89,7 @@ export default defineEventHandler(async (event) => {
   if (fullName.length < 3 || phone.length < 8) {
     throw createError({
       statusCode: 400,
-      statusMessage: "Personal info is incomplete",
+      statusMessage: "Please check your personal information and try again.",
     });
   }
 
@@ -110,7 +110,8 @@ export default defineEventHandler(async (event) => {
   ) {
     throw createError({
       statusCode: 400,
-      statusMessage: "Vehicle details/documents are incomplete",
+      statusMessage:
+        "Please complete all vehicle details and upload required documents.",
     });
   }
 
@@ -122,7 +123,7 @@ export default defineEventHandler(async (event) => {
   if (!bankCode || accountNumber.length !== 10 || accountName.length < 3) {
     throw createError({
       statusCode: 400,
-      statusMessage: "Payout details are incomplete",
+      statusMessage: "Please check your payout details and try again.",
     });
   }
 
@@ -131,7 +132,7 @@ export default defineEventHandler(async (event) => {
   if (!Array.isArray(selectedBranches) || selectedBranches.length === 0) {
     throw createError({
       statusCode: 400,
-      statusMessage: "Please select at least one branch to operate with",
+      statusMessage: "Please select at least one branch to continue.",
     });
   }
 
@@ -149,14 +150,14 @@ export default defineEventHandler(async (event) => {
     if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       throw createError({
         statusCode: 400,
-        statusMessage: "Please provide a valid email address",
+        statusMessage: "Please provide a valid email address.",
       });
     }
 
     if (!password || password.length < 6) {
       throw createError({
         statusCode: 400,
-        statusMessage: "Password must be at least 6 characters",
+        statusMessage: "Password must be at least 6 characters.",
       });
     }
 
@@ -169,7 +170,7 @@ export default defineEventHandler(async (event) => {
     if (!admin) {
       throw createError({
         statusCode: 500,
-        statusMessage: "Unable to create account at this time",
+        statusMessage: "Something went wrong. Please try again later.",
       });
     }
 
@@ -200,7 +201,7 @@ export default defineEventHandler(async (event) => {
       throw createError({
         statusCode: 400,
         statusMessage:
-          signUpError?.message || "Failed to create account. Please try again.",
+          "Failed to create account. Please try again or contact support.",
       });
     }
 
@@ -226,7 +227,7 @@ export default defineEventHandler(async (event) => {
       throw createError({
         statusCode: 500,
         statusMessage:
-          "Account created but profile setup failed. Please contact support.",
+          "Account setup failed. Please try again or contact support.",
       });
     }
   } else {
@@ -235,7 +236,7 @@ export default defineEventHandler(async (event) => {
       console.log("[Driver Onboarding] No valid user id found, rejecting");
       throw createError({
         statusCode: 401,
-        statusMessage: "Invalid session. Please sign in again.",
+        statusMessage: "Your session has expired. Please sign in again.",
       });
     }
     userId = existingUser.id;
@@ -253,7 +254,11 @@ export default defineEventHandler(async (event) => {
     )(profileUpdate).eq("id", userId);
 
     if (profileErr) {
-      throw createError({ statusCode: 400, statusMessage: profileErr.message });
+      console.error("[Driver Onboarding] Profile update failed:", profileErr);
+      throw createError({
+        statusCode: 400,
+        statusMessage: "Failed to update profile. Please try again.",
+      });
     }
   }
 
@@ -276,9 +281,13 @@ export default defineEventHandler(async (event) => {
   )(payload, { onConflict: "user_id" });
 
   if (upsertErr) {
+    console.error(
+      "[Driver Onboarding] Application submission failed:",
+      upsertErr,
+    );
     throw createError({
       statusCode: 400,
-      statusMessage: upsertErr.message || "Failed to submit application",
+      statusMessage: "Failed to submit application. Please try again.",
     });
   }
 

@@ -38,7 +38,7 @@ export default defineEventHandler(async (event) => {
   if (!supabaseUrl || !serviceRoleKey) {
     throw createError({
       statusCode: 500,
-      statusMessage: "Server not configured",
+      statusMessage: "Service temporarily unavailable. Please try again later.",
     });
   }
 
@@ -47,7 +47,7 @@ export default defineEventHandler(async (event) => {
   if (!paystackSecret) {
     throw createError({
       statusCode: 500,
-      statusMessage: "Paystack secret key not configured",
+      statusMessage: "Service temporarily unavailable. Please try again later.",
     });
   }
 
@@ -61,7 +61,7 @@ export default defineEventHandler(async (event) => {
   if (!token) {
     throw createError({
       statusCode: 401,
-      statusMessage: "Missing Authorization Bearer token",
+      statusMessage: "Your session has expired. Please sign in again.",
     });
   }
 
@@ -72,7 +72,10 @@ export default defineEventHandler(async (event) => {
   const { data: callerData, error: callerErr } =
     await admin.auth.getUser(token);
   if (callerErr || !callerData?.user) {
-    throw createError({ statusCode: 401, statusMessage: "Invalid session" });
+    throw createError({
+      statusCode: 401,
+      statusMessage: "Your session has expired. Please sign in again.",
+    });
   }
 
   const callerId = callerData.user.id;
@@ -83,11 +86,18 @@ export default defineEventHandler(async (event) => {
     .single();
 
   if (profileErr) {
-    throw createError({ statusCode: 500, statusMessage: profileErr.message });
+    console.error("[Admin Subaccount] Profile lookup failed:", profileErr);
+    throw createError({
+      statusCode: 500,
+      statusMessage: "Something went wrong. Please try again later.",
+    });
   }
 
   if (String((callerProfile as any)?.role) !== "super_admin") {
-    throw createError({ statusCode: 403, statusMessage: "Not authorized" });
+    throw createError({
+      statusCode: 403,
+      statusMessage: "You don't have permission to do that.",
+    });
   }
 
   const body = await readBody<Body>(event);
@@ -98,8 +108,7 @@ export default defineEventHandler(async (event) => {
   if (!storeId || !settlementBankCode || !accountNumber) {
     throw createError({
       statusCode: 400,
-      statusMessage:
-        "store_id, settlement_bank_code, account_number are required",
+      statusMessage: "Please provide all required information.",
     });
   }
 
@@ -112,7 +121,7 @@ export default defineEventHandler(async (event) => {
   if (storeErr || !storeRow) {
     throw createError({
       statusCode: 400,
-      statusMessage: storeErr?.message || "Store not found",
+      statusMessage: "Store not found. Please check the store ID.",
     });
   }
 
@@ -136,9 +145,10 @@ export default defineEventHandler(async (event) => {
       .eq("id", storeId);
 
     if (updateExistingErr) {
+      console.error("[Admin Subaccount] Update failed:", updateExistingErr);
       throw createError({
         statusCode: 500,
-        statusMessage: updateExistingErr.message,
+        statusMessage: "Failed to update store settings. Please try again.",
       });
     }
 
@@ -174,10 +184,11 @@ export default defineEventHandler(async (event) => {
   const psJson = (await psRes.json()) as PaystackSubaccountResponse;
 
   if (!psRes.ok || !psJson.status || !psJson.data?.subaccount_code) {
-    console.error("Paystack subaccount create error:", psJson);
+    console.error("[Admin Subaccount] Paystack error:", psJson);
     throw createError({
       statusCode: 400,
-      statusMessage: psJson.message || "Failed to create subaccount",
+      statusMessage:
+        "Failed to create subaccount. Please check the account details and try again.",
     });
   }
 
@@ -194,7 +205,11 @@ export default defineEventHandler(async (event) => {
     .eq("id", storeId);
 
   if (updateErr) {
-    throw createError({ statusCode: 500, statusMessage: updateErr.message });
+    console.error("[Admin Subaccount] Store update failed:", updateErr);
+    throw createError({
+      statusCode: 500,
+      statusMessage: "Failed to save subaccount. Please try again.",
+    });
   }
 
   return {

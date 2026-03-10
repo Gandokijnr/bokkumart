@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, ref } from "vue";
+import { getSafeErrorMessage } from "~/utils/errorHandler";
 
 definePageMeta({});
 
@@ -179,7 +180,8 @@ async function onPickIdCard(e: Event) {
   try {
     idCardPath.value = await uploadPrivateDoc("id_card", f);
   } catch (e: any) {
-    error.value = e?.message || "Failed to upload ID card";
+    // Use centralized error handler for safe, user-friendly messages
+    error.value = getSafeErrorMessage(e);
     idCardPath.value = null;
   } finally {
     loading.value = false;
@@ -196,7 +198,8 @@ async function onPickVehicleReg(e: Event) {
   try {
     vehicleRegPath.value = await uploadPrivateDoc("vehicle_registration", f);
   } catch (e: any) {
-    error.value = e?.message || "Failed to upload vehicle registration";
+    // Use centralized error handler for safe, user-friendly messages
+    error.value = getSafeErrorMessage(e);
     vehicleRegPath.value = null;
   } finally {
     loading.value = false;
@@ -220,7 +223,8 @@ async function fetchBranches() {
 
     branches.value = Array.isArray(res) ? res : res?.branches || [];
   } catch (e: any) {
-    error.value = e?.message || "Failed to load branches";
+    // Use centralized error handler for safe, user-friendly messages
+    error.value = getSafeErrorMessage(e);
   } finally {
     branchesLoading.value = false;
   }
@@ -318,8 +322,8 @@ async function submitApplication() {
 
     await navigateTo("/driver/thank-you", { replace: true });
   } catch (e: any) {
-    error.value =
-      e?.statusMessage || e?.message || "Failed to submit application";
+    // Use centralized error handler for safe, user-friendly messages
+    error.value = getSafeErrorMessage(e);
   } finally {
     loading.value = false;
   }

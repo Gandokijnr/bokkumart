@@ -28,7 +28,7 @@ export default defineEventHandler(async (event) => {
   if (!paystackSecret) {
     throw createError({
       statusCode: 500,
-      statusMessage: "Paystack secret key not configured",
+      statusMessage: "Service temporarily unavailable. Please try again later.",
     });
   }
 
@@ -39,7 +39,7 @@ export default defineEventHandler(async (event) => {
   if (!bankCode || accountNumber.length !== 10) {
     throw createError({
       statusCode: 400,
-      statusMessage: "bank_code and a 10-digit account_number are required",
+      statusMessage: "Please check your information and try again.",
     });
   }
 
@@ -61,7 +61,8 @@ export default defineEventHandler(async (event) => {
   if (existingAccount) {
     throw createError({
       statusCode: 409,
-      statusMessage: "This account is already registered to another rider",
+      statusMessage:
+        "This account is already registered. Please use a different account.",
     });
   }
 
@@ -80,17 +81,28 @@ export default defineEventHandler(async (event) => {
   const result = (await resp.json()) as PaystackResolveResponse;
 
   if (!resp.ok || !result.status) {
+    // Log internal details server-side only (with masked account number)
     console.error("[Paystack Resolve Error]", {
       status: resp.status,
-      paystackStatus: result?.status,
-      message: result?.message,
+      paystackMessage: result?.message,
       bankCode,
-      accountNumber:
-        accountNumber.slice(0, 4) + "****" + accountNumber.slice(-2),
     });
+
+    // Return safe user-facing message based on Paystack error
+    let userMessage =
+      "We couldn't verify that account. Please check the details and try again.";
+
+    if (
+      result?.message?.toLowerCase().includes("test mode") &&
+      result?.message?.toLowerCase().includes("limit")
+    ) {
+      userMessage =
+        "Please use Test Bank (001 or 011) for testing, or switch to live mode.";
+    }
+
     throw createError({
       statusCode: 400,
-      statusMessage: result?.message || "Failed to resolve account",
+      statusMessage: userMessage,
     });
   }
 

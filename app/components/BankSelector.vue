@@ -10,6 +10,8 @@ const emit = defineEmits<{
 
 // Popular Nigerian banks with their Paystack codes
 const banks = [
+  { name: "Test Bank (001)", code: "001", nipCode: "000001", testOnly: true },
+  { name: "Test Bank 2 (011)", code: "011", nipCode: "000011", testOnly: true },
   { name: "Access Bank", code: "044", nipCode: "000014" },
   { name: "Citibank Nigeria", code: "023", nipCode: "000009" },
   { name: "Ecobank Nigeria", code: "050", nipCode: "000010" },
