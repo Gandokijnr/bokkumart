@@ -112,66 +112,16 @@
         </div>
 
         <template v-if="isSuperAdmin">
-          <div class="grid gap-4 md:grid-cols-2">
-            <div class="md:col-span-2">
-              <p class="text-sm text-gray-700">
-                <span class="font-medium">Current Subaccount:</span>
-                <span class="ml-2 font-mono text-gray-900">{{
-                  selectedStore?.paystack_subaccount_code || "Not configured"
-                }}</span>
-              </p>
-            </div>
-
-            <div>
-              <label class="mb-1 block text-sm font-medium text-gray-700"
-                >Settlement Bank Code</label
-              >
-              <input
-                v-model="paystackOnboarding.bankCode"
-                type="text"
-                placeholder="e.g. 058"
-                class="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-red-500 focus:outline-none"
-              />
-            </div>
-
-            <div>
-              <label class="mb-1 block text-sm font-medium text-gray-700"
-                >Account Number</label
-              >
-              <input
-                v-model="paystackOnboarding.accountNumber"
-                type="text"
-                placeholder="0123456789"
-                class="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-red-500 focus:outline-none"
-              />
-            </div>
-
-            <div>
-              <label class="mb-1 block text-sm font-medium text-gray-700"
-                >Platform Percentage (%)</label
-              >
-              <input
-                v-model.number="paystackOnboarding.platformPercentage"
-                type="number"
-                min="0"
-                step="0.1"
-                class="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-red-500 focus:outline-none"
-              />
-            </div>
-
-            <div>
-              <label class="mb-1 block text-sm font-medium text-gray-700"
-                >Fixed Commission (₦)</label
-              >
-              <input
-                v-model.number="paystackOnboarding.fixedCommission"
-                type="number"
-                min="0"
-                step="1"
-                class="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-red-500 focus:outline-none"
-              />
-            </div>
-          </div>
+          <AccountResolver
+            v-model="paystackAccountData"
+            :resolved-account-name="paystackOnboarding.resolvedAccountName"
+            @resolved="
+              paystackOnboarding.resolvedAccountName = $event;
+              paystackOnboarding.error = '';
+              paystackOnboarding.success = '';
+            "
+            @error="paystackOnboarding.error = $event"
+          />
 
           <div class="mt-4 flex gap-3">
             <button
@@ -179,8 +129,9 @@
               :disabled="
                 paystackOnboarding.loading ||
                 !selectedStoreId ||
-                !paystackOnboarding.bankCode ||
-                !paystackOnboarding.accountNumber
+                !paystackAccountData.bankCode ||
+                paystackAccountData.accountNumber.length !== 10 ||
+                !paystackOnboarding.resolvedAccountName
               "
               class="rounded-lg bg-red-600 px-6 py-2 text-sm font-bold text-white hover:bg-red-700 disabled:cursor-not-allowed disabled:bg-gray-300"
             >
@@ -590,11 +541,26 @@ const detectedRoleLabel = computed(() => {
 const paystackOnboarding = ref({
   bankCode: "",
   accountNumber: "",
-  platformPercentage: null as number | null,
-  fixedCommission: null as number | null,
+  accountName: "",
+  resolvedAccountName: "",
+  resolving: false,
   loading: false,
   error: "",
   success: "",
+});
+
+// Sync account data with paystackOnboarding for AccountResolver component
+const paystackAccountData = computed({
+  get: () => ({
+    bankCode: paystackOnboarding.value.bankCode,
+    accountNumber: paystackOnboarding.value.accountNumber,
+    accountName: paystackOnboarding.value.accountName,
+  }),
+  set: (val) => {
+    paystackOnboarding.value.bankCode = val.bankCode;
+    paystackOnboarding.value.accountNumber = val.accountNumber;
+    paystackOnboarding.value.accountName = val.accountName;
+  },
 });
 
 const storeStats = ref({
@@ -675,10 +641,11 @@ const createPaystackSubaccount = async () => {
       },
       body: {
         store_id: selectedStoreId.value,
-        settlement_bank_code: paystackOnboarding.value.bankCode,
-        account_number: paystackOnboarding.value.accountNumber,
-        platform_percentage: paystackOnboarding.value.platformPercentage,
-        fixed_commission: paystackOnboarding.value.fixedCommission,
+        settlement_bank_code: paystackAccountData.value.bankCode,
+        account_number: paystackAccountData.value.accountNumber,
+        account_name:
+          paystackAccountData.value.accountName ||
+          paystackOnboarding.value.resolvedAccountName,
       },
     })) as any;
 

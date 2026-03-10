@@ -60,6 +60,20 @@ const vehicleRegPath = ref<string | null>(null);
 const resolvingAccount = ref(false);
 const resolvedAccountName = ref<string | null>(null);
 
+// Sync account data with form for AccountResolver component
+const accountData = computed({
+  get: () => ({
+    bankCode: form.value.bank_code,
+    accountNumber: form.value.account_number,
+    accountName: form.value.account_name,
+  }),
+  set: (val) => {
+    form.value.bank_code = val.bankCode;
+    form.value.account_number = val.accountNumber;
+    form.value.account_name = val.accountName;
+  },
+});
+
 const bucketName = "rider-documents";
 
 const currentStepIndex = computed(() => stepOrder.indexOf(step.value));
@@ -108,14 +122,14 @@ const vehicleValid = computed(() => {
 });
 
 const payoutValid = computed(() => {
-  const bankOk = String(form.value.bank_code).trim().length > 0;
-  const acctOk = String(form.value.account_number).trim().length === 10;
-  const nameOk = String(form.value.account_name).trim().length >= 3;
+  const bankOk = String(accountData.value.bankCode).trim().length > 0;
+  const acctOk = String(accountData.value.accountNumber).trim().length === 10;
+  const nameOk = String(accountData.value.accountName).trim().length >= 3;
 
   const resolvedOk =
     !resolvedAccountName.value ||
     normalized(resolvedAccountName.value) ===
-      normalized(form.value.account_name);
+      normalized(accountData.value.accountName);
 
   return bankOk && acctOk && nameOk && resolvedOk;
 });
@@ -186,41 +200,6 @@ async function onPickVehicleReg(e: Event) {
     vehicleRegPath.value = null;
   } finally {
     loading.value = false;
-  }
-}
-
-async function resolveAccount() {
-  error.value = "";
-  resolvedAccountName.value = null;
-
-  const bankCode = String(form.value.bank_code || "").trim();
-  const accountNumber = String(form.value.account_number || "").trim();
-
-  if (!bankCode || accountNumber.length !== 10) {
-    error.value = "Enter a valid bank code and 10-digit account number";
-    return;
-  }
-
-  resolvingAccount.value = true;
-  try {
-    const res = await $fetch<{
-      success: boolean;
-      account_name?: string;
-      message?: string;
-    }>("/api/paystack/resolve-account", {
-      method: "POST",
-      body: { bank_code: bankCode, account_number: accountNumber },
-    });
-
-    if (!res?.success || !res.account_name) {
-      throw new Error(res?.message || "Could not resolve account");
-    }
-
-    resolvedAccountName.value = res.account_name;
-  } catch (e: any) {
-    error.value = e?.statusMessage || e?.message || "Failed to resolve account";
-  } finally {
-    resolvingAccount.value = false;
   }
 }
 
@@ -309,9 +288,9 @@ async function submitApplication() {
         vehicle_registration_path: vehicleRegPath.value,
       },
       payout: {
-        bank_code: form.value.bank_code,
-        account_number: form.value.account_number,
-        account_name: form.value.account_name,
+        bank_code: accountData.value.bankCode,
+        account_number: accountData.value.accountNumber,
+        account_name: accountData.value.accountName,
         resolved_account_name: resolvedAccountName.value,
       },
       phone_verification: {
@@ -599,52 +578,12 @@ async function submitApplication() {
         </div>
 
         <div v-else class="space-y-4">
-          <FormInput
-            v-model="form.bank_code"
-            label="Bank Code"
-            placeholder="e.g. 058"
-            inputmode="numeric"
+          <AccountResolver
+            v-model="accountData"
+            :resolved-account-name="resolvedAccountName"
+            @resolved="resolvedAccountName = $event"
+            @error="error = $event"
           />
-          <FormInput
-            v-model="form.account_number"
-            label="Account Number"
-            placeholder="10-digit NUBAN"
-            inputmode="numeric"
-            :maxlength="10"
-          />
-          <FormInput
-            v-model="form.account_name"
-            label="Account Name"
-            placeholder="e.g. JOHN DOE"
-          />
-
-          <div class="flex gap-2">
-            <FormButton
-              :loading="resolvingAccount"
-              :disabled="resolvingAccount"
-              variant="outline"
-              @click="resolveAccount"
-            >
-              Resolve Account
-            </FormButton>
-          </div>
-
-          <div
-            v-if="resolvedAccountName"
-            class="rounded-xl border border-gray-200 bg-gray-50 p-3 text-xs text-gray-700"
-          >
-            Resolved Name:
-            <span class="font-semibold">{{ resolvedAccountName }}</span>
-            <div
-              v-if="
-                normalized(resolvedAccountName) !==
-                normalized(form.account_name)
-              "
-              class="mt-1 text-red-600"
-            >
-              Account name does not match resolved name.
-            </div>
-          </div>
         </div>
 
         <template #footer>

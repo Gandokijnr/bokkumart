@@ -1,4 +1,6 @@
 import { defineEventHandler, readBody, createError } from "h3";
+import { serverSupabaseClient } from "#supabase/server";
+import type { Database } from "~/types/database.types";
 
 interface Body {
   bank_code: string;
@@ -17,6 +19,7 @@ interface PaystackResolveResponse {
 
 export default defineEventHandler(async (event) => {
   const config = useRuntimeConfig();
+  const supabase = await serverSupabaseClient<Database>(event);
 
   const paystackSecret =
     (config.paystackSecretKey as string | undefined) ||
@@ -40,6 +43,28 @@ export default defineEventHandler(async (event) => {
     });
   }
 
+  // Check if account is already registered by another user
+  const { data: existingAccount, error: checkError } = await (supabase as any)
+    .from("rider_onboarding_applications")
+    .select("id, user_id, payout, status")
+    .eq("status", "approved")
+    .filter("payout->>account_number", "eq", accountNumber)
+    .maybeSingle();
+
+  if (checkError) {
+    console.error(
+      "[Resolve Account] Error checking existing account:",
+      checkError,
+    );
+  }
+
+  if (existingAccount) {
+    throw createError({
+      statusCode: 409,
+      statusMessage: "This account is already registered to another rider",
+    });
+  }
+
   const url = `https://api.paystack.co/bank/resolve?account_number=${encodeURIComponent(
     accountNumber,
   )}&bank_code=${encodeURIComponent(bankCode)}`;
@@ -55,6 +80,14 @@ export default defineEventHandler(async (event) => {
   const result = (await resp.json()) as PaystackResolveResponse;
 
   if (!resp.ok || !result.status) {
+    console.error("[Paystack Resolve Error]", {
+      status: resp.status,
+      paystackStatus: result?.status,
+      message: result?.message,
+      bankCode,
+      accountNumber:
+        accountNumber.slice(0, 4) + "****" + accountNumber.slice(-2),
+    });
     throw createError({
       statusCode: 400,
       statusMessage: result?.message || "Failed to resolve account",
