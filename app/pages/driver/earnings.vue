@@ -202,7 +202,7 @@
 
         <!-- Earnings History -->
         <div
-          v-if="earnings.length > 0"
+          v-if="earnings.length > 0 || withdrawals.length > 0"
           class="bg-slate-800/50 rounded-2xl p-5 border border-slate-700/30"
         >
           <h4 class="text-sm font-bold text-white mb-4 flex items-center gap-2">
@@ -222,40 +222,114 @@
             Earnings History
           </h4>
           <div class="space-y-3">
+            <!-- Combined Activity History (sorted by date, most recent first) -->
             <div
-              v-for="earning in earnings"
-              :key="earning.id"
+              v-for="activity in activityHistory"
+              :key="activity.type + '-' + activity.id"
               class="bg-slate-900/50 rounded-xl p-3 border border-slate-700/30"
             >
-              <div class="flex items-center justify-between">
+              <!-- Earning -->
+              <div
+                v-if="activity.type === 'earning'"
+                class="flex items-center justify-between"
+              >
                 <div>
                   <p class="text-sm font-semibold text-white">
-                    Order #{{ earning.order_id?.slice(0, 8).toUpperCase() }}
+                    Order #{{
+                      activity.data.order_id?.slice(0, 8).toUpperCase()
+                    }}
                   </p>
                   <p class="text-xs text-slate-400">
                     {{
-                      new Date(earning.created_at).toLocaleDateString("en-NG", {
-                        day: "numeric",
-                        month: "short",
-                        hour: "2-digit",
-                        minute: "2-digit",
-                      })
+                      new Date(activity.data.created_at).toLocaleDateString(
+                        "en-NG",
+                        {
+                          day: "numeric",
+                          month: "short",
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        },
+                      )
                     }}
                   </p>
                 </div>
                 <div class="text-right">
                   <p class="text-green-400 font-semibold">
-                    +₦{{ formatMoney(earning.total_earned) }}
+                    +₦{{ formatMoney(activity.data.total_earned) }}
                   </p>
-                  <p v-if="earning.tip_amount" class="text-xs text-slate-400">
-                    Tip: ₦{{ formatMoney(earning.tip_amount) }}
+                  <p
+                    v-if="activity.data.tip_amount"
+                    class="text-xs text-slate-400"
+                  >
+                    Tip: ₦{{ formatMoney(activity.data.tip_amount) }}
                   </p>
                   <span
-                    v-if="earning.is_withdrawn"
+                    v-if="activity.data.is_withdrawn"
                     class="text-xs text-slate-500"
                   >
                     Withdrawn
                   </span>
+                </div>
+              </div>
+
+              <!-- Withdrawal -->
+              <div
+                v-else-if="activity.type === 'withdrawal'"
+                class="flex items-center justify-between"
+              >
+                <div>
+                  <p
+                    class="text-sm font-semibold text-white flex items-center gap-2"
+                  >
+                    <svg
+                      class="w-4 h-4 text-amber-400"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"
+                      />
+                    </svg>
+                    Withdrawal
+                  </p>
+                  <p class="text-xs text-slate-400">
+                    {{ activity.data.bank_name }} • ****{{
+                      activity.data.account_number?.slice(-4)
+                    }}
+                  </p>
+                  <p class="text-xs text-slate-500">
+                    {{
+                      new Date(activity.data.created_at).toLocaleDateString(
+                        "en-NG",
+                        {
+                          day: "numeric",
+                          month: "short",
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        },
+                      )
+                    }}
+                    <span
+                      :class="{
+                        'text-amber-400': activity.data.status === 'pending',
+                        'text-green-400': activity.data.status === 'paid',
+                        'text-blue-400': activity.data.status === 'approved',
+                        'text-red-400': activity.data.status === 'rejected',
+                      }"
+                      class="ml-2"
+                    >
+                      {{ activity.data.status }}
+                    </span>
+                  </p>
+                </div>
+                <div class="text-right">
+                  <p class="text-red-400 font-semibold">
+                    -₦{{ formatMoney(activity.data.amount) }}
+                  </p>
                 </div>
               </div>
             </div>
@@ -273,7 +347,9 @@
 
         <!-- Empty State -->
         <div
-          v-else-if="!loading && earnings.length === 0"
+          v-else-if="
+            !loading && earnings.length === 0 && withdrawals.length === 0
+          "
           class="flex flex-col items-center justify-center py-12"
         >
           <div
@@ -438,7 +514,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted } from "vue";
+import { ref, reactive, onMounted, computed } from "vue";
 
 definePageMeta({
   middleware: "driver",
@@ -453,6 +529,16 @@ interface PayoutBalance {
   hasPendingRequest: boolean;
 }
 
+interface Withdrawal {
+  id: string;
+  amount: number;
+  status: "pending" | "approved" | "paid" | "rejected";
+  bank_name: string;
+  account_number: string;
+  created_at: string;
+  processed_at?: string;
+}
+
 interface Earning {
   id: string;
   order_id: string;
@@ -465,8 +551,10 @@ interface Earning {
 
 interface EarningsResponse {
   earnings: Earning[];
+  withdrawals: Withdrawal[];
   pagination?: {
     earnings?: { limit: number; offset: number; hasMore: boolean };
+    withdrawals?: { limit: number; offset: number; hasMore: boolean };
   };
 }
 
@@ -474,7 +562,9 @@ const loading = ref(true);
 const loadingMore = ref(false);
 const error = ref("");
 const earnings = ref<Earning[]>([]);
+const withdrawals = ref<Withdrawal[]>([]);
 const earningsOffset = ref(0);
+const withdrawalsOffset = ref(0);
 
 const session = useSupabaseSession();
 
@@ -488,6 +578,29 @@ const payoutBalance = reactive<PayoutBalance>({
 
 const pagination = reactive({
   earnings: { limit: 50, offset: 0, hasMore: false },
+  withdrawals: { limit: 50, offset: 0, hasMore: false },
+});
+
+// Combined and sorted activity history (most recent first)
+const activityHistory = computed(() => {
+  const activities = [
+    ...earnings.value.map((e) => ({
+      type: "earning" as const,
+      id: e.id,
+      created_at: e.created_at,
+      data: e,
+    })),
+    ...withdrawals.value.map((w) => ({
+      type: "withdrawal" as const,
+      id: w.id,
+      created_at: w.created_at,
+      data: w,
+    })),
+  ];
+  return activities.sort(
+    (a, b) =>
+      new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
+  );
 });
 
 // Modal state
@@ -589,15 +702,18 @@ async function fetchEarnings() {
       query: {
         earningsLimit: pagination.earnings.limit,
         earningsOffset: pagination.earnings.offset,
-        withdrawalsLimit: 0,
-        withdrawalsOffset: 0,
+        withdrawalsLimit: pagination.withdrawals.limit,
+        withdrawalsOffset: pagination.withdrawals.offset,
       },
       headers,
     });
 
     if (data) {
       earnings.value = data.earnings || [];
+      withdrawals.value = data.withdrawals || [];
       pagination.earnings.hasMore = data.pagination?.earnings?.hasMore || false;
+      pagination.withdrawals.hasMore =
+        data.pagination?.withdrawals?.hasMore || false;
     }
 
     await fetchPayoutBalance();

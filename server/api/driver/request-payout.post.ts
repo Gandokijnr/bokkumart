@@ -5,7 +5,18 @@ const MINIMUM_PAYOUT_AMOUNT = 2000;
 
 export default defineEventHandler(async (event) => {
   const supabase = await serverSupabaseClient<Database>(event);
-  const user = await serverSupabaseUser(event);
+  const authHeader = event.node.req.headers["authorization"];
+  const bearer = Array.isArray(authHeader) ? authHeader[0] : authHeader;
+  const token =
+    typeof bearer === "string" && bearer.startsWith("Bearer ")
+      ? bearer.slice("Bearer ".length)
+      : null;
+
+  const userFromCookie = await serverSupabaseUser(event);
+  const userFromToken = token
+    ? (await supabase.auth.getUser(token)).data.user
+    : null;
+  const user = userFromToken || userFromCookie;
 
   if (!user) {
     throw createError({
@@ -22,13 +33,28 @@ export default defineEventHandler(async (event) => {
     .eq("user_id", driverId)
     .eq("role", "driver")
     .eq("is_active", true)
-    .single();
+    .maybeSingle();
 
   if (roleError || !userRole) {
-    throw createError({
-      statusCode: 403,
-      statusMessage: "Only drivers can request payouts",
-    });
+    const { data: profile, error: profileErr } = await supabase
+      .from("profiles")
+      .select("role")
+      .eq("id", driverId)
+      .maybeSingle();
+
+    if (profileErr) {
+      throw createError({
+        statusCode: 500,
+        statusMessage: profileErr.message,
+      });
+    }
+
+    if (String((profile as any)?.role) !== "driver") {
+      throw createError({
+        statusCode: 403,
+        statusMessage: "Only drivers can request payouts",
+      });
+    }
   }
 
   const body = await readBody(event);

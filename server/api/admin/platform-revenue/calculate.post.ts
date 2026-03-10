@@ -67,7 +67,7 @@ export default defineEventHandler(async (event) => {
     // Check if revenue already exists for this month/year
     const { data: existingRevenue, error: checkError } = await (admin as any)
       .from("platform_revenue")
-      .select("id, status, platform_fee, gross_sales")
+      .select("id, status, platform_fee, subtotal")
       .eq("month", body.month)
       .eq("year", body.year)
       .single();
@@ -106,7 +106,7 @@ export default defineEventHandler(async (event) => {
     // Get overall statistics with safety check for null delivery_fee
     const { data: stats, error: statsError } = await (admin as any)
       .from("orders")
-      .select("total_amount, delivery_fee", { count: "exact" })
+      .select("subtotal, delivery_fee", { count: "exact" })
       .eq("channel", "platform")
       .eq("payment_status", "paid")
       .gte("created_at", startDate)
@@ -120,9 +120,9 @@ export default defineEventHandler(async (event) => {
     }
 
     const totalOrders = stats?.length || 0;
-    // Ensure delivery_fee defaults to 0 if null (safety trigger)
-    const grossSales = (stats || []).reduce(
-      (sum: number, o: any) => sum + (o.total_amount || 0),
+    // Calculate subtotal (cost of items only, excluding fees)
+    const subtotal = (stats || []).reduce(
+      (sum: number, o: any) => sum + (o.subtotal || 0),
       0,
     );
     const deliveryFees = (stats || []).reduce(
@@ -133,8 +133,8 @@ export default defineEventHandler(async (event) => {
     // Calculate platform fee with proper rounding to 2 decimal places
     const platformPercentage = 8.0;
     const platformBase = body.excludeDeliveryFees
-      ? grossSales - deliveryFees
-      : grossSales;
+      ? subtotal - deliveryFees
+      : subtotal;
     // Round to 2 decimal places to prevent floating-point errors in bank transfers
     const platformFee =
       Math.round(platformBase * (platformPercentage / 100) * 100) / 100;
@@ -158,7 +158,7 @@ export default defineEventHandler(async (event) => {
       month: body.month,
       year: body.year,
       total_orders: totalOrders,
-      gross_sales: grossSales,
+      subtotal: subtotal,
       platform_percentage: platformPercentage,
       platform_fee: platformFee,
       delivery_fees_excluded: body.excludeDeliveryFees ? deliveryFees : 0,
@@ -212,7 +212,7 @@ export default defineEventHandler(async (event) => {
         store_id: s.store_id,
         store_name: s.store_name,
         order_count: s.order_count,
-        gross_sales: s.gross_sales,
+        subtotal: s.subtotal,
         platform_fee: s.platform_fee,
         delivery_fees: s.delivery_fees,
       }));
@@ -239,8 +239,8 @@ export default defineEventHandler(async (event) => {
             : "calculated",
         previous_status: existingRevenue?.status || null,
         new_status: existingRevenue?.status || "pending",
-        previous_total: existingRevenue?.gross_sales || null,
-        new_total: grossSales,
+        previous_total: existingRevenue?.subtotal || null,
+        new_total: subtotal,
         previous_platform_fee: existingRevenue?.platform_fee || null,
         new_platform_fee: platformFee,
         notes: body.forceRecalculate
@@ -282,7 +282,7 @@ export default defineEventHandler(async (event) => {
           },
         ),
         total_orders: totalOrders,
-        gross_sales: grossSales,
+        subtotal: subtotal,
         platform_percentage: platformPercentage,
         platform_fee: platformFee,
         delivery_fees_excluded: body.excludeDeliveryFees ? deliveryFees : 0,

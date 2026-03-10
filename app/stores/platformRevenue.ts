@@ -8,7 +8,7 @@ export interface RevenueBreakdown {
   store_id: string;
   store_name: string;
   order_count: number;
-  gross_sales: number;
+  subtotal: number;
   platform_fee: number;
   delivery_fees: number;
 }
@@ -19,7 +19,7 @@ export interface RevenueRecord {
   year: number;
   month_name: string;
   total_orders: number;
-  gross_sales: number;
+  subtotal: number;
   platform_percentage: number;
   platform_fee: number;
   delivery_fees_excluded: number;
@@ -84,14 +84,14 @@ export const usePlatformRevenueStore = defineStore("platformRevenue", {
     // Get revenue for the currently selected month/year
     currentMonthRevenue: (state): RevenueRecord | undefined => {
       return state.records.find(
-        (r) => r.month === state.selectedMonth && r.year === state.selectedYear
+        (r) => r.month === state.selectedMonth && r.year === state.selectedYear,
       );
     },
 
     // Check if current selection is locked
     isCurrentLocked: (state): boolean => {
       const record = state.records.find(
-        (r) => r.month === state.selectedMonth && r.year === state.selectedYear
+        (r) => r.month === state.selectedMonth && r.year === state.selectedYear,
       );
       return record?.status === "locked";
     },
@@ -99,7 +99,7 @@ export const usePlatformRevenueStore = defineStore("platformRevenue", {
     // Check if current selection can be calculated
     canCalculate: (state): boolean => {
       const record = state.records.find(
-        (r) => r.month === state.selectedMonth && r.year === state.selectedYear
+        (r) => r.month === state.selectedMonth && r.year === state.selectedYear,
       );
       // Can calculate if no record exists, or if status is not locked
       return !record || record.status !== "locked";
@@ -115,9 +115,9 @@ export const usePlatformRevenueStore = defineStore("platformRevenue", {
       return state.records.reduce((sum, r) => sum + (r.total_orders || 0), 0);
     },
 
-    // Total gross sales across all records
-    totalGrossSales: (state): number => {
-      return state.records.reduce((sum, r) => sum + (r.gross_sales || 0), 0);
+    // Total subtotal across all records
+    totalSubtotal: (state): number => {
+      return state.records.reduce((sum, r) => sum + (r.subtotal || 0), 0);
     },
 
     // Get sorted records (newest first)
@@ -129,15 +129,26 @@ export const usePlatformRevenueStore = defineStore("platformRevenue", {
     },
 
     // Get audit logs for a specific revenue record
-    getAuditLogsForRevenue: (state) => (revenueId: string): AuditLogEntry[] => {
-      return state.auditLogs
-        .filter((log) => log.platform_revenue_id === revenueId)
-        .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
-    },
+    getAuditLogsForRevenue:
+      (state) =>
+      (revenueId: string): AuditLogEntry[] => {
+        return state.auditLogs
+          .filter((log) => log.platform_revenue_id === revenueId)
+          .sort(
+            (a, b) =>
+              new Date(b.created_at).getTime() -
+              new Date(a.created_at).getTime(),
+          );
+      },
 
     // Check if any operation is in progress
     isBusy: (state): boolean => {
-      return state.loading || state.calculating || !!state.locking || !!state.generatingInvoice;
+      return (
+        state.loading ||
+        state.calculating ||
+        !!state.locking ||
+        !!state.generatingInvoice
+      );
     },
   },
 
@@ -148,12 +159,12 @@ export const usePlatformRevenueStore = defineStore("platformRevenue", {
       this.error = null;
 
       try {
-        const { data } = await $fetch<{ success: boolean; data: RevenueRecord[] }>(
-          "/api/admin/platform-revenue",
-          {
-            params: { limit },
-          }
-        );
+        const { data } = await $fetch<{
+          success: boolean;
+          data: RevenueRecord[];
+        }>("/api/admin/platform-revenue", {
+          params: { limit },
+        });
         this.records = data || [];
       } catch (error: any) {
         this.error = error.message || "Failed to fetch revenue data";
@@ -175,7 +186,7 @@ export const usePlatformRevenueStore = defineStore("platformRevenue", {
           {
             method: "POST",
             body: params,
-          }
+          },
         );
 
         // Refresh records to get updated data
@@ -236,7 +247,7 @@ export const usePlatformRevenueStore = defineStore("platformRevenue", {
               id: revenueId,
               dueDays,
             },
-          }
+          },
         );
 
         // Refresh records to get updated invoice data
@@ -261,12 +272,12 @@ export const usePlatformRevenueStore = defineStore("platformRevenue", {
     // Fetch audit logs for a revenue record
     async fetchAuditLogs(revenueId: string) {
       try {
-        const { data } = await $fetch<{ success: boolean; data: AuditLogEntry[] }>(
-          "/api/admin/platform-revenue/audit-logs",
-          {
-            params: { revenueId },
-          }
-        );
+        const { data } = await $fetch<{
+          success: boolean;
+          data: AuditLogEntry[];
+        }>("/api/admin/platform-revenue/audit-logs", {
+          params: { revenueId },
+        });
 
         // Merge with existing audit logs, avoiding duplicates
         const newLogs = data || [];

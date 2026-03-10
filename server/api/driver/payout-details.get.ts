@@ -3,7 +3,18 @@ import type { Database } from "~/types/database.types";
 
 export default defineEventHandler(async (event) => {
   const supabase = await serverSupabaseClient<Database>(event);
-  const user = await serverSupabaseUser(event);
+  const authHeader = event.node.req.headers["authorization"];
+  const bearer = Array.isArray(authHeader) ? authHeader[0] : authHeader;
+  const token =
+    typeof bearer === "string" && bearer.startsWith("Bearer ")
+      ? bearer.slice("Bearer ".length)
+      : null;
+
+  const userFromCookie = await serverSupabaseUser(event);
+  const userFromToken = token
+    ? (await supabase.auth.getUser(token)).data.user
+    : null;
+  const user = userFromToken || userFromCookie;
 
   if (!user) {
     throw createError({

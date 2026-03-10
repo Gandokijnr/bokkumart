@@ -517,8 +517,8 @@ const monthlyRevenueChartOption = computed(() => {
         emphasis: { focus: "series" },
       },
       {
-        name: "Gross Sales (₦)",
-        data: monthly.map((m: any) => m.gross_sales).reverse(),
+        name: "Subtotal (₦)",
+        data: monthly.map((m: any) => m.subtotal).reverse(),
         type: "bar",
         itemStyle: { color: chartColors.secondary },
         emphasis: { focus: "series" },

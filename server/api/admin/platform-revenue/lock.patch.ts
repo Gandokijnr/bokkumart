@@ -59,7 +59,7 @@ export default defineEventHandler(async (event) => {
     // Get current revenue record before update (for audit trail)
     const { data: currentRevenue, error: fetchError } = await (admin as any)
       .from("platform_revenue")
-      .select("id, status, gross_sales, platform_fee, month, year")
+      .select("id, status, subtotal, platform_fee, month, year")
       .eq("id", body.id)
       .single();
 
@@ -116,8 +116,8 @@ export default defineEventHandler(async (event) => {
         action: actionMap[body.status] || body.status,
         previous_status: currentRevenue.status,
         new_status: body.status,
-        previous_total: currentRevenue.gross_sales,
-        new_total: currentRevenue.gross_sales, // Total doesn't change on lock
+        previous_total: currentRevenue.subtotal,
+        new_total: currentRevenue.subtotal, // Total doesn't change on lock
         previous_platform_fee: currentRevenue.platform_fee,
         new_platform_fee: currentRevenue.platform_fee, // Fee doesn't change on lock
         notes: body.notes || null,

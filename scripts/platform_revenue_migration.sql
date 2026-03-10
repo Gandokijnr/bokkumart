@@ -30,7 +30,7 @@ CREATE TABLE IF NOT EXISTS platform_revenue (
   month INTEGER NOT NULL CHECK (month >= 1 AND month <= 12),
   year INTEGER NOT NULL,
   total_orders INTEGER NOT NULL DEFAULT 0,
-  gross_sales DECIMAL(12,2) NOT NULL DEFAULT 0,
+  subtotal DECIMAL(12,2) NOT NULL DEFAULT 0,
   platform_percentage DECIMAL(5,2) NOT NULL DEFAULT 8.00,
   platform_fee DECIMAL(12,2) NOT NULL DEFAULT 0,
   delivery_fees_excluded DECIMAL(12,2) DEFAULT 0,
@@ -58,7 +58,7 @@ CREATE TABLE IF NOT EXISTS platform_revenue_breakdown (
   store_id UUID NOT NULL REFERENCES stores(id),
   store_name VARCHAR(255),
   order_count INTEGER NOT NULL DEFAULT 0,
-  gross_sales DECIMAL(12,2) NOT NULL DEFAULT 0,
+  subtotal DECIMAL(12,2) NOT NULL DEFAULT 0,
   platform_fee DECIMAL(12,2) NOT NULL DEFAULT 0,
   delivery_fees DECIMAL(12,2) DEFAULT 0,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
@@ -70,6 +70,12 @@ CREATE TABLE IF NOT EXISTS platform_revenue_breakdown (
 
 CREATE INDEX IF NOT EXISTS idx_revenue_breakdown_platform_id ON platform_revenue_breakdown(platform_revenue_id);
 CREATE INDEX IF NOT EXISTS idx_revenue_breakdown_store_id ON platform_revenue_breakdown(store_id);
+
+-- Step 4b: Drop view first, then rename columns, then recreate view
+DROP VIEW IF EXISTS v_platform_revenue_summary;
+
+ALTER TABLE platform_revenue RENAME COLUMN gross_sales TO subtotal;
+ALTER TABLE platform_revenue_breakdown RENAME COLUMN gross_sales TO subtotal;
 
 -- Step 5: Create function to update updated_at timestamp
 CREATE OR REPLACE FUNCTION update_updated_at_column()
@@ -101,7 +107,7 @@ SELECT
   pr.year,
   TO_CHAR(TO_DATE(pr.month::TEXT, 'MM'), 'Month') AS month_name,
   pr.total_orders,
-  pr.gross_sales,
+  pr.subtotal,
   pr.platform_percentage,
   pr.platform_fee,
   pr.delivery_fees_excluded,
@@ -115,15 +121,15 @@ LEFT JOIN (
   SELECT 
     platform_revenue_id,
     COUNT(DISTINCT store_id) AS store_count,
-    MAX(store_name) FILTER (WHERE gross_sales = max_sales) AS top_store_name,
-    MAX(gross_sales) AS top_store_sales
+    MAX(store_name) FILTER (WHERE subtotal = max_sales) AS top_store_name,
+    MAX(subtotal) AS top_store_sales
   FROM (
     SELECT 
       platform_revenue_id,
       store_id,
       store_name,
-      gross_sales,
-      MAX(gross_sales) OVER (PARTITION BY platform_revenue_id) AS max_sales
+      subtotal,
+      MAX(subtotal) OVER (PARTITION BY platform_revenue_id) AS max_sales
     FROM platform_revenue_breakdown
   ) ranked
   GROUP BY platform_revenue_id
@@ -137,6 +143,8 @@ COMMENT ON COLUMN orders.channel IS 'Order channel: platform (digital) or in_sto
 COMMENT ON COLUMN orders.payment_status IS 'Normalized payment status for revenue calculations';
 
 -- Step 8: Create function to calculate monthly revenue
+DROP FUNCTION IF EXISTS calculate_monthly_revenue(INTEGER, INTEGER, BOOLEAN);
+
 CREATE OR REPLACE FUNCTION calculate_monthly_revenue(
   p_month INTEGER,
   p_year INTEGER,
@@ -144,13 +152,13 @@ CREATE OR REPLACE FUNCTION calculate_monthly_revenue(
 )
 RETURNS TABLE (
   total_orders BIGINT,
-  gross_sales DECIMAL,
+  subtotal DECIMAL,
   platform_fee DECIMAL,
   delivery_fees DECIMAL
 ) AS $$
 DECLARE
   v_total_orders BIGINT;
-  v_gross_sales DECIMAL(12,2);
+  v_subtotal DECIMAL(12,2);
   v_delivery_fees DECIMAL(12,2);
   v_platform_base DECIMAL(12,2);
   v_platform_fee DECIMAL(12,2);
@@ -158,9 +166,9 @@ BEGIN
   -- Count orders and sum amounts
   SELECT 
     COUNT(*),
-    COALESCE(SUM(total_amount), 0),
+    COALESCE(SUM(subtotal), 0),
     COALESCE(SUM(delivery_fee), 0)
-  INTO v_total_orders, v_gross_sales, v_delivery_fees
+  INTO v_total_orders, v_subtotal, v_delivery_fees
   FROM orders
   WHERE channel = 'platform'
     AND payment_status = 'paid'
@@ -169,16 +177,57 @@ BEGIN
 
   -- Calculate platform fee base (exclude delivery fees if requested)
   IF p_exclude_delivery_fees THEN
-    v_platform_base := v_gross_sales - v_delivery_fees;
+    v_platform_base := v_subtotal - v_delivery_fees;
   ELSE
-    v_platform_base := v_gross_sales;
+    v_platform_base := v_subtotal;
   END IF;
 
   -- Calculate 8% platform fee
   v_platform_fee := ROUND(v_platform_base * 0.08, 2);
 
-  RETURN QUERY SELECT v_total_orders, v_gross_sales, v_platform_fee, v_delivery_fees;
+  RETURN QUERY SELECT v_total_orders, v_subtotal, v_platform_fee, v_delivery_fees;
 END;
 $$ LANGUAGE plpgsql;
 
 COMMENT ON FUNCTION calculate_monthly_revenue IS 'Calculates platform revenue for a given month/year';
+
+-- Step 9: Ensure branch total sales RPC matches platform revenue definition
+DROP FUNCTION IF EXISTS public.get_all_time_branch_total_sales(uuid, text[]);
+ 
+CREATE OR REPLACE FUNCTION public.get_all_time_branch_total_sales(
+   p_store_id uuid DEFAULT NULL::uuid,
+   p_statuses text[] DEFAULT ARRAY[
+     'paid'::text,
+     'confirmed'::text,
+     'ready_for_pos'::text,
+     'completed_in_pos'::text,
+     'assigned'::text,
+     'picked_up'::text,
+     'arrived'::text,
+     'delivered'::text
+   ]
+)
+RETURNS TABLE(
+   store_id uuid,
+   store_name text,
+   order_count bigint,
+   total_sales numeric
+)
+LANGUAGE sql
+STABLE
+AS $function$
+   SELECT
+     o.store_id,
+     COALESCE(s.name, 'Unknown') AS store_name,
+     COUNT(o.id)::bigint AS order_count,
+     COALESCE(SUM(o.subtotal), 0)::numeric AS total_sales
+   FROM public.orders o
+   LEFT JOIN public.stores s ON s.id = o.store_id
+   WHERE
+     (p_store_id IS NULL OR o.store_id = p_store_id)
+     AND (p_statuses IS NULL OR o.status = ANY(p_statuses))
+     AND o.channel = 'platform'
+     AND o.payment_status = 'paid'
+   GROUP BY o.store_id, s.name
+   ORDER BY COALESCE(s.name, 'Unknown') ASC;
+$function$;

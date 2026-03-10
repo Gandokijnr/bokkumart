@@ -55,7 +55,7 @@ const selectedYear = computed({
 const currentMonthRevenue = computed(() => store.currentMonthRevenue);
 const totalPlatformFees = computed(() => store.totalPlatformFees);
 const totalOrders = computed(() => store.totalOrders);
-const totalGrossSales = computed(() => store.totalGrossSales);
+const totalSubtotal = computed(() => store.totalSubtotal);
 const isCurrentLocked = computed(() => store.isCurrentLocked);
 const canCalculate = computed(() => store.canCalculate);
 
@@ -95,7 +95,7 @@ async function fetchRevenue() {
   }
 }
 
-async function fetchAllTimeBranchGrossSales() {
+async function fetchAllTimeBranchSubtotalSales() {
   branchGrossLoading.value = true;
   branchGrossError.value = null;
 
@@ -126,7 +126,7 @@ async function fetchAllTimeBranchGrossSales() {
     branchGrossTotals.value = res?.totals || null;
   } catch (e: any) {
     branchGrossError.value =
-      e?.statusMessage || e?.message || "Failed to load branch gross sales";
+      e?.statusMessage || e?.message || "Failed to load branch sales";
   } finally {
     branchGrossLoading.value = false;
   }
@@ -258,7 +258,7 @@ function isGeneratingInvoice(revenueId: string) {
 
 onMounted(() => {
   fetchRevenue();
-  fetchAllTimeBranchGrossSales();
+  fetchAllTimeBranchSubtotalSales();
 });
 </script>
 
@@ -294,7 +294,7 @@ onMounted(() => {
         <div class="bg-white rounded-xl shadow-sm p-6">
           <p class="text-sm font-medium text-gray-600">Total Sales</p>
           <p class="mt-2 text-2xl font-bold text-gray-900">
-            {{ formatCurrency(totalGrossSales) }}
+            {{ formatCurrency(totalSubtotal) }}
           </p>
         </div>
         <div class="bg-white rounded-xl shadow-sm p-6">
@@ -320,7 +320,7 @@ onMounted(() => {
             <select
               v-model="selectedBranchId"
               class="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm focus:border-red-500 focus:outline-none"
-              @change="fetchAllTimeBranchGrossSales"
+              @change="fetchAllTimeBranchSubtotalSales"
             >
               <option value="">All Branches</option>
               <option v-for="s in branchStores" :key="s.id" :value="s.id">
@@ -332,7 +332,7 @@ onMounted(() => {
               type="button"
               class="rounded-lg bg-gray-900 px-4 py-2 text-sm font-semibold text-white hover:bg-gray-800 disabled:opacity-60"
               :disabled="branchGrossLoading"
-              @click="fetchAllTimeBranchGrossSales"
+              @click="fetchAllTimeBranchSubtotalSales"
             >
               {{ branchGrossLoading ? "Loading..." : "Refresh" }}
             </button>
@@ -448,7 +448,7 @@ onMounted(() => {
           <div>
             <p class="text-sm text-gray-500">Total Digital Sales</p>
             <p class="text-xl font-bold text-gray-900">
-              {{ formatCurrency(currentMonthRevenue.gross_sales) }}
+              {{ formatCurrency(currentMonthRevenue.subtotal) }}
             </p>
           </div>
           <div>
@@ -490,7 +490,7 @@ onMounted(() => {
                   <th
                     class="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase"
                   >
-                    Gross Sales
+                    Subtotal
                   </th>
                   <th
                     class="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase"
@@ -508,7 +508,7 @@ onMounted(() => {
                     {{ formatNumber(b.order_count) }}
                   </td>
                   <td class="px-4 py-2 text-sm text-right text-gray-900">
-                    {{ formatCurrency(b.gross_sales) }}
+                    {{ formatCurrency(b.subtotal) }}
                   </td>
                   <td
                     class="px-4 py-2 text-sm text-right font-medium text-red-600"
@@ -611,7 +611,7 @@ onMounted(() => {
               <th
                 class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase"
               >
-                Gross Sales
+                Subtotal
               </th>
               <th
                 class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase"
@@ -650,7 +650,7 @@ onMounted(() => {
               <td
                 class="px-6 py-4 whitespace-nowrap text-sm text-right text-gray-900"
               >
-                {{ formatCurrency(record.gross_sales) }}
+                {{ formatCurrency(record.subtotal) }}
               </td>
               <td
                 class="px-6 py-4 whitespace-nowrap text-sm text-right font-bold text-red-600"
@@ -775,7 +775,7 @@ onMounted(() => {
                   <span>Exclude delivery fees from calculation</span>
                 </label>
                 <p class="text-xs text-gray-500">
-                  If checked, platform fee will be calculated on (gross sales -
+                  If checked, platform fee will be calculated on (subtotal -
                   delivery fees)
                 </p>
               </div>
@@ -899,7 +899,7 @@ onMounted(() => {
                   <th
                     class="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase"
                   >
-                    Gross Sales
+                    Subtotal
                   </th>
                   <th
                     class="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase"

@@ -24,9 +24,9 @@ platform_revenue:
 - month: INTEGER (1-12)
 - year: INTEGER
 - total_orders: INTEGER
-- gross_sales: DECIMAL(12,2)
+- subtotal: DECIMAL(12,2)
 - platform_percentage: DECIMAL(5,2) - default 8.00
-- platform_fee: DECIMAL(12,2) - calculated as gross_sales * 0.08
+- platform_fee: DECIMAL(12,2) - calculated as subtotal * 0.08
 - delivery_fees_excluded: DECIMAL(12,2) - if excluding delivery from calc
 - status: "pending" | "locked" | "paid" | "disputed"
 - invoice_number: VARCHAR(50) - unique invoice identifier
@@ -43,7 +43,7 @@ platform_revenue_breakdown:
 - store_id: UUID (FK)
 - store_name: VARCHAR
 - order_count: INTEGER
-- gross_sales: DECIMAL(12,2)
+- subtotal: DECIMAL(12,2)
 - platform_fee: DECIMAL(12,2)
 - delivery_fees: DECIMAL(12,2)
 ```

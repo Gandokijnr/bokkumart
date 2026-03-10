@@ -61,7 +61,9 @@ export default defineEventHandler(async (event) => {
     }
 
     // Generate invoice number if not exists
-    const invoiceNumber = revenue.invoice_number || generateInvoiceNumber(revenue.year, revenue.month);
+    const invoiceNumber =
+      revenue.invoice_number ||
+      generateInvoiceNumber(revenue.year, revenue.month);
     const dueDays = body.dueDays || 7;
     const dueDate = new Date();
     dueDate.setDate(dueDate.getDate() + dueDays);
@@ -87,9 +89,12 @@ export default defineEventHandler(async (event) => {
     }
 
     // Format invoice data
-    const monthName = new Date(revenue.year, revenue.month - 1).toLocaleString("default", {
-      month: "long",
-    });
+    const monthName = new Date(revenue.year, revenue.month - 1).toLocaleString(
+      "default",
+      {
+        month: "long",
+      },
+    );
 
     const invoice = {
       invoice_number: invoiceNumber,
@@ -109,7 +114,7 @@ export default defineEventHandler(async (event) => {
       year: revenue.year,
       summary: {
         total_orders: revenue.total_orders,
-        gross_sales: revenue.gross_sales,
+        subtotal: revenue.subtotal,
         platform_percentage: revenue.platform_percentage,
         platform_fee: revenue.platform_fee,
         delivery_fees_excluded: revenue.delivery_fees_excluded,
@@ -117,7 +122,7 @@ export default defineEventHandler(async (event) => {
       breakdown: (revenue.platform_revenue_breakdown || []).map((b: any) => ({
         store_name: b.store_name || b.stores?.name || "Unknown",
         order_count: b.order_count,
-        gross_sales: b.gross_sales,
+        subtotal: b.subtotal,
         platform_fee: b.platform_fee,
       })),
       subtotal: revenue.platform_fee,
