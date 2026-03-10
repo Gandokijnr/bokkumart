@@ -3,48 +3,52 @@ const isClient = import.meta.client;
 
 // State
 const needRefresh = ref(false);
-const offlineReady = ref(false);
-let updateServiceWorker: (() => Promise<void>) | undefined;
 
-// Check for updates
-async function checkForUpdates() {
-  if (!isClient || !('serviceWorker' in navigator)) return;
+// Check for updates - non blocking
+function checkForUpdates() {
+  if (!isClient || !("serviceWorker" in navigator)) return;
 
-  try {
-    const registration = await navigator.serviceWorker.ready;
+  // Use timeout to avoid blocking page load
+  setTimeout(async () => {
+    try {
+      const registration = await navigator.serviceWorker.ready;
 
-    // Listen for updates
-    registration.addEventListener('updatefound', () => {
-      const newWorker = registration.installing;
-      if (!newWorker) return;
+      // Check if already waiting
+      if (registration.waiting) {
+        needRefresh.value = true;
+        return;
+      }
 
-      newWorker.addEventListener('statechange', () => {
-        if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-          // New version available
-          needRefresh.value = true;
-        }
+      // Listen for new updates
+      registration.addEventListener("updatefound", () => {
+        const newWorker = registration.installing;
+        if (!newWorker) return;
+
+        newWorker.addEventListener("statechange", () => {
+          if (
+            newWorker.state === "installed" &&
+            navigator.serviceWorker.controller
+          ) {
+            needRefresh.value = true;
+          }
+        });
       });
-    });
-
-    // Check if already waiting
-    if (registration.waiting) {
-      needRefresh.value = true;
+    } catch {
+      // Silent fail - not critical
     }
-  } catch {
-    // Silent fail - not critical
-  }
+  }, 2000); // Delay 2 seconds to let page load first
 }
 
 // Update the app
 async function updateApp() {
-  if (!isClient || !('serviceWorker' in navigator)) return;
+  if (!isClient || !("serviceWorker" in navigator)) return;
 
   try {
     const registration = await navigator.serviceWorker.ready;
 
     // Tell waiting worker to skip waiting
     if (registration.waiting) {
-      registration.waiting.postMessage({ type: 'SKIP_WAITING' });
+      registration.waiting.postMessage({ type: "SKIP_WAITING" });
     }
 
     // Reload to activate new version
@@ -59,7 +63,7 @@ async function updateApp() {
 function dismiss() {
   needRefresh.value = false;
   try {
-    localStorage.setItem('pwa_update_dismissed', Date.now().toString());
+    localStorage.setItem("pwa_update_dismissed", Date.now().toString());
   } catch {
     // ignore
   }
@@ -70,9 +74,10 @@ onMounted(() => {
 
   // Check if user dismissed recently (within 1 hour)
   try {
-    const dismissedAt = localStorage.getItem('pwa_update_dismissed');
+    const dismissedAt = localStorage.getItem("pwa_update_dismissed");
     if (dismissedAt) {
-      const hoursSince = (Date.now() - parseInt(dismissedAt)) / (1000 * 60 * 60);
+      const hoursSince =
+        (Date.now() - parseInt(dismissedAt)) / (1000 * 60 * 60);
       if (hoursSince < 1) {
         // Don't show again if dismissed within 1 hour
         return;
@@ -113,9 +118,7 @@ onMounted(() => {
 
         <!-- Text -->
         <div class="flex-1 min-w-0">
-          <div class="text-sm font-bold leading-tight">
-            Update Available
-          </div>
+          <div class="text-sm font-bold leading-tight">Update Available</div>
           <div class="text-xs leading-tight mt-0.5 opacity-90">
             A new version of HomeAffairs is ready to install
           </div>
