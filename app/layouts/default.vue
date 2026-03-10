@@ -1,6 +1,7 @@
 <template>
   <div class="min-h-screen bg-gray-50 flex flex-col">
     <IosInstallPrompt />
+    <AndroidInstallPrompt />
     <main class="flex-1 pb-20 md:pb-0">
       <slot />
     </main>
