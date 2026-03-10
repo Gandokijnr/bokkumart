@@ -229,7 +229,9 @@ onMounted(() => {
                 </svg>
               </div>
               <div class="flex-1">
-                <div class="text-sm font-semibold text-gray-900">Tap "Add"</div>
+                <div class="text-sm font-semibold text-gray-900">
+                  Tap "Add to Home Screen"
+                </div>
                 <div class="text-xs text-gray-500 mt-0.5 leading-relaxed">
                   Confirm by tapping
                   <span class="font-medium text-gray-700">Add</span> in the
