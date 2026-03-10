@@ -710,6 +710,7 @@ import {
   type FulfillmentType,
 } from "~/composables/useUserOrders";
 import { useToast } from "~/composables/useToast";
+import { getSafeErrorMessage } from "~/utils/errorHandler";
 import OrderVerificationModal from "~/components/OrderVerificationModal.vue";
 import DriverAssignment from "~/components/DriverAssignment.vue";
 
@@ -1200,7 +1201,7 @@ const verifyCollection = async () => {
     showVerifyCollection.value = false;
     await updateStatus(selectedOrder.value, "delivered");
   } catch (e: any) {
-    verifyError.value = e?.statusMessage || e?.message || "Validation failed";
+    verifyError.value = getSafeErrorMessage(e);
   } finally {
     verifyingCollection.value = false;
   }
@@ -1246,8 +1247,7 @@ const verifyDeliveryPin = async () => {
     showVerifyDeliveryPin.value = false;
     await updateStatus(selectedOrder.value, "delivered");
   } catch (e: any) {
-    deliveryPinError.value =
-      e?.statusMessage || e?.message || "Validation failed";
+    deliveryPinError.value = getSafeErrorMessage(e);
   } finally {
     verifyingDeliveryPin.value = false;
   }
@@ -1315,8 +1315,7 @@ async function onVerifyModalSubmit(code: string) {
       await fetchOrders();
     }
   } catch (e: any) {
-    verifyModalError.value =
-      e?.statusMessage || e?.message || "Verification failed";
+    verifyModalError.value = getSafeErrorMessage(e);
   } finally {
     verifyingModal.value = false;
   }
@@ -1355,7 +1354,8 @@ async function onVerifyCollectionSubmit(code: string) {
     showVerifyCollection.value = false;
     await updateStatus(selectedOrder.value, "delivered", code);
   } catch (e: any) {
-    verifyError.value = e?.statusMessage || e?.message || "Validation failed";
+    // Use global error handler for safe, user-friendly messages
+    verifyError.value = getSafeErrorMessage(e);
   } finally {
     verifyingCollection.value = false;
   }
@@ -1394,8 +1394,8 @@ async function onVerifyDeliverySubmit(pin: string) {
     // verify-delivery-pin API already updates status to delivered
     await fetchOrders();
   } catch (e: any) {
-    deliveryPinError.value =
-      e?.statusMessage || e?.message || "Validation failed";
+    // Use global error handler for safe, user-friendly messages
+    deliveryPinError.value = getSafeErrorMessage(e);
   } finally {
     verifyingDeliveryPin.value = false;
   }
