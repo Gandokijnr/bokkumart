@@ -41,6 +41,76 @@
         />
       </div>
 
+      <details class="relative">
+        <summary
+          class="list-none cursor-pointer rounded-lg bg-gray-100 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-200"
+        >
+          Columns
+        </summary>
+        <div
+          class="absolute right-0 mt-2 w-56 rounded-xl border border-gray-200 bg-white p-3 shadow-lg z-10"
+        >
+          <label class="flex items-center gap-2 text-sm text-gray-700">
+            <input
+              type="checkbox"
+              :checked="allColumnsVisible"
+              @change="toggleAllColumns"
+              class="h-4 w-4"
+            />
+            Show all columns
+          </label>
+          <div class="my-2 border-t border-gray-200" />
+          <label class="flex items-center gap-2 text-sm text-gray-700 py-1">
+            <input
+              v-model="columnVisibility.product"
+              type="checkbox"
+              class="h-4 w-4"
+            />
+            Product
+          </label>
+          <label class="flex items-center gap-2 text-sm text-gray-700 py-1">
+            <input
+              v-model="columnVisibility.store"
+              type="checkbox"
+              class="h-4 w-4"
+            />
+            Store
+          </label>
+          <label class="flex items-center gap-2 text-sm text-gray-700 py-1">
+            <input
+              v-model="columnVisibility.stock"
+              type="checkbox"
+              class="h-4 w-4"
+            />
+            Stock Level
+          </label>
+          <label class="flex items-center gap-2 text-sm text-gray-700 py-1">
+            <input
+              v-model="columnVisibility.status"
+              type="checkbox"
+              class="h-4 w-4"
+            />
+            Status
+          </label>
+          <label class="flex items-center gap-2 text-sm text-gray-700 py-1">
+            <input
+              v-model="columnVisibility.updated"
+              type="checkbox"
+              class="h-4 w-4"
+            />
+            Last Updated
+          </label>
+          <label class="flex items-center gap-2 text-sm text-gray-700 py-1">
+            <input
+              v-model="columnVisibility.actions"
+              type="checkbox"
+              class="h-4 w-4"
+            />
+            Actions
+          </label>
+        </div>
+      </details>
+
       <select
         v-if="!isBranchManager"
         v-model="storeFilter"
@@ -82,6 +152,16 @@
         <option value="out_of_stock">Out of Stock</option>
       </select>
 
+      <!-- Missing Images Filter -->
+      <select
+        v-model="imageFilter"
+        class="rounded-lg border border-gray-300 px-3 py-2 focus:border-red-500 focus:outline-none"
+      >
+        <option value="">All Images</option>
+        <option value="missing">Missing Images Only</option>
+        <option value="has_image">Has Images Only</option>
+      </select>
+
       <button
         @click="fetchInventory"
         class="rounded-lg bg-gray-100 p-2 text-gray-600 hover:bg-gray-200"
@@ -109,11 +189,64 @@
       </button>
 
       <button
+        @click="showRetailManModal = true"
+        class="rounded-lg bg-purple-600 px-4 py-2 text-sm font-bold text-white hover:bg-purple-700"
+      >
+        Retail Man Import
+      </button>
+
+      <button
         @click="openManualModal"
         class="rounded-lg bg-red-600 px-4 py-2 text-sm font-bold text-white hover:bg-red-700"
       >
         Add Item
       </button>
+    </div>
+
+    <!-- Batch Selection Bar -->
+    <div
+      v-if="selectedItems.size > 0"
+      class="mb-4 rounded-xl bg-blue-50 border border-blue-200 p-4 flex items-center justify-between"
+    >
+      <div class="flex items-center gap-3">
+        <span class="text-sm font-medium text-blue-900">
+          {{ selectedItems.size }} item(s) selected
+        </span>
+      </div>
+      <div class="flex gap-2">
+        <button
+          @click="bulkToggleVisibility(true)"
+          class="rounded-lg bg-blue-100 px-3 py-1.5 text-xs font-bold text-blue-700 hover:bg-blue-200"
+        >
+          Show on Web
+        </button>
+        <button
+          @click="bulkToggleVisibility(false)"
+          class="rounded-lg bg-gray-100 px-3 py-1.5 text-xs font-bold text-gray-700 hover:bg-gray-200"
+        >
+          Hide from Web
+        </button>
+        <button
+          v-if="!isBranchManager"
+          @click="showBulkCategoryModal = true"
+          class="rounded-lg bg-purple-100 px-3 py-1.5 text-xs font-bold text-purple-700 hover:bg-purple-200"
+        >
+          Change Category
+        </button>
+        <button
+          v-if="!isBranchManager"
+          @click="confirmBulkDelete"
+          class="rounded-lg bg-red-100 px-3 py-1.5 text-xs font-bold text-red-700 hover:bg-red-200"
+        >
+          Bulk Delete
+        </button>
+        <button
+          @click="clearSelection()"
+          class="rounded-lg bg-white border border-gray-300 px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-50"
+        >
+          Clear Selection
+        </button>
+      </div>
     </div>
 
     <!-- Inventory Grid -->
@@ -122,32 +255,46 @@
         <table class="w-full">
           <thead class="bg-gray-50">
             <tr>
+              <th class="px-3 py-3 w-10">
+                <input
+                  type="checkbox"
+                  :checked="isAllSelected"
+                  @change="toggleSelectAll"
+                  class="h-4 w-4 rounded border-gray-300 text-red-600 focus:ring-red-500"
+                />
+              </th>
               <th
+                v-if="columnVisibility.product"
                 class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase"
               >
                 Product
               </th>
               <th
+                v-if="columnVisibility.store"
                 class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase"
               >
                 Store
               </th>
               <th
+                v-if="columnVisibility.stock"
                 class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase"
               >
                 Stock Level
               </th>
               <th
+                v-if="columnVisibility.status"
                 class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase"
               >
                 Status
               </th>
               <th
+                v-if="columnVisibility.updated"
                 class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase"
               >
                 Last Updated
               </th>
               <th
+                v-if="columnVisibility.actions"
                 class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase"
               >
                 Actions
@@ -159,8 +306,17 @@
               v-for="item in filteredInventory"
               :key="item.id"
               class="hover:bg-gray-50"
+              :class="{ 'bg-blue-50': selectedItems.has(item.product?.sku) }"
             >
-              <td class="px-4 py-3">
+              <td class="px-3 py-3">
+                <input
+                  type="checkbox"
+                  :checked="selectedItems.has(item.product?.sku)"
+                  @change="toggleSelection(item)"
+                  class="h-4 w-4 rounded border-gray-300 text-red-600 focus:ring-red-500"
+                />
+              </td>
+              <td v-if="columnVisibility.product" class="px-4 py-3">
                 <div class="flex items-center gap-3">
                   <img
                     v-if="item.product?.image_url"
@@ -179,15 +335,23 @@
                       {{ item.product?.name || "Unknown" }}
                     </p>
                     <p class="text-xs text-gray-500">
-                      {{ item.product?.category }}
+                      SKU: {{ item.product?.sku || "N/A" }}
+                    </p>
+                    <p class="text-xs text-gray-400">
+                      {{
+                        item.product?.category?.name || item.product?.category
+                      }}
                     </p>
                   </div>
                 </div>
               </td>
-              <td class="px-4 py-3 text-sm text-gray-700">
+              <td
+                v-if="columnVisibility.store"
+                class="px-4 py-3 text-sm text-gray-700"
+              >
                 {{ item.store?.name || "All Stores" }}
               </td>
-              <td class="px-4 py-3">
+              <td v-if="columnVisibility.stock" class="px-4 py-3">
                 <div class="flex items-center gap-2">
                   <input
                     v-model="item.quantity"
@@ -199,7 +363,7 @@
                   <span class="text-xs text-gray-500">units</span>
                 </div>
               </td>
-              <td class="px-4 py-3">
+              <td v-if="columnVisibility.status" class="px-4 py-3">
                 <span
                   class="rounded-full px-2 py-1 text-xs font-bold"
                   :class="getStatusClass(item)"
@@ -207,33 +371,113 @@
                   {{ getStatusLabel(item) }}
                 </span>
               </td>
-              <td class="px-4 py-3 text-sm text-gray-500">
+              <td
+                v-if="columnVisibility.updated"
+                class="px-4 py-3 text-sm text-gray-500"
+              >
                 {{ formatTime(item.updated_at) }}
               </td>
-              <td class="px-4 py-3">
-                <div class="flex gap-2">
+              <td v-if="columnVisibility.actions" class="px-4 py-3">
+                <div class="flex items-center gap-1">
+                  <!-- Edit Button -->
+                  <button
+                    @click="editProduct(item)"
+                    class="p-1.5 rounded-lg text-blue-600 hover:bg-blue-100 transition-colors"
+                    title="Edit Product"
+                  >
+                    <svg
+                      class="h-4 w-4"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                      />
+                    </svg>
+                  </button>
+
+                  <!-- Toggle Visibility Button -->
                   <button
                     @click="toggleAvailability(item)"
-                    :class="
+                    :class="[
+                      'p-1.5 rounded-lg transition-colors',
                       item.is_available
-                        ? 'rounded-lg bg-green-100 px-3 py-1.5 text-xs font-bold text-green-700 hover:bg-green-200'
-                        : 'rounded-lg bg-red-100 px-3 py-1.5 text-xs font-bold text-red-700 hover:bg-red-200'
+                        ? 'text-green-600 hover:bg-green-100'
+                        : 'text-gray-400 hover:bg-gray-100',
+                    ]"
+                    :title="
+                      item.is_available ? 'Visible on Web' : 'Hidden from Web'
                     "
                   >
-                    {{ item.is_available ? "Available" : "Unavailable" }}
+                    <svg
+                      v-if="item.is_available"
+                      class="h-4 w-4"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                      />
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+                      />
+                    </svg>
+                    <svg
+                      v-else
+                      class="h-4 w-4"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"
+                      />
+                    </svg>
                   </button>
+
+                  <!-- Delete Button -->
                   <button
-                    v-if="item.quantity <= 5 && item.quantity > 0"
-                    @click="restockItem(item)"
-                    class="rounded-lg bg-orange-100 px-3 py-1.5 text-xs font-bold text-orange-700 hover:bg-orange-200"
+                    v-if="!isBranchManager"
+                    @click="confirmDelete(item)"
+                    class="p-1.5 rounded-lg text-red-600 hover:bg-red-100 transition-colors"
+                    title="Delete Product"
                   >
-                    Restock
+                    <svg
+                      class="h-4 w-4"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                      />
+                    </svg>
                   </button>
                 </div>
               </td>
             </tr>
             <tr v-if="filteredInventory.length === 0">
-              <td colspan="6" class="px-4 py-8 text-center text-gray-500">
+              <td
+                :colspan="visibleTableColumnCount"
+                class="px-4 py-8 text-center text-gray-500"
+              >
                 No inventory items found
               </td>
             </tr>
@@ -258,6 +502,182 @@
         >
           Export Inventory Report
         </button>
+      </div>
+    </div>
+
+    <!-- Product Edit Modal (Slide-over) -->
+    <ProductEditModal
+      v-model="showEditModal"
+      :product-sku="editingProductSku"
+      :categories="categories"
+      @saved="fetchInventory"
+      @deleted="fetchInventory"
+    />
+
+    <!-- Bulk Category Modal -->
+    <div
+      v-if="showBulkCategoryModal"
+      class="fixed inset-0 bg-black/50 z-[60] flex items-center justify-center p-4"
+    >
+      <div class="bg-white rounded-xl shadow-xl max-w-md w-full p-6">
+        <h3 class="text-lg font-bold text-gray-900 mb-4">Change Category</h3>
+        <p class="text-sm text-gray-600 mb-4">
+          Change category for {{ selectedItems.size }} selected item(s)
+        </p>
+        <select
+          v-model="bulkCategoryId"
+          class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-red-500 focus:outline-none mb-4"
+        >
+          <option value="">Select category...</option>
+          <option v-for="cat in categories" :key="cat.id" :value="cat.id">
+            {{ cat.name }}
+          </option>
+        </select>
+        <div class="flex justify-end gap-3">
+          <button
+            @click="showBulkCategoryModal = false"
+            class="px-4 py-2 rounded-lg border border-gray-300 text-sm font-medium text-gray-700 hover:bg-gray-50"
+          >
+            Cancel
+          </button>
+          <button
+            @click="executeBulkCategoryChange"
+            :disabled="!bulkCategoryId || bulkProcessing"
+            class="px-4 py-2 rounded-lg bg-purple-600 text-white text-sm font-bold hover:bg-purple-700 disabled:opacity-50"
+          >
+            {{ bulkProcessing ? "Processing..." : "Change Category" }}
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Delete Confirmation Modal -->
+    <div
+      v-if="showDeleteModal"
+      class="fixed inset-0 bg-black/60 z-[60] flex items-center justify-center p-4"
+    >
+      <div class="bg-white rounded-xl shadow-2xl max-w-md w-full p-6">
+        <div class="flex items-center gap-3 mb-4">
+          <div
+            class="h-10 w-10 rounded-full bg-red-100 flex items-center justify-center"
+          >
+            <svg
+              class="h-6 w-6 text-red-600"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+              />
+            </svg>
+          </div>
+          <h3 class="text-lg font-bold text-gray-900">Delete Product?</h3>
+        </div>
+
+        <p class="text-sm text-gray-600 mb-4">
+          This will permanently delete
+          <strong>{{ deleteTarget?.product?.name }}</strong> and all associated
+          inventory records. This action cannot be undone.
+        </p>
+
+        <!-- High-value confirmation -->
+        <div
+          v-if="deleteTarget && (deleteTarget.product?.price || 0) > 10000"
+          class="mb-4"
+        >
+          <label class="block text-sm font-medium text-gray-700 mb-2">
+            Type <span class="font-bold text-red-600">DELETE</span> to confirm:
+          </label>
+          <input
+            v-model="deleteConfirmText"
+            type="text"
+            class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-red-500 focus:outline-none"
+            placeholder="Type DELETE"
+          />
+        </div>
+
+        <div class="flex gap-3 justify-end">
+          <button
+            @click="showDeleteModal = false"
+            class="px-4 py-2 rounded-lg border border-gray-300 text-sm font-medium text-gray-700 hover:bg-gray-50"
+          >
+            Cancel
+          </button>
+          <button
+            @click="executeDelete"
+            :disabled="requiresDeleteConfirm && deleteConfirmText !== 'DELETE'"
+            class="px-4 py-2 rounded-lg bg-red-600 text-white text-sm font-bold hover:bg-red-700 disabled:opacity-50"
+          >
+            {{ deleteProcessing ? "Deleting..." : "Delete Permanently" }}
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bulk Delete Confirmation Modal -->
+    <div
+      v-if="showBulkDeleteModal"
+      class="fixed inset-0 bg-black/60 z-[60] flex items-center justify-center p-4"
+    >
+      <div class="bg-white rounded-xl shadow-2xl max-w-md w-full p-6">
+        <div class="flex items-center gap-3 mb-4">
+          <div
+            class="h-10 w-10 rounded-full bg-red-100 flex items-center justify-center"
+          >
+            <svg
+              class="h-6 w-6 text-red-600"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+              />
+            </svg>
+          </div>
+          <h3 class="text-lg font-bold text-gray-900">Bulk Delete?</h3>
+        </div>
+
+        <p class="text-sm text-gray-600 mb-4">
+          You are about to delete
+          <strong>{{ selectedItems.size }}</strong> products and all their
+          associated inventory records. This action cannot be undone.
+        </p>
+
+        <div class="mb-4">
+          <label class="block text-sm font-medium text-gray-700 mb-2">
+            Type <span class="font-bold text-red-600">DELETE</span> to confirm:
+          </label>
+          <input
+            v-model="bulkDeleteConfirmText"
+            type="text"
+            class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-red-500 focus:outline-none"
+            placeholder="Type DELETE"
+          />
+        </div>
+
+        <div class="flex gap-3 justify-end">
+          <button
+            @click="showBulkDeleteModal = false"
+            class="px-4 py-2 rounded-lg border border-gray-300 text-sm font-medium text-gray-700 hover:bg-gray-50"
+          >
+            Cancel
+          </button>
+          <button
+            @click="executeBulkDelete"
+            :disabled="bulkDeleteConfirmText !== 'DELETE' || bulkProcessing"
+            class="px-4 py-2 rounded-lg bg-red-600 text-white text-sm font-bold hover:bg-red-700 disabled:opacity-50"
+          >
+            {{ bulkProcessing ? "Deleting..." : "Delete All Selected" }}
+          </button>
+        </div>
       </div>
     </div>
 
@@ -713,6 +1133,50 @@
         </div>
       </div>
     </div>
+    <!-- Retail Man Import Modal -->
+    <div
+      v-if="showRetailManModal"
+      class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
+    >
+      <div
+        class="bg-white rounded-xl shadow-xl max-w-3xl w-full max-h-[90vh] overflow-y-auto"
+      >
+        <div
+          class="px-6 py-4 border-b border-gray-200 flex items-center justify-between"
+        >
+          <div>
+            <h3 class="text-lg font-semibold text-gray-900">
+              Retail Man Bulk Import
+            </h3>
+            <p class="text-sm text-gray-600">
+              Import from Retail Man POS exports
+            </p>
+          </div>
+          <button
+            @click="showRetailManModal = false"
+            class="text-gray-400 hover:text-gray-600"
+          >
+            <svg
+              class="w-6 h-6"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M6 18L18 6M6 6l12 12"
+              />
+            </svg>
+          </button>
+        </div>
+
+        <div class="p-6">
+          <RetailManImporter />
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -732,10 +1196,32 @@ const userStore = useUserStore();
 
 const inventory = ref<any[]>([]);
 const stores = ref<any[]>([]);
+const categories = ref<any[]>([]);
 const searchQuery = ref("");
 const storeFilter = ref("");
 const statusFilter = ref("");
+const imageFilter = ref(""); // missing, has_image, or empty
 const processing = ref<Set<string>>(new Set());
+
+// Batch Selection
+const selectedItems = ref<Set<string>>(new Set());
+
+// Edit Modal
+const showEditModal = ref(false);
+const editingProductSku = ref<string | null>(null);
+
+// Delete Confirmation
+const showDeleteModal = ref(false);
+const deleteTarget = ref<any>(null);
+const deleteConfirmText = ref("");
+const deleteProcessing = ref(false);
+
+// Bulk Operations
+const showBulkCategoryModal = ref(false);
+const showBulkDeleteModal = ref(false);
+const bulkCategoryId = ref("");
+const bulkProcessing = ref(false);
+const bulkDeleteConfirmText = ref("");
 
 // CSV Upload
 const showUploadModal = ref(false);
@@ -744,6 +1230,9 @@ const uploading = ref(false);
 const dragOver = ref(false);
 const fileInput = ref<HTMLInputElement>();
 const uploadStoreId = ref("");
+
+// Retail Man Import
+const showRetailManModal = ref(false);
 
 const isBranchManager = computed(() => {
   const jwtRole =
@@ -756,7 +1245,53 @@ const isBranchManager = computed(() => {
 const managedStores = computed(() => userStore.managedStores);
 
 const storeOptions = computed(() => {
-  return isBranchManager.value ? userStore.managedStores || [] : stores.value;
+  if (isBranchManager.value && managedStores.value.length > 0) {
+    return managedStores.value;
+  }
+  return stores.value;
+});
+
+const isAllSelected = computed(() => {
+  const skus = filteredInventory.value
+    .map((item) => item.product?.sku)
+    .filter(Boolean);
+  return skus.length > 0 && skus.every((sku) => selectedItems.value.has(sku));
+});
+
+const columnVisibility = ref({
+  product: true,
+  store: true,
+  stock: true,
+  status: true,
+  updated: true,
+  actions: true,
+});
+
+const allColumnsVisible = computed(() => {
+  return Object.values(columnVisibility.value).every(Boolean);
+});
+
+const visibleTableColumnCount = computed(() => {
+  const visibleCount = Object.values(columnVisibility.value).filter(
+    Boolean,
+  ).length;
+  return 1 + visibleCount;
+});
+
+const toggleAllColumns = (event: Event) => {
+  const checked = (event.target as HTMLInputElement).checked;
+  columnVisibility.value = {
+    product: checked,
+    store: checked,
+    stock: checked,
+    status: checked,
+    updated: checked,
+    actions: checked,
+  };
+};
+
+const requiresDeleteConfirm = computed(() => {
+  return (deleteTarget.value?.product?.price || 0) > 10000;
 });
 
 // Manual Entry
@@ -805,6 +1340,9 @@ const filteredInventory = computed(() => {
       !searchQuery.value ||
       item.product?.name
         ?.toLowerCase()
+        .includes(searchQuery.value.toLowerCase()) ||
+      item.product?.sku
+        ?.toLowerCase()
         .includes(searchQuery.value.toLowerCase());
 
     const matchesStore =
@@ -820,7 +1358,15 @@ const filteredInventory = computed(() => {
       matchesStatus = !item.is_available || item.quantity === 0;
     }
 
-    return matchesSearch && matchesStore && matchesStatus;
+    // Image filter
+    let matchesImage = true;
+    if (imageFilter.value === "missing") {
+      matchesImage = !item.product?.image_url;
+    } else if (imageFilter.value === "has_image") {
+      matchesImage = !!item.product?.image_url;
+    }
+
+    return matchesSearch && matchesStore && matchesStatus && matchesImage;
   });
 });
 
@@ -855,6 +1401,15 @@ const fetchStores = async () => {
   if (data) stores.value = data;
 };
 
+const fetchCategories = async () => {
+  const { data } = await supabase
+    .from("categories")
+    .select("id, name")
+    .eq("is_active", true)
+    .order("name");
+  if (data) categories.value = data;
+};
+
 const downloadTemplate = () => {
   const csv =
     "name,sku,category,description,price,cost_price,unit,stock_level,store_price,digital_buffer,image_url\n" +
@@ -868,6 +1423,208 @@ const downloadTemplate = () => {
   a.download = `inventory-template-${new Date().toISOString().split("T")[0]}.csv`;
   a.click();
   URL.revokeObjectURL(url);
+};
+
+const editProduct = (item: any) => {
+  editingProductSku.value = item.product?.sku || null;
+  showEditModal.value = true;
+};
+
+const confirmDelete = (item: any) => {
+  deleteTarget.value = item;
+  deleteConfirmText.value = "";
+  showDeleteModal.value = true;
+};
+
+const executeDelete = async () => {
+  if (!deleteTarget.value?.product?.sku) return;
+  if (requiresDeleteConfirm.value && deleteConfirmText.value !== "DELETE")
+    return;
+
+  deleteProcessing.value = true;
+  try {
+    const { data: sessionData } = await supabase.auth.getSession();
+    const accessToken = sessionData?.session?.access_token;
+    if (!accessToken) throw new Error("Not authenticated");
+
+    await $fetch("/api/admin/products/delete", {
+      method: "DELETE",
+      headers: { Authorization: `Bearer ${accessToken}` },
+      body: { sku: deleteTarget.value.product.sku },
+    });
+
+    toast.add({
+      title: "Deleted",
+      description: "Product deleted successfully",
+      color: "success",
+    });
+
+    showDeleteModal.value = false;
+    await fetchInventory();
+  } catch (err: any) {
+    toast.add({
+      title: "Error",
+      description: err?.data?.message || err?.message || "Failed to delete",
+      color: "error",
+    });
+  } finally {
+    deleteProcessing.value = false;
+  }
+};
+
+// Batch Selection Functions
+const toggleSelectAll = () => {
+  const skus = filteredInventory.value
+    .map((item) => item.product?.sku)
+    .filter(Boolean);
+  if (isAllSelected.value) {
+    skus.forEach((sku) => selectedItems.value.delete(sku));
+  } else {
+    skus.forEach((sku) => selectedItems.value.add(sku));
+  }
+  selectedItems.value = new Set(selectedItems.value);
+};
+
+const toggleSelection = (item: any) => {
+  const sku = item.product?.sku;
+  if (!sku) return;
+  if (selectedItems.value.has(sku)) {
+    selectedItems.value.delete(sku);
+  } else {
+    selectedItems.value.add(sku);
+  }
+  selectedItems.value = new Set(selectedItems.value);
+};
+
+const clearSelection = () => {
+  selectedItems.value.clear();
+  selectedItems.value = new Set();
+};
+
+// Bulk Operations
+const bulkToggleVisibility = async (isVisible: boolean) => {
+  if (selectedItems.value.size === 0) return;
+  bulkProcessing.value = true;
+  try {
+    const { data: sessionData } = await supabase.auth.getSession();
+    const accessToken = sessionData?.session?.access_token;
+    if (!accessToken) throw new Error("Not authenticated");
+
+    await $fetch("/api/admin/products/bulk", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${accessToken}` },
+      body: {
+        operation: "toggle_visibility",
+        skus: Array.from(selectedItems.value),
+        is_visible: isVisible,
+      },
+    });
+
+    toast.add({
+      title: "Success",
+      description: `${selectedItems.value.size} products updated`,
+      color: "success",
+    });
+
+    selectedItems.value.clear();
+    selectedItems.value = new Set();
+    await fetchInventory();
+  } catch (err: any) {
+    toast.add({
+      title: "Error",
+      description: err?.data?.message || "Bulk update failed",
+      color: "error",
+    });
+  } finally {
+    bulkProcessing.value = false;
+  }
+};
+
+const confirmBulkDelete = () => {
+  bulkDeleteConfirmText.value = "";
+  showBulkDeleteModal.value = true;
+};
+
+const executeBulkDelete = async () => {
+  if (
+    bulkDeleteConfirmText.value !== "DELETE" ||
+    selectedItems.value.size === 0
+  )
+    return;
+  bulkProcessing.value = true;
+  try {
+    const { data: sessionData } = await supabase.auth.getSession();
+    const accessToken = sessionData?.session?.access_token;
+    if (!accessToken) throw new Error("Not authenticated");
+
+    await $fetch("/api/admin/products/bulk", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${accessToken}` },
+      body: {
+        operation: "delete",
+        skus: Array.from(selectedItems.value),
+      },
+    });
+
+    toast.add({
+      title: "Deleted",
+      description: `${selectedItems.value.size} products deleted`,
+      color: "success",
+    });
+
+    showBulkDeleteModal.value = false;
+    selectedItems.value.clear();
+    selectedItems.value = new Set();
+    await fetchInventory();
+  } catch (err: any) {
+    toast.add({
+      title: "Error",
+      description: err?.data?.message || "Bulk delete failed",
+      color: "error",
+    });
+  } finally {
+    bulkProcessing.value = false;
+  }
+};
+
+const executeBulkCategoryChange = async () => {
+  if (!bulkCategoryId.value || selectedItems.value.size === 0) return;
+  bulkProcessing.value = true;
+  try {
+    const { data: sessionData } = await supabase.auth.getSession();
+    const accessToken = sessionData?.session?.access_token;
+    if (!accessToken) throw new Error("Not authenticated");
+
+    await $fetch("/api/admin/products/bulk", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${accessToken}` },
+      body: {
+        operation: "change_category",
+        skus: Array.from(selectedItems.value),
+        category_id: bulkCategoryId.value,
+      },
+    });
+
+    toast.add({
+      title: "Success",
+      description: `${selectedItems.value.size} products moved to new category`,
+      color: "success",
+    });
+
+    showBulkCategoryModal.value = false;
+    bulkCategoryId.value = "";
+    selectedItems.value.clear();
+    selectedItems.value = new Set();
+    await fetchInventory();
+  } catch (err: any) {
+    toast.add({
+      title: "Error",
+      description: err?.data?.message || "Category change failed",
+      color: "error",
+    });
+  } finally {
+    bulkProcessing.value = false;
+  }
 };
 
 const handleFileSelect = (event: Event) => {
@@ -1305,5 +2062,6 @@ const exportInventory = () => {
 onMounted(() => {
   fetchInventory();
   fetchStores();
+  fetchCategories();
 });
 </script>

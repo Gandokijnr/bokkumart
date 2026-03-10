@@ -399,6 +399,7 @@ export interface Database {
           cost_price: number | null;
           unit: string;
           image_url: string | null;
+          is_visible: boolean;
           is_active: boolean;
           metadata: Json | null;
           created_at: string;
@@ -416,6 +417,7 @@ export interface Database {
           cost_price?: number | null;
           unit?: string;
           image_url?: string | null;
+          is_visible?: boolean;
           is_active?: boolean;
           metadata?: Json | null;
           created_at?: string;
@@ -433,6 +435,7 @@ export interface Database {
           cost_price?: number | null;
           unit?: string;
           image_url?: string | null;
+          is_visible?: boolean;
           is_active?: boolean;
           metadata?: Json | null;
           created_at?: string;
