@@ -44,12 +44,6 @@
           >
             Back to home
           </NuxtLink>
-          <NuxtLink
-            to="/auth"
-            class="w-full rounded-xl bg-gray-100 px-4 py-3 text-sm font-semibold text-gray-700 hover:bg-gray-200 transition-colors"
-          >
-            Sign in
-          </NuxtLink>
         </div>
       </div>
     </div>
