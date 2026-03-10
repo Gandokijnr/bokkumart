@@ -716,17 +716,31 @@ const adminStore = useAdminStore();
 
 // Get current user role
 const currentUserRole = computed(() => userStore.profile?.role || "customer");
-// Branch manager store_id - check profile.store_id first, fallback to first managed store
-const currentUserStoreId = computed(() => {
+
+// Get all store IDs for the current branch manager (supports multiple branches)
+const currentUserStoreIds = computed(() => {
+  const storeIds: string[] = [];
+
   // First try profile.store_id
   if (userStore.profile?.store_id) {
-    return userStore.profile.store_id;
+    storeIds.push(userStore.profile.store_id);
   }
-  // Fallback to first managed store (for branch managers with managed_store_ids but no store_id)
+
+  // Add all managed stores (for branch managers with managed_store_ids)
   if (userStore.managedStores?.length > 0) {
-    return userStore.managedStores[0]?.id ?? null;
+    for (const store of userStore.managedStores) {
+      if (store?.id && !storeIds.includes(store.id)) {
+        storeIds.push(store.id);
+      }
+    }
   }
-  return null;
+
+  return storeIds;
+});
+
+// Backwards compatibility - returns first store ID or null
+const currentUserStoreId = computed(() => {
+  return currentUserStoreIds.value[0] ?? null;
 });
 
 // Super admin branch filter from admin store
@@ -1590,18 +1604,18 @@ const fetchOrders = async () => {
   console.log(
     "[Orders] Role:",
     currentUserRole.value,
-    "Store ID:",
-    currentUserStoreId.value,
+    "Store IDs:",
+    currentUserStoreIds.value,
   );
 
   if (currentUserRole.value === "branch_manager") {
-    if (currentUserStoreId.value) {
-      // Branch managers only see orders for their assigned store
+    if (currentUserStoreIds.value.length > 0) {
+      // Branch managers see orders for ALL their assigned stores
       console.log(
-        "[Orders] Applying branch manager filter for store:",
-        currentUserStoreId.value,
+        "[Orders] Applying branch manager filter for stores:",
+        currentUserStoreIds.value,
       );
-      query = query.eq("store_id", currentUserStoreId.value);
+      query = query.in("store_id", currentUserStoreIds.value);
     } else {
       // No store assigned - show warning and return empty (should not happen)
       console.error("[Orders] Branch manager has no store_id assigned!");
@@ -1674,16 +1688,22 @@ const fetchOrders = async () => {
 };
 
 const fetchStores = async () => {
-  // Branch managers: only fetch their assigned store
-  if (currentUserRole.value === "branch_manager" && currentUserStoreId.value) {
+  // Branch managers: fetch ALL their assigned stores
+  if (
+    currentUserRole.value === "branch_manager" &&
+    currentUserStoreIds.value.length > 0
+  ) {
     const { data } = await supabase
       .from("stores")
       .select("id, name")
-      .eq("id", currentUserStoreId.value)
+      .in("id", currentUserStoreIds.value)
       .eq("is_active", true);
     if (data) stores.value = data;
-    // Auto-set the store filter to their branch
-    storeFilter.value = currentUserStoreId.value;
+    // Only auto-set filter if manager has exactly ONE store
+    // For multi-store managers, leave filter empty to show all orders
+    if (currentUserStoreIds.value.length === 1) {
+      storeFilter.value = currentUserStoreId.value || "";
+    }
     return;
   }
 
