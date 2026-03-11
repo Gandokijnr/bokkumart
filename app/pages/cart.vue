@@ -104,15 +104,13 @@
             <CartSummary
               :item-count="cartStore.cartCount"
               :subtotal="cartStore.cartSubtotal"
-              :delivery-fee="cartStore.deliveryFee"
-              :service-fee="serviceFee"
-              :total="totalWithService"
-              :delivery-calculated="deliveryCalculated"
+              :logistics-bundle-fee="cartStore.logisticsBundleFee"
+              :handling-fee="cartStore.handlingFee"
+              :total="displayTotal"
               :delivery-details="cartStore.deliveryDetails"
               :store-name="cartStore.currentStoreName || 'HomeAffairs Store'"
               v-model:order-note="orderNote"
               :has-out-of-stock-items="hasOutOfStockItems"
-              @calculate-delivery="calculateDelivery"
               @checkout="proceedToCheckout"
             />
           </div>
@@ -121,7 +119,7 @@
         <!-- Mobile Sticky Checkout Bar -->
         <MobileCheckoutBar
           :show="cartStore.items.length > 0"
-          :total="totalWithService"
+          :total="displayTotal"
           :disabled="hasOutOfStockItems"
           @checkout="proceedToCheckout"
         />
@@ -202,17 +200,19 @@ const crossSellProducts = ref<
 >([]);
 
 // Computed values
-const { serviceFee } = useFees({
-  subtotal: computed(() => cartStore.cartSubtotal),
-  fulfillmentMode: computed(
-    () => cartStore.deliveryDetails?.method || "delivery",
-  ),
-});
-const totalWithService = computed(
-  () => cartStore.cartSubtotal + cartStore.deliveryFee + serviceFee.value,
-);
 const hasOutOfStockItems = computed(() => {
   return cartStore.items.some((item) => item.quantity > item.max_quantity);
+});
+
+const displayTotal = computed(() => {
+  const method = cartStore.deliveryDetails?.method;
+  if (!method) return cartStore.cartSubtotal;
+
+  if (method === "pickup") {
+    return cartStore.cartSubtotal + cartStore.handlingFee;
+  }
+
+  return cartStore.finalTotal;
 });
 
 // Methods

@@ -45,6 +45,8 @@ export interface CartState {
   reservationExpiry: number | null;
   isLoading: boolean;
   fetchedForUserId: string | null;
+  // Track ongoing save to prevent race conditions
+  _savePromise: Promise<boolean> | null;
 }
 
 const CART_RETENTION_KEY = "ha_cart_retention_until";
@@ -61,6 +63,7 @@ export const useCartStore = defineStore("cart", {
     reservationExpiry: null,
     isLoading: false,
     fetchedForUserId: null,
+    _savePromise: null,
   }),
 
   getters: {
@@ -75,8 +78,19 @@ export const useCartStore = defineStore("cart", {
       );
     },
 
-    deliveryFee: (state): number => {
+    // === LOGISTICS & HANDLING FEE BUNDLE ===
+    // Single fee combining zone delivery + payment processing + platform profit
+    // This ensures the platform never runs at a loss on any order
+
+    /**
+     * Base zone-based delivery fee (0 for pickup orders or when no zone selected)
+     */
+    baseDeliveryFee: (state): number => {
       if (!state.deliveryDetails || state.deliveryDetails.method === "pickup") {
+        return 0;
+      }
+      // If delivery method selected but no zone chosen yet, don't charge delivery fee
+      if (!state.deliveryDetails.deliveryZone) {
         return 0;
       }
       const zone = state.deliveryDetails.deliveryZone;
@@ -95,11 +109,91 @@ export const useCartStore = defineStore("cart", {
         island: 1800,
         mainland: 1200,
       };
-      return zone ? zoneFees[zone] || 1500 : 1500;
+      return zoneFees[zone] || 1500;
+    },
+
+    /**
+     * Determines minimum platform profit based on order size
+     * - Small orders (< ₦10,000): ₦200 profit
+     * - Large orders (>= ₦10,000): ₦500 profit
+     */
+    platformProfit(): number {
+      const SMALL_ORDER_THRESHOLD = 10000;
+      const SMALL_ORDER_PROFIT = 200;
+      const LARGE_ORDER_PROFIT = 500;
+
+      return this.cartSubtotal < SMALL_ORDER_THRESHOLD
+        ? SMALL_ORDER_PROFIT
+        : LARGE_ORDER_PROFIT;
+    },
+
+    /**
+     * Handling & Processing Fee
+     * Covers: Paystack transaction fees (1.5% + ₦100) + Platform packaging profit
+     * Calculated as the "gap" needed to ensure platform receives target amount
+     */
+    handlingFee(): number {
+      // Target = what platform needs after all fees (subtotal + delivery + profit)
+      const targetNet =
+        this.cartSubtotal + this.baseDeliveryFee + this.platformProfit;
+      const percentFee = 0.015;
+      const flatFee = 100;
+      const FLAT_FEE_THRESHOLD = 2500;
+      const PAYSTACK_FEE_CAP = 2000;
+
+      // Gross-up calculation to find total customer must pay
+      let total = (targetNet + flatFee) / (1 - percentFee);
+
+      // Flat fee waived if total under ₦2,500
+      if (total < FLAT_FEE_THRESHOLD) {
+        total = targetNet / (1 - percentFee);
+      }
+
+      // Paystack fee cap at ₦2,000
+      if (total - targetNet > PAYSTACK_FEE_CAP) {
+        total = targetNet + PAYSTACK_FEE_CAP;
+      }
+
+      // Handling fee is the gap between total and (subtotal + delivery)
+      return Math.ceil(total) - this.cartSubtotal - this.baseDeliveryFee;
+    },
+
+    /**
+     * The Combined Bundle - Single fee shown to customer
+     * Delivery, Packaging & Handling = Base Delivery + Handling Fee
+     */
+    logisticsBundleFee(): number {
+      return this.baseDeliveryFee + this.handlingFee;
+    },
+
+    /**
+     * Final total customer pays
+     * Subtotal + Logistics Bundle (Delivery + Handling)
+     */
+    finalTotal(): number {
+      return this.cartSubtotal + this.logisticsBundleFee;
+    },
+
+    /**
+     * Legacy getters for backward compatibility
+     */
+    deliveryFee(): number {
+      return this.baseDeliveryFee;
     },
 
     cartTotal(): number {
-      return this.cartSubtotal + this.deliveryFee;
+      return this.finalTotal;
+    },
+
+    /**
+     * Internal tracking: Actual Paystack fee deducted from final total
+     */
+    paystackFee(): number {
+      // Paystack takes: 1.5% of finalTotal + ₦100 (if >= ₦2,500), capped at ₦2,000
+      const percentComponent = this.finalTotal * 0.015;
+      const flatComponent = this.finalTotal >= 2500 ? 100 : 0;
+      const rawFee = percentComponent + flatComponent;
+      return Math.min(Math.ceil(rawFee), 2000);
     },
 
     canAddFromStore:
@@ -264,9 +358,47 @@ export const useCartStore = defineStore("cart", {
     },
 
     /**
-     * Save cart to database (call after any cart modification)
+     * Save cart to database with race condition protection.
+     * Queues concurrent saves to prevent duplicate items.
      */
     async saveToDatabase(supabase: SupabaseClient<Database>): Promise<boolean> {
+      // Chain to existing save promise to prevent race conditions
+      const currentSave = this._savePromise;
+
+      const newSave = (async (): Promise<boolean> => {
+        // Wait for any ongoing save to complete
+        if (currentSave) {
+          await currentSave;
+        }
+
+        // Now perform the actual save
+        return this._performSaveToDatabase(supabase);
+      })();
+
+      this._savePromise = newSave;
+
+      // Clean up after save completes (success or failure)
+      newSave
+        .then(() => {
+          if (this._savePromise === newSave) {
+            this._savePromise = null;
+          }
+        })
+        .catch(() => {
+          if (this._savePromise === newSave) {
+            this._savePromise = null;
+          }
+        });
+
+      return newSave;
+    },
+
+    /**
+     * Internal save implementation - do not call directly, use saveToDatabase
+     */
+    async _performSaveToDatabase(
+      supabase: SupabaseClient<Database>,
+    ): Promise<boolean> {
       const { data: user } = await supabase.auth.getUser();
       if (!user.user) return false;
 
@@ -617,7 +749,9 @@ export const useCartStore = defineStore("cart", {
         store_id: this.currentStoreId,
         store_name: this.currentStoreName,
         subtotal: this.cartSubtotal,
-        delivery_fee: this.deliveryFee,
+        logistics_bundle_fee: this.logisticsBundleFee,
+        platform_profit: this.platformProfit,
+        paystack_fee: this.paystackFee,
         total: this.cartTotal,
         delivery_details: this.deliveryDetails,
       };

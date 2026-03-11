@@ -55,7 +55,7 @@
       <div v-else-if="error" class="rounded-xl bg-red-50 p-6 text-center">
         <p class="text-red-700">{{ error }}</p>
         <button
-          @click="fetchCategories"
+          @click="() => fetchCategories()"
           class="mt-2 text-sm font-semibold text-red-600 hover:text-red-800"
         >
           Retry

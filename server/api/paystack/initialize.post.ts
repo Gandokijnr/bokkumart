@@ -4,8 +4,8 @@ import type { Database } from "~/types/database.types";
 
 interface PaystackInitializeRequest {
   email: string;
-  amount: number; // in kobo (Naira * 100)
-  service_fee_kobo?: number; // Service fee for platform (excluded from store payment)
+  amount: number; // in kobo (Naira * 100) - total customer pays
+  platform_fee_kobo?: number; // Platform fee for processing & packaging (what platform keeps)
   metadata: {
     order_id?: string;
     user_id: string;
@@ -27,7 +27,7 @@ interface PaystackInitializeRequest {
     store_address?: string;
     subtotal: number;
     delivery_fee: number;
-    service_fee?: number;
+    platform_fee?: number;
     pickup_store_id?: string | null;
     payment_expires_at?: string | null;
   };
@@ -125,14 +125,30 @@ export default defineEventHandler(async (event) => {
       });
     }
 
-    const serviceFeeKobo = Math.max(
+    // Platform fee (Processing & Packaging fee) - what platform keeps
+    const platformFeeKobo = Math.max(
       0,
-      Math.round(Number(body.service_fee_kobo || 0)),
+      Math.round(Number(body.platform_fee_kobo || 0)),
     );
 
-    // Note: Platform collects service fee via transaction_charge
-    // Store receives: amount - service_fee_kobo
-    // Platform receives: service_fee_kobo
+    // Price Parity Configuration:
+    // Customer pays: subtotal + platform_fee
+    // Store must receive: EXACT subtotal (in-store price)
+    // Platform bears: Paystack fee (1.5% + ₦100)
+    //
+    // Solution:
+    // - bearer: "account" means main (platform) account bears Paystack fees
+    // - transaction_charge: platform fee goes to main account
+    // - subaccount receives: amount - transaction_charge = store subtotal
+    // - Since bearer is "account", Paystack fee is deducted from main account
+    // Result: Store gets EXACT subtotal (price parity achieved)
+
+    // Calculate what Paystack will charge (1.5% + ₦100 on total)
+    const totalAmountKobo = body.amount;
+    const paystackFeeKobo = Math.round(totalAmountKobo * 0.015) + 100;
+
+    // Store subtotal in kobo (what store should receive)
+    const storeSubtotalKobo = totalAmountKobo - platformFeeKobo;
 
     // Build callback URL
     const siteUrlRaw = config.public.siteUrl || "http://localhost:3000";
@@ -142,38 +158,48 @@ export default defineEventHandler(async (event) => {
       ? new URL(String(body.callback_url), siteUrl).toString()
       : `${siteUrl}/checkout/verify`;
 
-    // Prepare Paystack payload with service fee split
-    // transaction_charge is deducted from subaccount and sent to platform
     const payload = {
       email: body.email,
       amount: body.amount,
       currency: "NGN",
       callback_url: callbackUrl,
       subaccount: subaccountCode,
-      bearer: "account",
-      transaction_charge: serviceFeeKobo, // Platform keeps this amount
+      bearer: "account", // Platform (main account) bears Paystack fees - ensures price parity
+      transaction_charge: platformFeeKobo, // Platform keeps this amount
       metadata: {
         ...body.metadata,
         platform: "homeaffairs-digital",
-        routing: {
+        price_parity: {
+          store_receives_exact_subtotal: true,
+          platform_bears_paystack_fee: true,
+          store_name: storeRow.name,
           store_id: storeId,
           subaccount: subaccountCode,
-          bearer: "account",
-          transaction_charge_kobo: serviceFeeKobo,
-          platform_keeps: serviceFeeKobo,
-          store_receives_kobo: Math.max(0, body.amount - serviceFeeKobo),
-          note: "Service fee deducted for platform, rest goes to store",
+          subtotal_kobo: storeSubtotalKobo,
+          platform_fee_kobo: platformFeeKobo,
+          paystack_fee_kobo: paystackFeeKobo,
+          total_customer_paid_kobo: totalAmountKobo,
+          settlement: {
+            store_gets_kobo: storeSubtotalKobo,
+            platform_gets_kobo: Math.max(0, platformFeeKobo - paystackFeeKobo), // Platform profit after Paystack
+            paystack_takes_kobo: paystackFeeKobo,
+          },
         },
         custom_fields: [
           {
             display_name: "Store",
             variable_name: "store_name",
-            value: body.metadata.store_id,
+            value: storeRow.name || body.metadata.store_id,
           },
           {
             display_name: "Delivery Method",
             variable_name: "delivery_method",
             value: body.metadata.delivery_method,
+          },
+          {
+            display_name: "Processing Fee",
+            variable_name: "processing_fee",
+            value: `₦${(platformFeeKobo / 100).toLocaleString()}`,
           },
         ],
       },
@@ -208,6 +234,15 @@ export default defineEventHandler(async (event) => {
       authorization_url: result.data?.authorization_url,
       reference: result.data?.reference,
       access_code: result.data?.access_code,
+      settlement_preview: {
+        store_receives: storeSubtotalKobo / 100,
+        platform_receives: Math.max(
+          0,
+          (platformFeeKobo - paystackFeeKobo) / 100,
+        ),
+        paystack_fee: paystackFeeKobo / 100,
+        customer_paid: totalAmountKobo / 100,
+      },
     };
   } catch (error: any) {
     console.error("Paystack initialize error:", error);

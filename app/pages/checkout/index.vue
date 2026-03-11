@@ -709,11 +709,12 @@
           </p>
         </div>
 
-        <!-- Final Bill Breakdown -->
+        <!-- // Final Bill Breakdown - "Logistics Bundle" Strategy -->
         <div class="rounded-xl border-2 border-gray-200 bg-white p-5">
           <h2 class="font-bold text-gray-900 mb-4">Final Bill</h2>
 
           <div class="space-y-3">
+            <!-- In-Store Prices (Preserved for merchant) -->
             <div class="flex justify-between text-sm">
               <span class="text-gray-600"
                 >Subtotal ({{ cartStore.cartCount }} items)</span
@@ -723,46 +724,66 @@
               }}</span>
             </div>
 
+            <!-- Single "Logistics Bundle" Line Item -->
             <div class="flex justify-between text-sm">
-              <span class="text-gray-600">
+              <span class="text-gray-600 flex items-center gap-1">
                 {{
-                  fulfillmentMode === "pickup" ? "Pickup Fee" : "Delivery Fee"
+                  fulfillmentMode === "pickup"
+                    ? "Packaging & Handling"
+                    : "Delivery, Packaging & Handling"
                 }}
+                <span
+                  class="group relative cursor-help"
+                  :title="
+                    fulfillmentMode === 'pickup'
+                      ? 'Includes platform processing and payment handling'
+                      : 'Includes delivery fee, platform processing, and payment handling'
+                  "
+                >
+                  <svg
+                    class="h-4 w-4 text-gray-400 hover:text-gray-600"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                    />
+                  </svg>
+                </span>
               </span>
               <span class="font-medium">{{
-                formatPrice(currentDeliveryFee)
+                formatPrice(cartStore.logisticsBundleFee)
               }}</span>
             </div>
 
-            <div class="flex justify-between text-sm">
-              <span class="text-gray-600">{{
-                fulfillmentMode === "pickup"
-                  ? "Packing & Handling Fee"
-                  : "Service Fee"
-              }}</span>
-              <span class="font-medium">{{ formatPrice(serviceFee) }}</span>
-            </div>
-
-            <!-- Paystack Discount -->
+            <!-- Online Payment Discount (if applicable) -->
             <div
               v-if="
-                onlinePaymentDiscountEligible &&
-                fulfillmentMode === 'delivery' &&
-                currentDeliveryFee > 0
+                onlinePaymentDiscountEligible && fulfillmentMode === 'delivery'
               "
               class="flex justify-between text-sm text-green-600"
             >
-              <span class="font-medium">Online Payment Discount</span>
+              <span class="font-medium">First Order Discount</span>
               <span class="font-bold">-₦500</span>
             </div>
 
             <div class="border-t pt-3">
               <div class="flex justify-between items-center">
-                <span class="text-base font-bold text-gray-900">Total</span>
+                <span class="text-base font-bold text-gray-900"
+                  >Total to Pay</span
+                >
                 <span class="text-2xl font-bold text-red-600">{{
-                  formatPrice(finalTotal)
+                  formatPrice(cartStore.finalTotal)
                 }}</span>
               </div>
+              <p class="text-xs text-gray-500 mt-2">
+                Store receives exact in-store prices. You pay only the logistics
+                & handling fee shown above.
+              </p>
             </div>
           </div>
         </div>
@@ -810,7 +831,7 @@
               Processing...
             </span>
             <span v-else>
-              {{ `Pay ${formatPrice(finalTotal)} with Paystack` }}
+              {{ `Proceed to Pay ${formatPrice(cartStore.finalTotal)}` }}
             </span>
           </button>
 
@@ -1016,7 +1037,13 @@ const deliveryZones = [
   { id: "magodo", name: "Magodo", fee: 1500 },
 ];
 
-const { serviceFee, serviceFeeKobo } = useFees({
+const {
+  platformFee,
+  platformFeeKobo,
+  serviceFee,
+  serviceFeeKobo,
+  feeDescription,
+} = useFees({
   subtotal: computed(() => cartStore.cartSubtotal),
   fulfillmentMode,
 });
@@ -1053,15 +1080,18 @@ async function fetchOnlinePaymentDiscountEligibility() {
 }
 
 const finalTotal = computed(() => {
-  const base =
-    cartStore.cartSubtotal + currentDeliveryFee.value + serviceFee.value;
+  // Use cartStore's no-loss calculation which includes:
+  // - Store subtotal (preserved for merchant)
+  // - Platform profit + Paystack fee (grossed up)
+  let total = cartStore.finalTotal;
+
+  // Apply first-order discount for delivery if eligible
   const onlineDiscount =
-    onlinePaymentDiscountEligible.value &&
-    fulfillmentMode.value === "delivery" &&
-    currentDeliveryFee.value > 0
+    onlinePaymentDiscountEligible.value && fulfillmentMode.value === "delivery"
       ? 500
       : 0;
-  return Math.max(0, base - onlineDiscount);
+
+  return Math.max(0, total - onlineDiscount);
 });
 
 const selectedStore = computed(() => {
@@ -1284,12 +1314,23 @@ function updateDeliveryFee() {
   const zone = deliveryZones.find((z) => z.id === selectedArea.value);
   if (zone) {
     currentDeliveryFee.value = zone.fee;
+    // Save delivery details to cart store so fees are calculated correctly
+    cartStore.setDeliveryDetails({
+      method: "delivery",
+      deliveryZone: selectedArea.value,
+      contactPhone: userDetails.value.phone || "",
+    });
   }
 }
 
 function goToStep2() {
   if (fulfillmentMode.value === "pickup") {
     currentDeliveryFee.value = 0;
+    // Save pickup details to cart store
+    cartStore.setDeliveryDetails({
+      method: "pickup",
+      contactPhone: userDetails.value.phone || "",
+    });
   }
   step.value = 2;
 }
@@ -1415,7 +1456,9 @@ async function initiatePaystackPayment() {
         })),
         delivery_method: fulfillmentMode.value,
         subtotal: cartStore.cartSubtotal,
-        delivery_fee: currentDeliveryFee.value,
+        logistics_bundle_fee: cartStore.logisticsBundleFee,
+        platform_profit: cartStore.platformProfit,
+        paystack_fee: cartStore.paystackFee,
         total_amount: finalTotal.value,
         payment_method: "paystack",
         contact_name: userDetails.value.fullName,
@@ -1484,7 +1527,7 @@ async function initiatePaystackPayment() {
         body: {
           email: userEmail,
           amount: Math.round(customerTotalAmount * 100), // Full amount customer pays
-          service_fee_kobo: serviceFeeKobo.value, // Amount platform keeps
+          service_fee_kobo: cartStore.platformProfit * 100, // Amount platform keeps
           metadata: {
             order_id: orderData?.id,
             user_id: userId,
@@ -1511,10 +1554,10 @@ async function initiatePaystackPayment() {
                   },
             store_address: selectedStore.value?.address,
             subtotal: cartStore.cartSubtotal,
-            delivery_fee: currentDeliveryFee.value,
-            service_fee: serviceFee.value,
-            store_receives: customerTotalAmount - serviceFee.value, // Amount after service fee
-            total_paid_by_customer: customerTotalAmount,
+            processing_and_packaging_fee: cartStore.platformProfit,
+            logistics_and_handling_fee: cartStore.logisticsBundleFee,
+            paystack_fee: cartStore.paystackFee,
+            total_paid_by_customer: finalTotal.value,
             pickup_store_id:
               fulfillmentMode.value === "pickup" ? selectedStoreId.value : null,
             payment_expires_at: paymentExpiresAt,

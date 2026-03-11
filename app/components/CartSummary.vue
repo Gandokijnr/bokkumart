@@ -15,40 +15,60 @@
         }}</span>
       </div>
 
-      <!-- Delivery Fee -->
-      <div class="flex justify-between text-xs sm:text-sm">
-        <span class="text-gray-600">Delivery Fee</span>
-        <span v-if="deliveryCalculated" class="font-medium text-gray-900">{{
-          formatPrice(deliveryFee)
-        }}</span>
-        <button
-          v-else
-          @click="$emit('calculateDelivery')"
-          class="rounded-md bg-red-600 px-2 py-1 text-xs font-medium text-white"
-        >
-          Calculate
-        </button>
-      </div>
-
-      <!-- Service Fee -->
-      <div class="flex justify-between text-xs sm:text-sm">
-        <span class="text-gray-600">Service Fee</span>
+      <!-- Logistics/Handling Fee (Only after fulfillment method is selected) -->
+      <div
+        v-if="deliveryDetails?.method"
+        class="flex justify-between text-xs sm:text-sm"
+      >
+        <span class="text-gray-600 flex items-center gap-1">
+          {{
+            deliveryDetails.method === "pickup"
+              ? "Packaging & Handling"
+              : "Delivery, Packaging & Handling"
+          }}
+          <span
+            class="group relative cursor-help"
+            :title="
+              deliveryDetails.method === 'pickup'
+                ? 'Includes platform processing and payment handling'
+                : 'Includes delivery fee, platform processing, and payment handling'
+            "
+          >
+            <svg
+              class="h-3.5 w-3.5 text-gray-400 hover:text-gray-600"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+              />
+            </svg>
+          </span>
+        </span>
         <span class="font-medium text-gray-900">{{
-          formatPrice(serviceFee)
+          formatPrice(
+            deliveryDetails.method === "pickup"
+              ? handlingFee
+              : logisticsBundleFee,
+          )
         }}</span>
       </div>
 
       <div class="border-t-2 border-gray-100 pt-2.5 sm:pt-3">
         <div class="flex justify-between">
           <span class="text-sm font-bold text-gray-900 sm:text-base"
-            >Total</span
+            >Total to Pay</span
           >
           <span class="text-lg font-bold text-red-600 sm:text-xl">{{
             formatPrice(total)
           }}</span>
         </div>
         <p class="mt-1 text-right text-xs text-gray-500">
-          Includes VAT where applicable
+          Store receives exact in-store prices
         </p>
       </div>
     </div>
@@ -201,10 +221,9 @@ interface DeliveryDetails {
 const props = defineProps<{
   itemCount: number;
   subtotal: number;
-  deliveryFee: number;
-  serviceFee: number;
+  logisticsBundleFee: number;
+  handlingFee: number;
   total: number;
-  deliveryCalculated: boolean;
   deliveryDetails?: DeliveryDetails | null;
   storeName: string;
   orderNote: string;
@@ -212,7 +231,6 @@ const props = defineProps<{
 }>();
 
 const emit = defineEmits<{
-  calculateDelivery: [];
   "update:orderNote": [value: string];
   checkout: [];
 }>();

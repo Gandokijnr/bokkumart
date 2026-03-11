@@ -63,11 +63,15 @@
                 />
               </svg>
             </button>
-            <span
-              class="flex h-10 w-10 items-center justify-center text-sm font-semibold text-gray-900 sm:h-11 sm:w-11 sm:text-base"
-            >
-              {{ item.quantity }}
-            </span>
+            <input
+              type="number"
+              :value="item.quantity"
+              @change="handleQuantityInput"
+              @blur="handleQuantityInput"
+              min="1"
+              :max="item.max_quantity"
+              class="h-10 w-14 appearance-none border-x-2 border-gray-200 bg-white text-center text-sm font-semibold text-gray-900 focus:border-red-600 focus:outline-none sm:h-11 sm:w-16 sm:text-base"
+            />
             <button
               @click="increaseQuantity"
               class="flex h-10 w-10 items-center justify-center text-gray-600 transition-colors hover:bg-gray-100 active:bg-gray-200 disabled:cursor-not-allowed disabled:opacity-50 sm:h-11 sm:w-11"
@@ -154,6 +158,26 @@ function increaseQuantity() {
   if (props.item.quantity < props.item.max_quantity) {
     emit("updateQuantity", props.item.id, props.item.quantity + 1);
   }
+}
+
+function handleQuantityInput(event: Event) {
+  const input = event.target as HTMLInputElement;
+  const value = parseInt(input.value, 10);
+
+  if (isNaN(value) || value < 1) {
+    // Reset to 1 if invalid or less than 1
+    emit("updateQuantity", props.item.id, 1);
+    return;
+  }
+
+  if (value > props.item.max_quantity) {
+    // Cap at max quantity
+    emit("updateQuantity", props.item.id, props.item.max_quantity);
+    return;
+  }
+
+  // Valid quantity
+  emit("updateQuantity", props.item.id, value);
 }
 
 function remove() {
