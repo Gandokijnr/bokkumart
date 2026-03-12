@@ -159,7 +159,9 @@ export const useProducts = () => {
         })
         .map((product: any) => {
           const inventory = inventoryMap[product.id];
-          const category = categoriesMap[product.category_id];
+          const category = product.category_id
+            ? categoriesMap[product.category_id]
+            : { name: "Uncategorized", slug: "uncategorized" };
           const finalPrice = inventory.store_price || product.price;
           const effectiveStock = Math.max(
             0,
@@ -597,7 +599,9 @@ export const useProducts = () => {
         .filter((p) => currentBranchProductIds.has(p.id))
         .map((product) => {
           const inventory = currentBranchInventoryMap[product.id];
-          const category = categoriesMap[product.category_id];
+          const category = product.category_id
+            ? categoriesMap[product.category_id]
+            : { name: "Uncategorized", slug: "uncategorized" };
           const effectiveStock = Math.max(
             0,
             (inventory?.available_stock || 0) -
@@ -655,7 +659,9 @@ export const useProducts = () => {
             }))
             .sort((a, b) => b.quantity - a.quantity);
 
-          const category = categoriesMap[product.category_id];
+          const category = product.category_id
+            ? categoriesMap[product.category_id]
+            : { name: "Uncategorized", slug: "uncategorized" };
 
           let imageUrl = product.image_url;
           if (imageUrl && !imageUrl.startsWith("http")) {

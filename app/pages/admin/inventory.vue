@@ -182,13 +182,6 @@
       </button>
 
       <button
-        @click="showUploadModal = true"
-        class="rounded-lg bg-gray-600 px-4 py-2 text-sm font-bold text-white hover:bg-gray-700"
-      >
-        Upload CSV
-      </button>
-
-      <button
         @click="showRetailManModal = true"
         class="rounded-lg bg-purple-600 px-4 py-2 text-sm font-bold text-white hover:bg-purple-700"
       >
@@ -681,141 +674,6 @@
       </div>
     </div>
 
-    <!-- CSV Upload Modal -->
-    <div
-      v-if="showUploadModal"
-      class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
-    >
-      <div
-        class="bg-white rounded-xl shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto"
-      >
-        <div
-          class="px-6 py-4 border-b border-gray-200 flex items-center justify-between"
-        >
-          <div>
-            <h3 class="text-lg font-semibold text-gray-900">
-              Upload Inventory CSV
-            </h3>
-            <p class="text-sm text-gray-600">Bulk update store inventory</p>
-          </div>
-          <button
-            @click="showUploadModal = false"
-            class="text-gray-400 hover:text-gray-600"
-          >
-            <svg
-              class="w-6 h-6"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M6 18L18 6M6 6l12 12"
-              />
-            </svg>
-          </button>
-        </div>
-
-        <div class="p-6 space-y-6">
-          <!-- Store Selection -->
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1"
-              >Select Store *</label
-            >
-            <select
-              v-model="uploadStoreId"
-              class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-red-500 focus:outline-none"
-            >
-              <option value="">Choose a store...</option>
-              <option
-                v-for="store in storeOptions"
-                :key="store.id"
-                :value="store.id"
-              >
-                {{ store.name }}
-              </option>
-            </select>
-            <p class="text-xs text-gray-500 mt-1">
-              All products in the CSV will be added to this store
-            </p>
-          </div>
-
-          <!-- Template Download -->
-          <div class="bg-gray-50 rounded-lg p-4">
-            <p class="text-sm text-gray-900 mb-2">
-              <strong>CSV Format:</strong> name, sku, category, description,
-              price, cost_price, unit, stock_level, store_price, digital_buffer,
-              image_url
-            </p>
-            <p class="text-xs text-gray-700">
-              Required: name, stock_level, price. Store is selected above, not
-              in CSV.
-            </p>
-            <button
-              @click="downloadTemplate"
-              class="mt-3 text-sm text-gray-600 hover:text-gray-800 font-medium"
-            >
-              Download Template CSV →
-            </button>
-          </div>
-
-          <!-- File Upload -->
-          <div
-            class="border-2 border-dashed rounded-xl p-6 text-center transition-colors"
-            :class="dragOver ? 'border-gray-500 bg-gray-50' : 'border-gray-300'"
-            @dragover.prevent="dragOver = true"
-            @dragleave.prevent="dragOver = false"
-            @drop.prevent="handleFileDrop"
-          >
-            <div class="space-y-3">
-              <div class="text-4xl">📄</div>
-              <div>
-                <p class="text-sm font-medium text-gray-900">
-                  {{
-                    selectedFile ? selectedFile.name : "Drop your CSV file here"
-                  }}
-                </p>
-                <p class="text-xs text-gray-500">or click to browse</p>
-              </div>
-              <button
-                @click="fileInput?.click()"
-                type="button"
-                class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
-              >
-                Choose File
-              </button>
-              <input
-                ref="fileInput"
-                type="file"
-                accept=".csv"
-                class="hidden"
-                @change="handleFileSelect"
-              />
-            </div>
-          </div>
-
-          <!-- Actions -->
-          <div class="flex justify-end gap-3">
-            <button
-              @click="showUploadModal = false"
-              class="px-4 py-2 rounded-lg border border-gray-300 text-sm font-medium text-gray-700 hover:bg-gray-50"
-            >
-              Cancel
-            </button>
-            <button
-              @click="uploadFile"
-              :disabled="uploading || !selectedFile || !uploadStoreId"
-              class="px-4 py-2 rounded-lg bg-gray-600 text-white text-sm font-bold hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {{ uploading ? "Uploading..." : "Upload CSV" }}
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
-
     <!-- Manual Entry Modal -->
     <div
       v-if="showManualModal"
@@ -1223,14 +1081,6 @@ const bulkCategoryId = ref("");
 const bulkProcessing = ref(false);
 const bulkDeleteConfirmText = ref("");
 
-// CSV Upload
-const showUploadModal = ref(false);
-const selectedFile = ref<File | null>(null);
-const uploading = ref(false);
-const dragOver = ref(false);
-const fileInput = ref<HTMLInputElement>();
-const uploadStoreId = ref("");
-
 // Retail Man Import
 const showRetailManModal = ref(false);
 
@@ -1406,23 +1256,8 @@ const fetchCategories = async () => {
     .from("categories")
     .select("id, name")
     .eq("is_active", true)
-    .order("name");
+    .order("sort_order");
   if (data) categories.value = data;
-};
-
-const downloadTemplate = () => {
-  const csv =
-    "name,sku,category,description,price,cost_price,unit,stock_level,store_price,digital_buffer,image_url\n" +
-    "Fresh Cow Milk,DAIRY-001,Dairy & Eggs,Premium fresh milk 1L,850.00,600.00,liter,50,,5,https://example.com/milk.jpg\n" +
-    "Basmati Rice,GRAIN-001,Grains & Rice,Long grain rice 5kg,7500.00,5500.00,5kg bag,30,,3,https://example.com/rice.jpg";
-
-  const blob = new Blob([csv], { type: "text/csv" });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = `inventory-template-${new Date().toISOString().split("T")[0]}.csv`;
-  a.click();
-  URL.revokeObjectURL(url);
 };
 
 const editProduct = (item: any) => {
@@ -1627,13 +1462,6 @@ const executeBulkCategoryChange = async () => {
   }
 };
 
-const handleFileSelect = (event: Event) => {
-  const input = event.target as HTMLInputElement;
-  if (input.files && input.files[0] && input.files[0].name.endsWith(".csv")) {
-    selectedFile.value = input.files[0];
-  }
-};
-
 const openManualModal = () => {
   manualForm.value = {
     store_id: "",
@@ -1799,78 +1627,6 @@ const saveManualEntry = async () => {
     });
   } finally {
     manualSaving.value = false;
-  }
-};
-
-const handleFileDrop = (event: DragEvent) => {
-  dragOver.value = false;
-  const files = event.dataTransfer?.files;
-  if (files && files[0] && files[0].name.endsWith(".csv")) {
-    selectedFile.value = files[0];
-  }
-};
-
-const uploadFile = async () => {
-  if (!selectedFile.value) return;
-  if (!uploadStoreId.value) {
-    toast.add({
-      title: "Error",
-      description: "Please select a store",
-      color: "error",
-    });
-    return;
-  }
-
-  if (isBranchManager.value) {
-    const allowedIds = (userStore.managedStores || []).map((s: any) => s.id);
-    if (!allowedIds.includes(uploadStoreId.value)) {
-      toast.add({
-        title: "Error",
-        description: "Not authorized to upload for this store",
-        color: "error",
-      });
-      return;
-    }
-  }
-
-  uploading.value = true;
-  try {
-    const { data: sessionData, error: sessionError } =
-      await supabase.auth.getSession();
-    if (sessionError) throw sessionError;
-
-    const accessToken = sessionData?.session?.access_token;
-    if (!accessToken) throw new Error("Not authenticated");
-
-    const formData = new FormData();
-    formData.append("file", selectedFile.value);
-    formData.append("store_id", uploadStoreId.value);
-
-    await $fetch("/api/admin/upload-inventory", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-      },
-      body: formData,
-    });
-
-    toast.add({
-      title: "Success",
-      description: "Inventory uploaded successfully",
-      color: "success",
-    });
-    showUploadModal.value = false;
-    selectedFile.value = null;
-    await fetchInventory();
-  } catch (err: any) {
-    console.error("Upload error:", err);
-    toast.add({
-      title: "Upload Failed",
-      description: err?.data?.message || err?.message || "Failed to upload CSV",
-      color: "error",
-    });
-  } finally {
-    uploading.value = false;
   }
 };
 

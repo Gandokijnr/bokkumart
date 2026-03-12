@@ -4,8 +4,9 @@
     <div class="mb-6">
       <h2 class="text-xl font-bold text-gray-900">Retail Man Bulk Import</h2>
       <p class="text-sm text-gray-600 mt-1">
-        Import inventory from Retail Man POS exports. Upload your CSV file with
-        Part Number, Details, Retail price, and Retail Qty.
+        Import inventory from CSV. Upload your file with product details
+        including name, price, stock level, and category. Categories are
+        automatically created if they don't exist.
       </p>
     </div>
 
@@ -81,16 +82,6 @@
           {{ isUploading ? "Uploading..." : "Drop your Retail Man CSV here" }}
         </p>
         <p class="text-xs text-gray-500 mb-3">or click to browse</p>
-
-        <div class="text-xs text-gray-400">
-          <p>
-            Expected columns:
-            <span class="font-mono bg-gray-200 px-1 rounded">Part Number</span>,
-            <span class="font-mono bg-gray-200 px-1 rounded">Details</span>,
-            <span class="font-mono bg-gray-200 px-1 rounded">Retail</span>,
-            <span class="font-mono bg-gray-200 px-1 rounded">Retail Qty</span>
-          </p>
-        </div>
 
         <input
           ref="fileInput"
@@ -406,6 +397,70 @@
       </div>
     </div>
 
+    <!-- CSV Format Guide -->
+    <div class="mt-6 rounded-lg border border-gray-200 bg-white p-4">
+      <h4 class="text-sm font-bold text-gray-900 mb-3">CSV Format Example</h4>
+      <div class="overflow-x-auto">
+        <table class="w-full text-xs">
+          <thead class="bg-gray-50">
+            <tr>
+              <th class="px-2 py-1 text-left font-mono text-red-700">name *</th>
+              <th class="px-2 py-1 text-left font-mono">sku</th>
+              <th class="px-2 py-1 text-left font-mono text-green-700">
+                category
+              </th>
+              <th class="px-2 py-1 text-left font-mono">description</th>
+              <th class="px-2 py-1 text-left font-mono text-red-700">
+                price *
+              </th>
+              <th class="px-2 py-1 text-left font-mono">cost_price</th>
+              <th class="px-2 py-1 text-left font-mono">unit</th>
+              <th class="px-2 py-1 text-left font-mono text-red-700">
+                stock_level *
+              </th>
+            </tr>
+          </thead>
+          <tbody class="font-mono">
+            <tr class="border-t">
+              <td class="px-2 py-1">Rice 50kg</td>
+              <td class="px-2 py-1">RICE-001</td>
+              <td class="px-2 py-1">Grains & Rice</td>
+              <td class="px-2 py-1">Premium long grain</td>
+              <td class="px-2 py-1">45000.00</td>
+              <td class="px-2 py-1">38000.00</td>
+              <td class="px-2 py-1">kg</td>
+              <td class="px-2 py-1">100</td>
+            </tr>
+            <tr class="border-t bg-gray-50">
+              <td class="px-2 py-1">Fresh Milk 1L</td>
+              <td class="px-2 py-1">MILK-001</td>
+              <td class="px-2 py-1">Dairy & Eggs</td>
+              <td class="px-2 py-1">Full cream milk</td>
+              <td class="px-2 py-1">2500.00</td>
+              <td class="px-2 py-1">2000.00</td>
+              <td class="px-2 py-1">litre</td>
+              <td class="px-2 py-1">50</td>
+            </tr>
+            <tr class="border-t">
+              <td class="px-2 py-1">Vegetable Oil 5L</td>
+              <td class="px-2 py-1">OIL-001</td>
+              <td class="px-2 py-1">Cooking Oil</td>
+              <td class="px-2 py-1">Premium oil</td>
+              <td class="px-2 py-1">8500.00</td>
+              <td class="px-2 py-1">7000.00</td>
+              <td class="px-2 py-1">litre</td>
+              <td class="px-2 py-1">30</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="text-xs text-gray-500 mt-3">
+        <span class="font-semibold text-green-600">Category Tip:</span>
+        Categories are auto-created if they don't exist. Matching is
+        case-insensitive ("dairy & eggs" = "Dairy & Eggs").
+      </p>
+    </div>
+
     <!-- Best Practices Tip -->
     <div class="mt-6 rounded-lg bg-blue-50 border border-blue-200 p-4">
       <div class="flex items-start gap-3">
@@ -452,11 +507,12 @@ interface Store {
 interface ImportResult {
   success: boolean;
   processed: number;
-  productsUpdated: number;
   productsCreated: number;
+  productsUpdated?: number;
   inventoryUpdated: number;
   inventoryCreated: number;
-  failed: number;
+  categoriesCreated?: number;
+  failed?: number;
   parseErrors?: Array<{ row: number; message: string; rawData?: string }>;
   processingErrors?: Array<{ row: number; sku: string; message: string }>;
   errorReport?: string;
@@ -586,7 +642,7 @@ async function startUpload() {
       throw new Error("Not authenticated");
     }
 
-    const response = await $fetch("/api/admin/import-retailman", {
+    const response = await $fetch("/api/admin/upload-inventory", {
       method: "POST",
       body: formData,
       headers: {
@@ -597,7 +653,24 @@ async function startUpload() {
     clearInterval(progressInterval);
     progress.value.percentage = 100;
 
-    result.value = response as ImportResult;
+    const r = response as Partial<ImportResult>;
+    const parseCount = r.parseErrors?.length || 0;
+    const processingCount = r.processingErrors?.length || 0;
+
+    result.value = {
+      success: Boolean(r.success),
+      processed: r.processed || 0,
+      productsCreated: r.productsCreated || 0,
+      productsUpdated: r.productsUpdated || 0,
+      inventoryUpdated: r.inventoryUpdated || 0,
+      inventoryCreated: r.inventoryCreated || 0,
+      categoriesCreated: r.categoriesCreated || 0,
+      failed: r.failed ?? parseCount + processingCount,
+      parseErrors: r.parseErrors,
+      processingErrors: r.processingErrors,
+      errorReport: r.errorReport,
+      storeId: selectedStoreId.value,
+    };
   } catch (err: any) {
     console.error("Upload failed:", err);
     alert(

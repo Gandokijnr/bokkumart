@@ -22,6 +22,10 @@ interface ParseResult {
 }
 
 function parseCSV(content: string): ParseResult {
+  // Detect delimiter: tab or comma
+  const firstLine = content.split("\n")[0] || "";
+  const delimiter = firstLine.includes("\t") ? "\t" : ",";
+
   const lines = content.trim().split("\n");
   if (lines.length < 2) {
     return {
@@ -35,9 +39,43 @@ function parseCSV(content: string): ParseResult {
     };
   }
 
-  const headers =
-    lines[0]?.split(",").map((h) => h.trim().toLowerCase().replace(/"/g, "")) ||
-    [];
+  // Header name mapping for Retail Man compatibility
+  const headerMap: Record<string, string> = {
+    "part number": "sku",
+    part_number: "sku",
+    partnumber: "sku",
+    details: "name",
+    description: "name",
+    retail: "price",
+    "retail price": "price",
+    retail_price: "price",
+    "retail qty": "stock_level",
+    retail_qty: "stock_level",
+    quantity: "stock_level",
+    qty: "stock_level",
+    category: "category",
+    categories: "category",
+    "cost price": "cost_price",
+    cost_price: "cost_price",
+    unit: "unit",
+    "store price": "store_price",
+    store_price: "store_price",
+    "digital buffer": "digital_buffer",
+    digital_buffer: "digital_buffer",
+    "image url": "image_url",
+    image_url: "image_url",
+  };
+
+  const rawHeaders =
+    lines[0]
+      ?.split(delimiter)
+      .map((h) =>
+        h.trim().toLowerCase().replace(/"/g, "").replace(/\r/g, ""),
+      ) || [];
+
+  // Map headers to standard names
+  const headers = rawHeaders.map((h) => headerMap[h] || h);
+
   if (headers.length === 0) {
     return { success: [], errors: [{ row: 0, message: "Empty CSV file" }] };
   }
@@ -50,7 +88,7 @@ function parseCSV(content: string): ParseResult {
       errors: [
         {
           row: 0,
-          message: `Missing required columns: ${missingFields.join(", ")}`,
+          message: `Missing required columns: ${missingFields.join(", ")}. Expected one of: name/details, stock_level/retail qty, price/retail`,
         },
       ],
     };
@@ -63,7 +101,7 @@ function parseCSV(content: string): ParseResult {
     const line = lines[i]?.trim();
     if (!line) continue;
 
-    const values = parseCSVLine(line);
+    const values = parseCSVLine(line, delimiter);
     if (values.length !== headers.length) {
       errors.push({
         row: i + 1,
@@ -125,7 +163,7 @@ function parseCSV(content: string): ParseResult {
   return { success: result, errors };
 }
 
-function parseCSVLine(line: string): string[] {
+function parseCSVLine(line: string, delimiter: string = ","): string[] {
   const result: string[] = [];
   let current = "";
   let inQuotes = false;
@@ -135,7 +173,7 @@ function parseCSVLine(line: string): string[] {
 
     if (char === '"') {
       inQuotes = !inQuotes;
-    } else if (char === "," && !inQuotes) {
+    } else if (char === delimiter && !inQuotes) {
       result.push(current.trim());
       current = "";
     } else {
@@ -254,11 +292,38 @@ export default defineEventHandler(async (event) => {
     (categories || []).map((c: any) => [c.name.toLowerCase(), c.id]),
   );
 
+  // Helper function to create a new category with slug
+  const createCategory = async (name: string): Promise<string | null> => {
+    const slug = name
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-|-$/g, "");
+
+    const { data: newCategory, error: catError } = await (admin as any)
+      .from("categories")
+      .insert({
+        name: name,
+        slug: slug,
+        is_active: true,
+        sort_order: 0,
+      })
+      .select("id")
+      .single();
+
+    if (catError) {
+      console.error(`Failed to create category "${name}":`, catError.message);
+      return null;
+    }
+
+    return newCategory?.id || null;
+  };
+
   const results = {
     created: 0,
     updated: 0,
     errors: [] as { row: number; message: string }[],
     productsCreated: 0,
+    categoriesCreated: 0,
   };
 
   // Process each row
@@ -298,7 +363,16 @@ export default defineEventHandler(async (event) => {
       if (!productId) {
         let categoryId = null;
         if (row.category) {
-          categoryId = categoryMap.get(row.category.toLowerCase()) || null;
+          const categoryKey = row.category.toLowerCase();
+          categoryId = categoryMap.get(categoryKey) || null;
+          if (!categoryId) {
+            // Auto-create category if not exists
+            categoryId = await createCategory(row.category);
+            if (categoryId) {
+              categoryMap.set(categoryKey, categoryId);
+              results.categoriesCreated++;
+            }
+          }
         }
 
         const { data: newProduct, error: productError } = await (admin as any)
@@ -326,8 +400,16 @@ export default defineEventHandler(async (event) => {
       } else {
         // Update existing product with category if provided in CSV
         if (row.category) {
-          const categoryId =
-            categoryMap.get(row.category.toLowerCase()) || null;
+          const categoryKey = row.category.toLowerCase();
+          let categoryId = categoryMap.get(categoryKey) || null;
+          // Auto-create category if not exists
+          if (!categoryId) {
+            categoryId = await createCategory(row.category);
+            if (categoryId) {
+              categoryMap.set(categoryKey, categoryId);
+              results.categoriesCreated++;
+            }
+          }
           if (categoryId) {
             await (admin as any)
               .from("products")
@@ -362,7 +444,6 @@ export default defineEventHandler(async (event) => {
           .from("store_inventory")
           .update({
             stock_level: row.stock_level || 0,
-            available_stock: row.stock_level || 0,
             digital_buffer: row.digital_buffer || 0,
             is_visible: (row.stock_level || 0) > 0,
             store_price: row.store_price || null,
@@ -380,7 +461,6 @@ export default defineEventHandler(async (event) => {
             store_id: store_id,
             product_id: productId,
             stock_level: row.stock_level || 0,
-            available_stock: row.stock_level || 0,
             reserved_stock: 0,
             digital_buffer: row.digital_buffer || 0,
             is_visible: (row.stock_level || 0) > 0,
@@ -427,6 +507,7 @@ export default defineEventHandler(async (event) => {
     inventoryCreated: results.created,
     inventoryUpdated: results.updated,
     productsCreated: results.productsCreated,
+    categoriesCreated: results.categoriesCreated,
     parseErrors: parseErrors.length > 0 ? parseErrors : null,
     processingErrors: results.errors.length > 0 ? results.errors : null,
   };
