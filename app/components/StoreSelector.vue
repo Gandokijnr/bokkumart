@@ -186,19 +186,19 @@ const handleBackdropClick = () => {
     >
       <div
         v-if="modelValue"
-        class="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
+        class="fixed inset-0 z-[110] flex items-center justify-center bg-black/60 backdrop-blur-sm p-2 sm:p-4"
         @click.self="handleBackdropClick"
       >
         <div
-          class="w-full max-w-2xl bg-white rounded-2xl shadow-2xl overflow-hidden max-h-[90vh] flex flex-col"
+          class="w-full max-w-2xl bg-white rounded-2xl shadow-2xl overflow-hidden h-[100dvh] sm:h-auto sm:max-h-[90vh] flex flex-col z-[111]"
           @click.stop
         >
           <!-- Header -->
           <div
-            class="px-6 py-5 border-b border-gray-200 flex items-center justify-between bg-red-600"
+            class="px-4 sm:px-6 py-4 sm:py-5 border-b border-gray-200 flex items-center justify-between bg-red-600"
           >
             <div>
-              <h2 class="text-xl font-bold text-white">
+              <h2 class="text-lg sm:text-xl font-bold text-white">
                 {{
                   branchStore.hasActiveBranch
                     ? "Switch Store"
@@ -237,16 +237,19 @@ const handleBackdropClick = () => {
           <!-- Content -->
           <div class="flex-1 overflow-y-auto">
             <!-- Loading State -->
-            <div v-if="branchStore.loading" class="p-6 space-y-4">
+            <div
+              v-if="branchStore.loading"
+              class="p-4 sm:p-6 space-y-3 sm:space-y-4"
+            >
               <div
                 v-for="i in 3"
                 :key="i"
-                class="h-24 w-full bg-gray-100 rounded-xl animate-pulse"
+                class="h-20 sm:h-24 w-full bg-gray-100 rounded-xl animate-pulse"
               />
             </div>
 
             <!-- Error State -->
-            <div v-else-if="branchStore.error || error" class="p-6">
+            <div v-else-if="branchStore.error || error" class="p-4 sm:p-6">
               <div
                 class="rounded-xl bg-red-50 p-4 text-red-600 flex items-center gap-3"
               >
@@ -276,11 +279,11 @@ const handleBackdropClick = () => {
             </div>
 
             <!-- Branch List -->
-            <div v-else class="p-6 space-y-3">
+            <div v-else class="p-4 sm:p-6 space-y-3">
               <div
                 v-for="branch in branchStore.activeBranches"
                 :key="branch.id"
-                class="relative rounded-xl border-2 p-4 transition-all cursor-pointer"
+                class="relative rounded-xl border-2 p-3 sm:p-4 transition-all cursor-pointer"
                 :class="[
                   selectedBranchId === branch.id
                     ? 'border-red-600 bg-red-50 shadow-md'
@@ -361,11 +364,11 @@ const handleBackdropClick = () => {
                     </p>
 
                     <div
-                      class="mt-2 flex items-center gap-4 text-sm text-gray-500"
+                      class="mt-2 flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-4 text-xs sm:text-sm text-gray-500"
                     >
                       <span class="flex items-center gap-1">
                         <svg
-                          class="w-4 h-4"
+                          class="w-3.5 h-3.5 sm:w-4 sm:h-4"
                           fill="none"
                           stroke="currentColor"
                           viewBox="0 0 24 24"
@@ -381,7 +384,7 @@ const handleBackdropClick = () => {
                       </span>
                       <span v-if="branch.phone" class="flex items-center gap-1">
                         <svg
-                          class="w-4 h-4"
+                          class="w-3.5 h-3.5 sm:w-4 sm:h-4"
                           fill="none"
                           stroke="currentColor"
                           viewBox="0 0 24 24"
@@ -404,18 +407,18 @@ const handleBackdropClick = () => {
 
           <!-- Footer -->
           <div
-            class="px-6 py-4 border-t border-gray-200 bg-gray-50 flex justify-end gap-3"
+            class="px-4 sm:px-6 py-3 sm:py-4 border-t border-gray-200 bg-gray-50 flex justify-end gap-2 sm:gap-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]"
           >
             <button
               v-if="branchStore.hasActiveBranch"
               @click="close"
-              class="rounded-xl border border-gray-300 px-5 py-2.5 text-sm font-medium text-gray-700 hover:bg-white hover:shadow-sm transition-all"
+              class="rounded-xl border border-gray-300 px-3 sm:px-5 py-2 sm:py-2.5 text-xs sm:text-sm font-medium text-gray-700 hover:bg-white hover:shadow-sm transition-all"
             >
               Cancel
             </button>
             <button
               :disabled="!selectedBranchId || isLoading"
-              class="rounded-xl bg-red-600 px-6 py-2.5 text-sm font-medium text-white hover:bg-red-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-sm hover:shadow-md flex items-center gap-2"
+              class="rounded-xl bg-red-600 px-4 sm:px-6 py-2 sm:py-2.5 text-xs sm:text-sm font-medium text-white hover:bg-red-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-sm hover:shadow-md flex items-center gap-2"
               @click="handleConfirmSelection"
             >
               <svg
