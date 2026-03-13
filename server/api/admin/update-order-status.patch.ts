@@ -1,6 +1,7 @@
 import { defineEventHandler, readBody, createError } from "h3";
 import { createClient } from "@supabase/supabase-js";
 import type { Database } from "~/types/database.types";
+import { sendOrderStatusNotifications } from "../../services/notificationService";
 
 interface UpdateOrderStatusBody {
   orderId: string;
@@ -23,6 +24,24 @@ function normalizePhoneToE164(phone: string): string {
 function buildWhatsAppUrl(phoneE164: string, message: string): string {
   const encoded = encodeURIComponent(message);
   return `https://wa.me/${phoneE164}?text=${encoded}`;
+}
+
+/**
+ * Map order status to notification type
+ */
+function getNotificationType(
+  status: string,
+): import("../../services/notificationService").NotificationType | null {
+  const statusMap: Record<
+    string,
+    import("../../services/notificationService").NotificationType
+  > = {
+    confirmed: "order_confirmed",
+    picked_up: "driver_picked_up",
+    delivered: "order_delivered",
+    cancelled: "order_cancelled",
+  };
+  return statusMap[status] || null;
 }
 
 export default defineEventHandler(async (event) => {
@@ -209,6 +228,48 @@ export default defineEventHandler(async (event) => {
       statusCode: 400,
       statusMessage: updateErr?.message || "Failed to update order",
     });
+  }
+
+  // Send push notifications for order status change
+  try {
+    const { data: orderData } = await (admin as any)
+      .from("orders")
+      .select(
+        `
+        id,
+        order_number,
+        status,
+        user_id,
+        store:store_id (name, id),
+        branch:branch_id (name, id),
+        delivery_details
+      `,
+      )
+      .eq("id", body.orderId)
+      .single();
+
+    if (orderData) {
+      const notificationType = getNotificationType(newStatus);
+      if (notificationType) {
+        await sendOrderStatusNotifications(event, notificationType, {
+          orderId: orderData.id,
+          orderNumber: orderData.order_number,
+          customerId: orderData.user_id,
+          customerName:
+            orderData.delivery_details?.fullName ||
+            orderData.delivery_details?.contactName,
+          storeId: orderData.store?.id,
+          storeName: orderData.store?.name,
+          branchId: orderData.branch?.id,
+          branchName: orderData.branch?.name,
+          status: newStatus,
+          url: `/orders/${orderData.id}`,
+        });
+      }
+    }
+  } catch (notifyErr) {
+    console.error("[Push Notification] Failed to send:", notifyErr);
+    // Don't fail the request if notification fails
   }
 
   if (shouldFinalizeStock) {

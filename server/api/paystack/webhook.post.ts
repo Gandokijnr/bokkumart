@@ -2,6 +2,7 @@ import { defineEventHandler, createError, getHeader, readRawBody } from "h3";
 import { createClient } from "@supabase/supabase-js";
 import type { Database } from "~/types/database.types";
 import crypto from "node:crypto";
+import { sendOrderStatusNotifications } from "../../services/notificationService";
 
 interface PaystackWebhookEvent {
   event: string;
@@ -222,6 +223,20 @@ export default defineEventHandler(async (event) => {
           statusMessage: "Failed to update order",
         });
       }
+
+      // Send push notification for payment successful
+      try {
+        await sendOrderStatusNotifications(event, "payment_successful", {
+          orderId: (existingOrder as any).id,
+          customerId: data.metadata.user_id,
+          customerName: data.metadata.customer_name,
+          storeId: data.metadata.store_id,
+          status: "confirmed",
+          url: `/orders/${(existingOrder as any).id}`,
+        });
+      } catch (notifyErr) {
+        console.error("[Push Notification] Failed to send:", notifyErr);
+      }
     } else {
       const insertPayload: any = {
         user_id: data.metadata.user_id,
@@ -271,6 +286,29 @@ export default defineEventHandler(async (event) => {
           statusCode: 500,
           statusMessage: "Failed to create order",
         });
+      }
+
+      // Send push notification for new order placed
+      try {
+        const { data: newOrder } = await (supabase as any)
+          .from("orders")
+          .select("id, order_number")
+          .eq("paystack_reference", data.reference)
+          .single();
+
+        if (newOrder) {
+          await sendOrderStatusNotifications(event, "order_placed", {
+            orderId: newOrder.id,
+            orderNumber: newOrder.order_number,
+            customerId: data.metadata.user_id,
+            customerName: data.metadata.customer_name,
+            storeId: data.metadata.store_id,
+            status: "confirmed",
+            url: `/orders/${newOrder.id}`,
+          });
+        }
+      } catch (notifyErr) {
+        console.error("[Push Notification] Failed to send:", notifyErr);
       }
     }
 

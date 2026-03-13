@@ -1,4 +1,5 @@
 import { defineEventHandler, readBody, createError } from "h3";
+import { sendOrderStatusNotifications } from "../../services/notificationService";
 
 interface BranchDispatchRequest {
   orderId: string;
@@ -162,6 +163,52 @@ export default defineEventHandler(
             updated_at: new Date().toISOString(),
           })
           .eq("id", orderId);
+      }
+
+      // Send push notification for driver assigned
+      try {
+        const { data: orderData } = await supabase
+          .from("orders")
+          .select(
+            `
+            id,
+            order_number,
+            user_id,
+            store:store_id (name, id),
+            branch:branch_id (name, id),
+            delivery_details
+          `,
+          )
+          .eq("id", orderId)
+          .single();
+
+        if (orderData) {
+          const store = (orderData.store?.[0] || {}) as {
+            id?: string;
+            name?: string;
+          };
+          const branch = (orderData.branch?.[0] || {}) as {
+            id?: string;
+            name?: string;
+          };
+          await sendOrderStatusNotifications(event, "driver_assigned", {
+            orderId: orderData.id,
+            orderNumber: orderData.order_number,
+            customerId: orderData.user_id,
+            customerName:
+              orderData.delivery_details?.fullName ||
+              orderData.delivery_details?.contactName,
+            storeId: store.id,
+            storeName: store.name,
+            branchId: branch.id,
+            branchName: branch.name,
+            driverName: riderName,
+            status: "assigned",
+            url: `/orders/${orderData.id}`,
+          });
+        }
+      } catch (notifyErr) {
+        console.error("[Push Notification] Failed to send:", notifyErr);
       }
 
       return {

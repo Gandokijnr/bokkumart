@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, watch } from "vue";
 import { useCartStore } from "~/stores/useCartStore";
+import { subscribeToPush } from "~/composables/usePushNotifications";
 
 useHead({
   meta: [
@@ -44,6 +45,12 @@ onMounted(() => {
       if (cartStore.fetchedForUserId === userId) return;
       try {
         await cartStore.loadFromDatabase(supabase as any);
+        // Subscribe to push notifications after successful login
+        if (user.value) {
+          subscribeToPush(user.value as any).catch((err) => {
+            console.error("[Push] Auto-subscription failed:", err);
+          });
+        }
       } finally {
         cartStore.markFetchedForUser(userId);
       }

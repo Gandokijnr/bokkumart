@@ -144,6 +144,9 @@ html,body{background:#fff;}
     paystackSecretKey: process.env.PAYSTACK_SECRET_KEY,
     supabaseUrl: process.env.SUPABASE_URL,
     supabaseServiceRoleKey: process.env.SUPABASE_SERVICE_ROLE_KEY,
+    vapidPublicKey: process.env.VAPID_PUBLIC_KEY,
+    vapidPrivateKey: process.env.VAPID_PRIVATE_KEY,
+    vapidSubject: process.env.VAPID_SUBJECT || "mailto:admin@homeaffairs.com",
     orderPaymentTimeoutMinutes: Number(
       process.env.ORDER_PAYMENT_TIMEOUT_MINUTES || 15,
     ),
@@ -152,6 +155,7 @@ html,body{background:#fff;}
     public: {
       siteUrl: process.env.SITE_URL || "http://localhost:3000",
       paystackPublicKey: process.env.PAYSTACK_PUBLIC_KEY,
+      vapidPublicKey: process.env.VAPID_PUBLIC_KEY,
     },
   },
 
