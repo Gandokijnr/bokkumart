@@ -807,8 +807,6 @@
         </div>
       </div>
     </Transition>
-
-    <AppFooter />
   </div>
 </template>
 

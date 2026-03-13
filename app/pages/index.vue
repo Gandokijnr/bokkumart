@@ -23,9 +23,6 @@
 
       <!-- About / Benefits Section -->
       <BenefitsSection :benefits="benefits" />
-
-      <!-- Footer -->
-      <AppFooter />
     </main>
   </div>
 </template>
