@@ -63,7 +63,7 @@
           <span class="text-sm font-bold text-gray-900 sm:text-base"
             >Total to Pay</span
           >
-          <span class="text-lg font-bold text-red-600 sm:text-xl">{{
+          <span class="text-lg font-bold text-blue-600 sm:text-xl">{{
             formatPrice(total)
           }}</span>
         </div>
@@ -76,11 +76,11 @@
     <!-- Delivery Location Preview -->
     <div
       v-if="deliveryDetails?.method"
-      class="mt-4 rounded-lg border border-red-200 bg-red-50 p-2.5 text-xs sm:mt-5 sm:p-3 sm:text-sm"
+      class="mt-4 rounded-lg border border-blue-200 bg-blue-50 p-2.5 text-xs sm:mt-5 sm:p-3 sm:text-sm"
     >
       <div class="flex items-start gap-2">
         <svg
-          class="mt-0.5 h-4 w-4 flex-shrink-0 text-red-600"
+          class="mt-0.5 h-4 w-4 flex-shrink-0 text-blue-600"
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
@@ -133,14 +133,14 @@
         "
         rows="3"
         placeholder="e.g., Please pick firm tomatoes, Call upon arrival..."
-        class="w-full resize-none rounded-lg border-2 border-gray-200 p-2.5 text-xs focus:border-red-600 focus:outline-none sm:p-3 sm:text-sm"
+        class="w-full resize-none rounded-lg border-2 border-gray-200 p-2.5 text-xs focus:border-blue-600 focus:outline-none sm:p-3 sm:text-sm"
       ></textarea>
     </div>
 
     <!-- Stock Validation Warning -->
     <div
       v-if="hasOutOfStockItems"
-      class="mt-3 flex items-start gap-2 rounded-lg bg-red-50 p-2.5 text-xs text-red-700 sm:mt-4 sm:p-3 sm:text-sm"
+      class="mt-3 flex items-start gap-2 rounded-lg bg-blue-50 p-2.5 text-xs text-blue-700 sm:mt-4 sm:p-3 sm:text-sm"
     >
       <svg
         class="mt-0.5 h-4 w-4 flex-shrink-0"
@@ -202,7 +202,7 @@
     <button
       @click="$emit('checkout')"
       :disabled="hasOutOfStockItems"
-      class="mt-5 hidden w-full rounded-xl bg-red-600 py-3 text-sm font-bold text-white shadow-lg transition-all hover:bg-red-700 hover:shadow-xl disabled:cursor-not-allowed disabled:opacity-50 lg:block"
+      class="mt-5 hidden w-full rounded-xl bg-blue-600 py-3 text-sm font-bold text-white shadow-lg transition-all hover:bg-blue-700 hover:shadow-xl disabled:cursor-not-allowed disabled:opacity-50 lg:block"
     >
       Proceed to Checkout
       <span class="ml-2">→</span>

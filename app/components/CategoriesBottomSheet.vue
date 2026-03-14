@@ -74,7 +74,7 @@
                   v-model="searchQuery"
                   type="search"
                   placeholder="Search categories..."
-                  class="w-full rounded-xl border border-gray-200 bg-gray-50 py-3 pl-11 pr-4 text-sm outline-none transition focus:border-red-500 focus:bg-white focus:ring-2 focus:ring-red-500/20"
+                  class="w-full rounded-xl border border-gray-200 bg-gray-50 py-3 pl-11 pr-4 text-sm outline-none transition focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-500/20"
                 />
                 <svg
                   class="absolute left-3.5 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400"
@@ -96,7 +96,7 @@
             <div class="flex-1 overflow-y-auto px-5 py-2">
               <div v-if="pending" class="flex items-center justify-center py-8">
                 <svg
-                  class="animate-spin h-8 w-8 text-red-600"
+                  class="animate-spin h-8 w-8 text-blue-600"
                   fill="none"
                   viewBox="0 0 24 24"
                 >
@@ -146,7 +146,7 @@
                   :key="category.id"
                   :to="`/category/${category.slug}`"
                   @click="handleCategoryClick(category)"
-                  class="flex flex-col items-center gap-2 p-4 rounded-2xl bg-gray-50 hover:bg-red-50 active:scale-95 transition-all tap-highlight-transparent"
+                  class="flex flex-col items-center gap-2 p-4 rounded-2xl bg-gray-50 hover:bg-blue-50 active:scale-95 transition-all tap-highlight-transparent"
                 >
                   <div
                     class="w-14 h-14 rounded-2xl bg-white shadow-sm flex items-center justify-center text-2xl"

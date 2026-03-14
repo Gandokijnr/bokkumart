@@ -5,7 +5,7 @@ type FulfillmentMode = "pickup" | "delivery" | null | undefined;
 type MaybeRef<T> = Ref<T> | ComputedRef<T>;
 
 /**
- * Robust Fee Calculator for HomeAffairs
+ * Robust Fee Calculator for BokkuMart
  * Ensures platform NEVER runs at loss while maintaining store price parity
  *
  * Logic:

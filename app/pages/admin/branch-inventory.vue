@@ -30,7 +30,7 @@
             </button>
             <button
               @click="showManualEntry = true"
-              class="inline-flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+              class="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
             >
               <svg
                 class="w-5 h-5"
@@ -105,12 +105,12 @@
           <div class="flex items-center justify-between">
             <div>
               <p class="text-sm text-gray-600">Out of Stock</p>
-              <p class="text-2xl font-bold text-red-600 mt-1">
+              <p class="text-2xl font-bold text-blue-600 mt-1">
                 {{ stats.outOfStock }}
               </p>
             </div>
             <div
-              class="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center"
+              class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center"
             >
               <span class="text-2xl">❌</span>
             </div>
@@ -128,14 +128,14 @@
               v-model="searchQuery"
               type="text"
               placeholder="Search products..."
-              class="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-red-500 focus:outline-none focus:ring-2 focus:ring-red-500"
+              class="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
 
           <select
             v-if="managedStores.length > 1"
             v-model="storeFilter"
-            class="rounded-lg border border-gray-300 px-3 py-2 focus:border-red-500 focus:outline-none focus:ring-2 focus:ring-red-500"
+            class="rounded-lg border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
             <option value="">All My Stores</option>
             <option
@@ -149,7 +149,7 @@
 
           <select
             v-model="statusFilter"
-            class="rounded-lg border border-gray-300 px-3 py-2 focus:border-red-500 focus:outline-none focus:ring-2 focus:ring-red-500"
+            class="rounded-lg border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
             <option value="">All Status</option>
             <option value="in_stock">In Stock</option>
@@ -345,7 +345,7 @@
             >
             <select
               v-model="uploadStoreId"
-              class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-red-500 focus:outline-none"
+              class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none"
             >
               <option value="">Choose a store...</option>
               <option
@@ -393,8 +393,8 @@
           <div
             @dragover.prevent
             @drop.prevent="handleFileDrop"
-            class="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-red-400 transition-colors"
-            :class="{ 'border-red-500 bg-red-50': dragOver }"
+            class="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-blue-400 transition-colors"
+            :class="{ 'border-blue-500 bg-blue-50': dragOver }"
             @dragenter="dragOver = true"
             @dragleave="dragOver = false"
           >
@@ -420,7 +420,7 @@
             </svg>
             <p class="mt-2 text-sm text-gray-600">
               <span
-                class="font-medium text-red-600 cursor-pointer"
+                class="font-medium text-blue-600 cursor-pointer"
                 @click="fileInput?.click()"
                 >Click to upload</span
               >
@@ -465,10 +465,10 @@
               {{ uploadResult.productsCreated }}
             </p>
             <div v-if="uploadResult.processingErrors?.length" class="mt-3">
-              <p class="text-sm font-medium text-red-700">
+              <p class="text-sm font-medium text-blue-700">
                 Errors ({{ uploadResult.processingErrors.length }}):
               </p>
-              <ul class="text-xs text-red-600 mt-1 max-h-32 overflow-y-auto">
+              <ul class="text-xs text-blue-600 mt-1 max-h-32 overflow-y-auto">
                 <li
                   v-for="(err, idx) in uploadResult.processingErrors.slice(
                     0,
@@ -531,7 +531,7 @@
             >
             <select
               v-model="manualForm.store_id"
-              class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-red-500 focus:outline-none"
+              class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none"
             >
               <option
                 v-for="store in managedStores"
@@ -550,7 +550,7 @@
             <input
               v-model="manualForm.name"
               type="text"
-              class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-red-500 focus:outline-none"
+              class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none"
               placeholder="Enter product name"
             />
           </div>
@@ -563,7 +563,7 @@
               <input
                 v-model="manualForm.sku"
                 type="text"
-                class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-red-500 focus:outline-none"
+                class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none"
                 placeholder="Product SKU"
               />
             </div>
@@ -574,7 +574,7 @@
               <input
                 v-model="manualForm.barcode"
                 type="text"
-                class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-red-500 focus:outline-none"
+                class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none"
                 placeholder="e.g. 123456789012"
               />
             </div>
@@ -587,7 +587,7 @@
             <input
               v-model="manualForm.retailman_product_id"
               type="text"
-              class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-red-500 focus:outline-none"
+              class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none"
               placeholder="RetailMan system ID"
             />
           </div>
@@ -601,7 +601,7 @@
                 v-model="manualForm.stock_level"
                 type="number"
                 min="0"
-                class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-red-500 focus:outline-none"
+                class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none"
               />
             </div>
             <div>
@@ -612,7 +612,7 @@
                 v-model="manualForm.digital_buffer"
                 type="number"
                 min="0"
-                class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-red-500 focus:outline-none"
+                class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none"
               />
             </div>
           </div>
@@ -626,7 +626,7 @@
                 v-model="manualForm.price"
                 type="number"
                 min="0"
-                class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-red-500 focus:outline-none"
+                class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none"
                 placeholder="For new products"
               />
             </div>
@@ -638,7 +638,7 @@
                 v-model="manualForm.store_price"
                 type="number"
                 min="0"
-                class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-red-500 focus:outline-none"
+                class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none"
                 placeholder="Override price"
               />
             </div>
@@ -660,7 +660,7 @@
                 />
                 <button
                   @click="clearImage"
-                  class="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full text-xs hover:bg-red-600 flex items-center justify-center"
+                  class="absolute -top-2 -right-2 w-6 h-6 bg-blue-500 text-white rounded-full text-xs hover:bg-blue-600 flex items-center justify-center"
                 >
                   ×
                 </button>
@@ -673,8 +673,8 @@
               @drop.prevent="handleImageDrop"
               @dragenter="imageDragOver = true"
               @dragleave="imageDragOver = false"
-              :class="{ 'border-red-500 bg-red-50': imageDragOver }"
-              class="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center hover:border-red-400 transition-colors cursor-pointer"
+              :class="{ 'border-blue-500 bg-blue-50': imageDragOver }"
+              class="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center hover:border-blue-400 transition-colors cursor-pointer"
               @click="imageInput?.click()"
             >
               <input
@@ -698,7 +698,7 @@
                 />
               </svg>
               <p class="mt-1 text-sm text-gray-600">
-                <span class="text-red-600 font-medium">Click to upload</span> or
+                <span class="text-blue-600 font-medium">Click to upload</span> or
                 drag and drop
               </p>
               <p class="text-xs text-gray-500 mt-1">PNG, JPG, GIF up to 5MB</p>
@@ -716,7 +716,7 @@
               <input
                 v-model="manualForm.is_visible"
                 type="checkbox"
-                class="rounded border-gray-300 text-red-600 focus:ring-red-500"
+                class="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
               />
               <span class="text-sm text-gray-700">Visible to customers</span>
             </label>
@@ -733,7 +733,7 @@
           <button
             @click="saveManualEntry"
             :disabled="!manualForm.name || manualForm.stock_level < 0"
-            class="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 disabled:opacity-50"
+            class="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 disabled:opacity-50"
           >
             {{ manualSaving ? "Saving..." : "Save Item" }}
           </button>
@@ -763,7 +763,7 @@
               v-model="editForm.stock_level"
               type="number"
               min="0"
-              class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-red-500 focus:outline-none"
+              class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none"
             />
           </div>
 
@@ -775,7 +775,7 @@
               v-model="editForm.digital_buffer"
               type="number"
               min="0"
-              class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-red-500 focus:outline-none"
+              class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none"
             />
           </div>
 
@@ -787,7 +787,7 @@
               v-model="editForm.store_price"
               type="number"
               min="0"
-              class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-red-500 focus:outline-none"
+              class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none"
               placeholder="Override base price"
             />
           </div>
@@ -803,7 +803,7 @@
                 <input
                   v-model="editForm.aisle"
                   type="text"
-                  class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-red-500 focus:outline-none"
+                  class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none"
                   placeholder="e.g. A1"
                 />
               </div>
@@ -812,7 +812,7 @@
                 <input
                   v-model="editForm.shelf"
                   type="text"
-                  class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-red-500 focus:outline-none"
+                  class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none"
                   placeholder="e.g. 3"
                 />
               </div>
@@ -821,7 +821,7 @@
                 <input
                   v-model="editForm.section"
                   type="text"
-                  class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-red-500 focus:outline-none"
+                  class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none"
                   placeholder="e.g. B"
                 />
               </div>
@@ -833,7 +833,7 @@
               <input
                 v-model="editForm.is_visible"
                 type="checkbox"
-                class="rounded border-gray-300 text-red-600 focus:ring-red-500"
+                class="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
               />
               <span class="text-sm text-gray-700">Visible to customers</span>
             </label>
@@ -868,7 +868,7 @@ definePageMeta({
 });
 
 useHead({
-  title: "Branch Inventory - HomeAffairs",
+  title: "Branch Inventory - BokkuMart",
 });
 
 const supabase = useSupabaseClient();
@@ -983,7 +983,7 @@ const getStoreName = (storeId: string) => {
 
 const getStatusClass = (item: any) => {
   if (!item.is_visible || item.stock_level === 0)
-    return "bg-red-100 text-red-700";
+    return "bg-blue-100 text-blue-700";
   if (item.stock_level <= 5) return "bg-orange-100 text-orange-700";
   return "bg-green-100 text-green-700";
 };

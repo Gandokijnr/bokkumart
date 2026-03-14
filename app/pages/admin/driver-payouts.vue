@@ -6,7 +6,7 @@ definePageMeta({
   middleware: ["admin"],
 });
 
-useHead({ title: "Driver Payouts - HomeAffairs" });
+useHead({ title: "Driver Payouts - BokkuMart" });
 
 const loading = ref(false);
 const error = ref<string | null>(null);
@@ -92,7 +92,9 @@ onMounted(fetchPending);
     <div class="flex items-center justify-between mb-6">
       <div>
         <h1 class="text-2xl font-bold text-slate-900">Driver Payouts</h1>
-        <p class="text-sm text-slate-500">Pending requests: {{ pendingCount }}</p>
+        <p class="text-sm text-slate-500">
+          Pending requests: {{ pendingCount }}
+        </p>
       </div>
       <button
         @click="fetchPending"
@@ -103,7 +105,7 @@ onMounted(fetchPending);
     </div>
 
     <div v-if="loading" class="text-slate-600">Loading...</div>
-    <div v-else-if="error" class="text-red-600">{{ error }}</div>
+    <div v-else-if="error" class="text-blue-600">{{ error }}</div>
 
     <div v-else class="space-y-3">
       <div
@@ -115,7 +117,9 @@ onMounted(fetchPending);
           <div>
             <div class="font-semibold text-slate-900">
               ₦{{ formatMoney(row.amount) }}
-              <span class="ml-2 text-xs text-slate-500">({{ row.status }})</span>
+              <span class="ml-2 text-xs text-slate-500"
+                >({{ row.status }})</span
+              >
             </div>
             <div class="text-sm text-slate-600">
               Driver: {{ row.driver?.full_name || row.driver_id }}
@@ -129,7 +133,9 @@ onMounted(fetchPending);
           </div>
 
           <div class="w-full max-w-sm">
-            <label class="block text-xs text-slate-500 mb-1">Transaction Reference</label>
+            <label class="block text-xs text-slate-500 mb-1"
+              >Transaction Reference</label
+            >
             <input
               v-model="txRef[row.id]"
               type="text"
@@ -150,7 +156,9 @@ onMounted(fetchPending);
           <summary class="text-xs text-slate-500 cursor-pointer">
             Bank details
           </summary>
-          <pre class="mt-2 text-xs bg-slate-50 p-3 rounded-lg overflow-auto">{{ row.bank_details }}</pre>
+          <pre class="mt-2 text-xs bg-slate-50 p-3 rounded-lg overflow-auto">{{
+            row.bank_details
+          }}</pre>
         </details>
       </div>
 

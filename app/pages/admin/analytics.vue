@@ -8,7 +8,7 @@ definePageMeta({
 });
 
 useHead({
-  title: "Analytics Dashboard - HomeAffairs",
+  title: "Analytics Dashboard - BokkuMart",
 });
 
 // State
@@ -96,7 +96,7 @@ const revenueChartOption = computed(() => {
       textStyle: { color: "#374151" },
       formatter: (params: any) => {
         const p = params[0];
-        return `<div class="font-medium">${p.name}</div><div class="text-red-600">Revenue: ${formatCurrency(p.value)}</div>`;
+        return `<div class="font-medium">${p.name}</div><div class="text-blue-600">Revenue: ${formatCurrency(p.value)}</div>`;
       },
     },
     toolbox: {
@@ -411,7 +411,7 @@ const storeChartOption = computed(() => {
       textStyle: { color: "#374151" },
       formatter: (params: any) => {
         const p = params[0];
-        return `<div class="font-medium">${p.name}</div><div class="text-red-600">Revenue: ${formatCurrency(p.value)}</div>`;
+        return `<div class="font-medium">${p.name}</div><div class="text-blue-600">Revenue: ${formatCurrency(p.value)}</div>`;
       },
     },
     toolbox: {
@@ -623,7 +623,7 @@ onMounted(() => {
         <div class="flex flex-wrap gap-3 items-center">
           <select
             v-model.number="selectedDays"
-            class="w-40 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500"
+            class="w-40 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
           >
             <option
               v-for="opt in daysOptions"
@@ -636,7 +636,7 @@ onMounted(() => {
           <select
             v-if="!isBranchManager && stores.length > 0"
             v-model="selectedStore"
-            class="w-48 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500"
+            class="w-48 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
           >
             <option
               v-for="opt in storeOptions"
@@ -649,7 +649,7 @@ onMounted(() => {
           <select
             v-if="isBranchManager && managedStores.length > 1"
             v-model="selectedStore"
-            class="w-48 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500"
+            class="w-48 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
           >
             <option value="">All My Stores</option>
             <option
@@ -672,7 +672,7 @@ onMounted(() => {
       <!-- Loading State -->
       <div v-if="loading" class="flex items-center justify-center py-20">
         <div
-          class="animate-spin rounded-full h-12 w-12 border-b-2 border-red-600"
+          class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"
         ></div>
       </div>
 
@@ -681,7 +681,7 @@ onMounted(() => {
         <!-- Summary Cards -->
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-4">
           <div
-            class="bg-white rounded-xl shadow-sm p-6 border-l-4 border-red-600"
+            class="bg-white rounded-xl shadow-sm p-6 border-l-4 border-blue-600"
           >
             <p class="text-sm font-medium text-gray-600">Total Revenue</p>
             <p class="mt-2 text-2xl font-bold text-gray-900">
@@ -751,11 +751,11 @@ onMounted(() => {
           </div>
           <div class="mt-4 flex items-center justify-center gap-6 text-sm">
             <div class="flex items-center gap-2">
-              <div class="w-3 h-3 rounded bg-red-600"></div>
+              <div class="w-3 h-3 rounded bg-blue-600"></div>
               <span class="text-gray-600">Platform Fee (8%)</span>
             </div>
             <div class="flex items-center gap-2">
-              <div class="w-3 h-3 rounded bg-red-400"></div>
+              <div class="w-3 h-3 rounded bg-blue-400"></div>
               <span class="text-gray-600">Gross Digital Sales</span>
             </div>
           </div>
@@ -824,7 +824,7 @@ onMounted(() => {
                     {{ formatNumber(store.orders) }} orders
                   </p>
                 </div>
-                <p class="text-sm font-bold text-red-600">
+                <p class="text-sm font-bold text-blue-600">
                   {{ formatCurrency(store.revenue) }}
                 </p>
               </div>
@@ -864,7 +864,7 @@ onMounted(() => {
             <NuxtLink
               v-if="!isBranchManager"
               to="/admin/platform-revenue"
-              class="inline-flex items-center justify-center rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-red-700"
+              class="inline-flex items-center justify-center rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-700"
             >
               Platform Revenue
             </NuxtLink>

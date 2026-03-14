@@ -517,7 +517,7 @@ export const useCartStore = defineStore("cart", {
         }
         return {
           success: false,
-          error: `You can only order from one HomeAffairs branch at a time. Your cart contains items from ${existingStoreName}. Clear cart to switch to ${product.store_name}?`,
+          error: `You can only order from one BokkuMart branch at a time. Your cart contains items from ${existingStoreName}. Clear cart to switch to ${product.store_name}?`,
           requiresStoreSwitch: true,
         };
       }

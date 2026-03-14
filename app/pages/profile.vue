@@ -4,7 +4,7 @@
 
     <main class="mx-auto max-w-7xl px-4 py-8 sm:px-6">
       <!-- Profile Header -->
-      <div class="mb-8 rounded-2xl bg-red-700 p-6 text-white shadow-lg sm:p-8">
+      <div class="mb-8 rounded-2xl bg-blue-700 p-6 text-white shadow-lg sm:p-8">
         <div
           class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between"
         >
@@ -18,21 +18,21 @@
               <h1 class="text-2xl font-bold">
                 {{ profile?.full_name || "Welcome Back" }}
               </h1>
-              <p class="text-red-100">{{ user?.email }}</p>
+              <p class="text-gray-100">{{ user?.email }}</p>
             </div>
           </div>
 
           <!-- Profile Completion -->
           <div class="sm:text-right">
-            <p class="text-sm text-red-100">Profile Completion</p>
+            <p class="text-sm text-gray-100">Profile Completion</p>
             <div class="mt-1 flex items-center gap-2">
               <div class="h-2 w-32 overflow-hidden rounded-full bg-white/20">
                 <div
-                  class="h-full rounded-full bg-yellow-400 transition-all"
+                  class="h-full rounded-full bg-gray-100 transition-all"
                   :style="{ width: profileCompletion + '%' }"
                 ></div>
               </div>
-              <span class="text-sm font-bold text-yellow-400">
+              <span class="text-sm font-bold text-gray-100">
                 {{ profileCompletion }}%
               </span>
             </div>
@@ -50,7 +50,7 @@
             class="flex items-center gap-2 whitespace-nowrap px-4 py-3 text-sm font-medium transition-colors"
             :class="
               activeTab === tab.id
-                ? 'border-b-2 border-red-700 text-red-700'
+                ? 'border-b-2 border-blue-700 text-blue-700'
                 : 'text-gray-500 hover:text-gray-700'
             "
           >
@@ -58,7 +58,7 @@
             {{ tab.label }}
             <span
               v-if="tab.badge"
-              class="rounded-full bg-red-500 px-2 py-0.5 text-xs text-white"
+              class="rounded-full bg-blue-500 px-2 py-0.5 text-xs text-white"
             >
               {{ tab.badge }}
             </span>
@@ -73,12 +73,10 @@
           <!-- Quick Stats -->
           <div class="grid gap-4 sm:grid-cols-3">
             <!-- Last Order Card -->
-            <div
-              class="rounded-2xl border-2 border-red-200 bg-red-50 p-5 shadow-sm"
-            >
+            <div class="rounded-2xl border-2 border-blue-200 p-5 shadow-sm">
               <div class="flex items-center gap-3">
                 <div
-                  class="flex h-12 w-12 items-center justify-center rounded-xl bg-red-500 text-xl text-white"
+                  class="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-500 text-xl text-white"
                 >
                   📦
                 </div>
@@ -111,7 +109,7 @@
                 </span>
                 <NuxtLink
                   :to="`/order/pending-${lastOrder.id}`"
-                  class="text-xs font-medium text-red-600 hover:text-red-700"
+                  class="text-xs font-medium text-blue-600 hover:text-blue-700"
                 >
                   View Details →
                 </NuxtLink>
@@ -148,7 +146,7 @@
               <button
                 v-else
                 @click="activeTab = 'addresses'"
-                class="mt-3 text-sm font-medium text-red-600 hover:text-red-700"
+                class="mt-3 text-sm font-medium text-blue-600 hover:text-blue-700"
               >
                 Add Address →
               </button>
@@ -158,13 +156,13 @@
           <!-- Active Orders -->
           <div
             v-if="activeOrders.length > 0"
-            class="rounded-2xl border-2 border-red-200 bg-white p-6 shadow-sm"
+            class="rounded-2xl border-2 border-blue-200 bg-white p-6 shadow-sm"
           >
             <h3
               class="mb-4 flex items-center gap-2 text-lg font-bold text-gray-900"
             >
               <span
-                class="flex h-6 w-6 items-center justify-center rounded-full bg-red-100 text-xs"
+                class="flex h-6 w-6 items-center justify-center rounded-full bg-blue-100 text-xs"
                 >⏱️</span
               >
               Active Orders ({{ activeOrders.length }})
@@ -199,7 +197,7 @@
                   </span>
                   <NuxtLink
                     :to="`/order/pending-${order.id}`"
-                    class="rounded-lg bg-red-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-red-700"
+                    class="rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-blue-700"
                   >
                     Track
                   </NuxtLink>
@@ -221,12 +219,12 @@
           <!-- Error State -->
           <div
             v-if="ordersError"
-            class="rounded-2xl border-2 border-red-200 bg-red-50 p-6 text-center"
+            class="rounded-2xl border-2 border-blue-200 bg-blue-50 p-6 text-center"
           >
-            <p class="text-red-700">{{ ordersError }}</p>
+            <p class="text-blue-700">{{ ordersError }}</p>
             <button
               @click="fetchOrders()"
-              class="mt-4 rounded-xl bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700"
+              class="mt-4 rounded-xl bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
             >
               Try Again
             </button>
@@ -261,7 +259,7 @@
             </p>
             <NuxtLink
               to="/"
-              class="mt-6 rounded-xl bg-red-600 px-6 py-3 font-medium text-white hover:bg-red-700 inline-block"
+              class="mt-6 rounded-xl bg-blue-600 px-6 py-3 font-medium text-white hover:bg-blue-700 inline-block"
             >
               Start Shopping
             </NuxtLink>
@@ -307,7 +305,7 @@
                       {{ formatOrderDate(order.created_at) }} •
                       {{ order.items.length }} items
                     </p>
-                    <p class="mt-1 font-medium text-red-600">
+                    <p class="mt-1 font-medium text-blue-600">
                       {{ formatCurrency(order.total_amount) }}
                     </p>
                     <div
@@ -332,11 +330,11 @@
                     v-if="order.status === 'delivered'"
                     @click="reorder(order)"
                     :disabled="reorderingOrderId === order.id"
-                    class="flex items-center gap-2 rounded-xl border-2 border-red-600 bg-white px-4 py-2 font-medium text-red-600 hover:bg-red-50 disabled:opacity-50"
+                    class="flex items-center gap-2 rounded-xl border-2 border-blue-600 bg-white px-4 py-2 font-medium text-blue-600 hover:bg-blue-50 disabled:opacity-50"
                   >
                     <span
                       v-if="reorderingOrderId === order.id"
-                      class="h-4 w-4 animate-spin rounded-full border-2 border-red-600 border-t-transparent"
+                      class="h-4 w-4 animate-spin rounded-full border-2 border-blue-600 border-t-transparent"
                     ></span>
                     {{
                       reorderingOrderId === order.id ? "Adding..." : "Buy Again"
@@ -366,7 +364,7 @@
                   </button>
                   <NuxtLink
                     :to="`/order/pending-${order.id}`"
-                    class="rounded-xl bg-red-600 px-4 py-2 font-medium text-white hover:bg-red-700"
+                    class="rounded-xl bg-blue-600 px-4 py-2 font-medium text-white hover:bg-blue-700"
                   >
                     Details
                   </NuxtLink>
@@ -390,7 +388,7 @@
                         step.completed
                           ? 'bg-green-500 text-white'
                           : step.active
-                            ? 'bg-red-600 text-white'
+                            ? 'bg-blue-600 text-white'
                             : 'bg-gray-200 text-gray-500'
                       "
                     >
@@ -420,7 +418,7 @@
             <h3 class="text-lg font-bold text-gray-900">Saved Addresses</h3>
             <button
               @click="showAddressForm = true"
-              class="flex items-center gap-2 rounded-xl bg-red-600 px-4 py-2 font-medium text-white hover:bg-red-700"
+              class="flex items-center gap-2 rounded-xl px-4 py-2 font-medium text-white hover:bg-blue-700"
             >
               <span>+</span> Add New
             </button>
@@ -454,8 +452,8 @@
               class="relative rounded-2xl border-2 p-5 transition-all"
               :class="
                 address.is_primary
-                  ? 'border-red-400 bg-red-50'
-                  : 'border-gray-200 bg-white hover:border-red-300'
+                  ? 'border-blue-400'
+                  : 'border-gray-200 bg-white hover:border-blue-300'
               "
             >
               <div class="flex items-start justify-between">
@@ -472,7 +470,7 @@
                   }}</span>
                   <span
                     v-if="address.is_primary"
-                    class="rounded-full bg-red-400 px-2 py-0.5 text-xs font-medium text-red-900"
+                    class="rounded-full bg-blue-400 px-2 py-0.5 text-xs font-medium text-white"
                   >
                     Primary
                   </span>
@@ -480,13 +478,13 @@
                 <div class="flex gap-1">
                   <button
                     @click="editAddress(address)"
-                    class="rounded-lg p-2 text-gray-400 hover:bg-gray-100 hover:text-gray-600"
+                    class="rounded-lg p-2 text-gray-100 hover:bg-gray-100 hover:text-gray-600"
                   >
                     ✏️
                   </button>
                   <button
                     @click="confirmDeleteAddress(address)"
-                    class="rounded-lg p-2 text-gray-400 hover:bg-red-50 hover:text-red-600"
+                    class="rounded-lg p-2 text-gray-100 hover:bg-blue-50 hover:text-blue-600"
                   >
                     🗑️
                   </button>
@@ -509,7 +507,7 @@
               <button
                 v-if="!address.is_primary"
                 @click="setAsPrimary(address.id)"
-                class="mt-4 w-full rounded-lg border border-red-200 py-2 text-sm font-medium text-red-600 hover:bg-red-50"
+                class="mt-4 w-full rounded-lg border border-blue-200 py-2 text-sm font-medium text-blue-600 hover:bg-blue-50"
               >
                 Set as Primary
               </button>
@@ -543,7 +541,7 @@
                 <input
                   v-model="profileForm.full_name"
                   type="text"
-                  class="w-full rounded-xl border-2 border-gray-200 px-4 py-3 focus:border-red-500 focus:outline-none"
+                  class="w-full rounded-xl border-2 border-gray-200 px-4 py-3 focus:border-blue-500 focus:outline-none"
                   placeholder="Enter your full name"
                 />
               </div>
@@ -557,7 +555,7 @@
                   <input
                     v-model="profileForm.phone_number"
                     type="tel"
-                    class="flex-1 rounded-xl border-2 border-gray-200 px-4 py-3 focus:border-red-500 focus:outline-none"
+                    class="flex-1 rounded-xl border-2 border-gray-200 px-4 py-3 focus:border-blue-500 focus:outline-none"
                     placeholder="+234 80X XXX XXXX"
                   />
                 </div>
@@ -587,14 +585,14 @@
                 <button
                   type="button"
                   @click="logout"
-                  class="text-sm font-medium text-red-600 hover:text-red-700"
+                  class="text-sm font-medium text-blue-600 hover:text-blue-700"
                 >
                   Sign Out
                 </button>
                 <button
                   type="submit"
                   :disabled="savingProfile"
-                  class="flex items-center gap-2 rounded-xl bg-red-700 px-6 py-3 font-medium text-white hover:bg-red-800 disabled:opacity-50"
+                  class="flex items-center gap-2 rounded-xl bg-blue-700 px-6 py-3 font-medium text-white hover:bg-blue-800 disabled:opacity-50"
                 >
                   <span
                     v-if="savingProfile"
@@ -649,7 +647,7 @@
                   class="flex-1 rounded-xl border-2 py-3 text-sm font-medium capitalize transition-colors"
                   :class="
                     addressForm.label === label
-                      ? 'border-red-700 bg-red-50 text-red-700'
+                      ? 'border-blue-700 bg-blue-50 text-gray-100'
                       : 'border-gray-200 hover:border-gray-300'
                   "
                 >
@@ -665,7 +663,7 @@
               >
               <select
                 v-model="addressForm.area"
-                class="w-full rounded-xl border-2 border-gray-200 px-4 py-3 focus:border-red-600 focus:outline-none"
+                class="w-full rounded-xl border-2 border-gray-200 px-4 py-3 focus:border-blue-600 focus:outline-none"
               >
                 <option value="">Select an area</option>
                 <option v-for="area in LAGOS_AREAS" :key="area" :value="area">
@@ -683,7 +681,7 @@
                 v-model="addressForm.street_address"
                 type="text"
                 placeholder="House number, street name"
-                class="w-full rounded-xl border-2 border-gray-200 px-4 py-3 focus:border-red-600 focus:outline-none"
+                class="w-full rounded-xl border-2 border-gray-200 px-4 py-3 focus:border-blue-600 focus:outline-none"
               />
             </div>
 
@@ -691,13 +689,13 @@
             <div>
               <label class="mb-2 block text-sm font-medium text-gray-700">
                 Landmark / Nearest Bus Stop
-                <span class="text-red-500">*</span>
+                <span class="text-blue-500">*</span>
               </label>
               <input
                 v-model="addressForm.landmark"
                 type="text"
                 placeholder="e.g., Near Total Filling Station, Opposite Shoprite"
-                class="w-full rounded-xl border-2 border-gray-200 px-4 py-3 focus:border-red-600 focus:outline-none"
+                class="w-full rounded-xl border-2 border-gray-200 px-4 py-3 focus:border-blue-600 focus:outline-none"
               />
               <p class="mt-1 text-xs text-gray-500">
                 This helps our dispatch riders find you faster
@@ -709,7 +707,7 @@
               <input
                 v-model="addressForm.is_primary"
                 type="checkbox"
-                class="h-5 w-5 rounded border-gray-300 text-red-600 focus:ring-red-500"
+                class="h-5 w-5 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
               />
               <span class="text-sm text-gray-700">Set as primary address</span>
             </label>
@@ -726,7 +724,7 @@
               <button
                 type="submit"
                 :disabled="addressSaving"
-                class="flex-1 rounded-xl bg-red-700 py-3 font-medium text-white hover:bg-red-800 disabled:opacity-50"
+                class="flex-1 rounded-xl bg-blue-700 py-3 font-medium text-white hover:bg-blue-800 disabled:opacity-50"
               >
                 {{ addressSaving ? "Saving..." : "Save Address" }}
               </button>
@@ -773,7 +771,7 @@
             <button
               @click="deleteAddressConfirmed"
               :disabled="addressDeleting"
-              class="flex-1 rounded-xl bg-red-600 py-3 font-medium text-white hover:bg-red-700 disabled:opacity-50"
+              class="flex-1 rounded-xl bg-blue-600 py-3 font-medium text-white hover:bg-blue-700 disabled:opacity-50"
             >
               {{ addressDeleting ? "Deleting..." : "Delete" }}
             </button>
@@ -798,8 +796,8 @@
           toast.type === 'success'
             ? 'bg-green-600'
             : toast.type === 'error'
-              ? 'bg-red-600'
-              : 'bg-red-700'
+              ? 'bg-blue-600'
+              : 'bg-blue-700'
         "
       >
         <div class="flex items-center gap-2">
@@ -1406,11 +1404,11 @@ onUnmounted(() => {
 });
 
 useHead({
-  title: "My Profile | HomeAffairs",
+  title: "My Profile | BokkuMart",
   meta: [
     {
       name: "description",
-      content: "Manage your HomeAffairs account, orders, and addresses",
+      content: "Manage your BokkuMart account, orders, and addresses",
     },
   ],
 });

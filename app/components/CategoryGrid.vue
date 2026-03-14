@@ -21,7 +21,7 @@
         </div>
         <button
           @click="navigateTo('/#deals')"
-          class="hidden text-sm font-semibold text-red-600 hover:text-red-700 md:block"
+          class="hidden text-sm font-semibold text-blue-600 hover:text-blue-700 md:block"
         >
           View all deals →
         </button>
@@ -52,11 +52,11 @@
       </div>
 
       <!-- Error state -->
-      <div v-else-if="error" class="rounded-xl bg-red-50 p-6 text-center">
-        <p class="text-red-700">{{ error }}</p>
+      <div v-else-if="error" class="rounded-xl bg-blue-50 p-6 text-center">
+        <p class="text-blue-700">{{ error }}</p>
         <button
           @click="() => fetchCategories()"
-          class="mt-2 text-sm font-semibold text-red-600 hover:text-red-800"
+          class="mt-2 text-sm font-semibold text-blue-600 hover:text-blue-800"
         >
           Retry
         </button>
@@ -71,13 +71,13 @@
             v-for="c in displayCategories"
             :key="c.id"
             @click="navigateTo(`/category/${c.slug}`)"
-            class="group w-[220px] flex-none snap-start rounded-2xl border border-gray-100 bg-white p-4 text-left shadow-sm transition-all hover:border-red-200 hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-red-600 focus-visible:ring-offset-2"
+            class="group w-[220px] flex-none snap-start rounded-2xl border border-gray-100 bg-white p-4 text-left shadow-sm transition-all hover:border-blue-200 hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
             type="button"
             :aria-label="`Browse ${c.name}`"
           >
             <div class="flex items-start gap-3">
               <div
-                class="flex h-12 w-12 flex-none items-center justify-center rounded-2xl bg-red-50 text-2xl transition-colors group-hover:bg-red-100"
+                class="flex h-12 w-12 flex-none items-center justify-center rounded-2xl bg-blue-50 text-2xl transition-colors group-hover:bg-blue-100"
               >
                 {{ c.icon }}
               </div>
@@ -93,7 +93,7 @@
             </div>
 
             <div class="mt-4 flex items-center justify-between">
-              <span class="text-xs font-bold text-red-700">Browse</span>
+              <span class="text-xs font-bold text-blue-700">Browse</span>
               <Icon
                 name="mdi:chevron-right"
                 class="h-5 w-5 text-gray-400 transition-colors group-hover:text-gray-700"

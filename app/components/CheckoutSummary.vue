@@ -176,7 +176,7 @@ async function selectAlternativeStore(storeId: string) {
     <!-- Error Message -->
     <div
       v-if="error"
-      class="mb-4 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700"
+      class="mb-4 rounded-lg border border-blue-200 bg-blue-50 p-3 text-sm text-blue-700"
     >
       {{ error }}
     </div>
@@ -295,7 +295,7 @@ async function selectAlternativeStore(storeId: string) {
       <!-- Total -->
       <div class="flex justify-between border-t border-gray-100 pt-3">
         <span class="font-semibold text-gray-900">Total</span>
-        <span class="font-bold text-lg text-red-600">
+        <span class="font-bold text-lg text-blue-600">
           {{ formatDeliveryFee(total) }}
         </span>
       </div>

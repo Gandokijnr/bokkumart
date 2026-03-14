@@ -194,7 +194,3 @@ export function useBatchGeocoding() {
     attribution: OPENSTREETMAP_ATTRIBUTION,
   };
 }
-
-// Re-export types
-export type { GeocodeResult };
-export { OPENSTREETMAP_ATTRIBUTION, isNigerianAddress };

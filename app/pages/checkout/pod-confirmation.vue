@@ -25,7 +25,7 @@
           Online Payment Only
         </h1>
         <p class="mt-2 text-gray-600">
-          To ensure priority packing and safety, HomeAffairs currently accepts
+          To ensure priority packing and safety, BokkuMart currently accepts
           secure online payments only.
         </p>
       </div>
@@ -127,7 +127,7 @@
         <button
           @click="checkOrderStatus"
           :disabled="checking"
-          class="w-full rounded-xl bg-red-600 py-4 text-sm font-bold text-white hover:bg-red-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-all"
+          class="w-full rounded-xl bg-blue-600 py-4 text-sm font-bold text-white hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-all"
         >
           <span v-if="checking" class="flex items-center justify-center gap-2">
             <svg class="h-5 w-5 animate-spin" fill="none" viewBox="0 0 24 24">
@@ -187,7 +187,7 @@
           </p>
           <NuxtLink
             to="/profile"
-            class="mt-6 w-full rounded-xl bg-red-600 py-3 text-sm font-bold text-white hover:bg-red-700 text-center inline-block"
+            class="mt-6 w-full rounded-xl bg-blue-600 py-3 text-sm font-bold text-white hover:bg-blue-700 text-center inline-block"
           >
             View Order Status
           </NuxtLink>

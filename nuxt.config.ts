@@ -11,15 +11,15 @@ export default defineNuxtConfig({
     head: {
       style: [
         {
-          innerHTML: `:root{--ha-red:#ED1C24;}
+          innerHTML: `:root{--bokku-blue:#0052CC;--bokku-yellow:#FFC107;}
 html,body{background:#fff;}
-.ha-splash{position:fixed;inset:0;z-index:100000;background:#fff;display:flex;align-items:center;justify-content:center;}
-.ha-splash__inner{display:flex;align-items:center;justify-content:center;padding:24px;}
-.ha-splash__brand{display:flex;align-items:center;gap:10px;color:var(--ha-red);animation:haPulse 1.2s ease-in-out infinite;}
-.ha-splash__icon{width:24px;height:24px;}
-.ha-splash__text{font-weight:800;letter-spacing:.2px;font-size:20px;}
-@keyframes haPulse{0%,100%{opacity:1;transform:scale(1);}50%{opacity:.6;transform:scale(.985);}}
-@media (prefers-reduced-motion: reduce){.ha-splash__brand{animation:none;}}
+.bokku-splash{position:fixed;inset:0;z-index:100000;background:#fff;display:flex;align-items:center;justify-content:center;}
+.bokku-splash__inner{display:flex;align-items:center;justify-content:center;padding:24px;}
+.bokku-splash__brand{display:flex;align-items:center;gap:10px;color:var(--bokku-blue);animation:bokkuPulse 1.2s ease-in-out infinite;}
+.bokku-splash__icon{width:24px;height:24px;}
+.bokku-splash__text{font-weight:800;letter-spacing:.2px;font-size:20px;}
+@keyframes bokkuPulse{0%,100%{opacity:1;transform:scale(1);}50%{opacity:.6;transform:scale(.985);}}
+@media (prefers-reduced-motion: reduce){.bokku-splash__brand{animation:none;}}
 `,
         },
       ],
@@ -29,9 +29,10 @@ html,body{background:#fff;}
   modules: ["@nuxtjs/supabase", "@nuxt/icon", "@vite-pwa/nuxt"],
 
   pwa: {
+    disable: process.env.NODE_ENV === "development",
     registerType: "autoUpdate",
     devOptions: {
-      enabled: true,
+      enabled: false,
     },
     workbox: {
       cleanupOutdatedCaches: true,
@@ -85,11 +86,13 @@ html,body{background:#fff;}
       installPrompt: true,
     },
     manifest: {
-      name: "HomeAffairs",
-      short_name: "HomeAffairs",
-      description: "Your local grocery delivery service",
-      theme_color: "#ED1C24",
-      background_color: "#ffffff",
+      name: process.env.NUXT_PUBLIC_APP_NAME || "BokkuMart",
+      short_name: process.env.NUXT_PUBLIC_APP_SHORT_NAME || "BokkuMart",
+      description:
+        process.env.NUXT_PUBLIC_APP_DESCRIPTION ||
+        "Your trusted online grocery marketplace",
+      theme_color: process.env.NUXT_PUBLIC_THEME_COLOR || "#0052CC",
+      background_color: process.env.NUXT_PUBLIC_BACKGROUND_COLOR || "#ffffff",
       display: "standalone",
       orientation: "portrait",
       start_url: "/",
@@ -146,7 +149,7 @@ html,body{background:#fff;}
     supabaseServiceRoleKey: process.env.SUPABASE_SERVICE_ROLE_KEY,
     vapidPublicKey: process.env.VAPID_PUBLIC_KEY,
     vapidPrivateKey: process.env.VAPID_PRIVATE_KEY,
-    vapidSubject: process.env.VAPID_SUBJECT || "mailto:admin@homeaffairs.com",
+    vapidSubject: process.env.VAPID_SUBJECT || "mailto:admin@bokkuMart.com",
     orderPaymentTimeoutMinutes: Number(
       process.env.ORDER_PAYMENT_TIMEOUT_MINUTES || 15,
     ),
@@ -156,6 +159,21 @@ html,body{background:#fff;}
       siteUrl: process.env.SITE_URL || "http://localhost:3000",
       paystackPublicKey: process.env.PAYSTACK_PUBLIC_KEY,
       vapidPublicKey: process.env.VAPID_PUBLIC_KEY,
+      // Multitenancy Branding Configuration
+      appName: process.env.NUXT_PUBLIC_APP_NAME || "BokkuMart",
+      appShortName: process.env.NUXT_PUBLIC_APP_SHORT_NAME || "BokkuMart",
+      appDescription:
+        process.env.NUXT_PUBLIC_APP_DESCRIPTION ||
+        "Your trusted online grocery marketplace",
+      logoUrl: process.env.NUXT_PUBLIC_LOGO_URL || "/logo-bokku.svg",
+      themeColor: process.env.NUXT_PUBLIC_THEME_COLOR || "#0052CC",
+      backgroundColor: process.env.NUXT_PUBLIC_BACKGROUND_COLOR || "#ffffff",
+      // Partnership Revenue Model - Technology Markup
+      markupPercentage: Number(process.env.NUXT_PUBLIC_MARKUP_PERCENTAGE || 2),
+      // Partner identification
+      partnerName: process.env.NUXT_PUBLIC_PARTNER_NAME || "Bokku",
+      supportEmail:
+        process.env.NUXT_PUBLIC_SUPPORT_EMAIL || "support@bokkumart.com",
     },
   },
 

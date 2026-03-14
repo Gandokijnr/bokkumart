@@ -4,7 +4,7 @@ import type { Database } from "~/types/database.types";
 import { useUserStore } from "~/stores/user";
 
 useHead({
-  title: "Staff Management - HomeAffairs Admin",
+  title: "Staff Management - BokkuMart Admin",
 });
 
 definePageMeta({
@@ -364,7 +364,7 @@ const formatDate = (date: string) => {
           </div>
           <button
             @click="openCreateModal"
-            class="flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+            class="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
           >
             <svg
               class="w-5 h-5"
@@ -398,7 +398,7 @@ const formatDate = (date: string) => {
               v-model="searchQuery"
               type="text"
               placeholder="Search by name, email, or phone..."
-              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
+              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             />
           </div>
 
@@ -409,7 +409,7 @@ const formatDate = (date: string) => {
             >
             <select
               v-model="roleFilter"
-              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
+              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             >
               <option value="all">All Roles</option>
               <option
@@ -553,8 +553,8 @@ const formatDate = (date: string) => {
               v-model="createForm.email"
               type="email"
               required
-              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
-              placeholder="user@homeaffairs.com"
+              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              placeholder="user@bokkumart.com"
             />
           </div>
 
@@ -567,7 +567,7 @@ const formatDate = (date: string) => {
               v-model="createForm.password"
               type="password"
               required
-              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
+              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               placeholder="Minimum 6 characters"
             />
           </div>
@@ -581,7 +581,7 @@ const formatDate = (date: string) => {
               v-model="createForm.fullName"
               type="text"
               required
-              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
+              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               placeholder="John Doe"
             />
           </div>
@@ -594,7 +594,7 @@ const formatDate = (date: string) => {
             <input
               v-model="createForm.phone"
               type="tel"
-              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
+              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               placeholder="+234 XXX XXX XXXX"
             />
           </div>
@@ -606,7 +606,7 @@ const formatDate = (date: string) => {
             >
             <select
               v-model="createForm.role"
-              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
+              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             >
               <option
                 v-for="option in visibleRoleOptions"
@@ -635,7 +635,7 @@ const formatDate = (date: string) => {
                   type="checkbox"
                   :value="store.id"
                   v-model="createForm.managedStoreIds"
-                  class="w-4 h-4 text-red-600 border-gray-300 rounded focus:ring-red-500"
+                  class="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
                 />
                 <div class="flex-1">
                   <p class="text-sm font-medium text-gray-900">
@@ -656,7 +656,7 @@ const formatDate = (date: string) => {
             >
             <select
               v-model="createForm.storeId"
-              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
+              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             >
               <option value="">Select a store</option>
               <option v-for="store in stores" :key="store.id" :value="store.id">
@@ -688,7 +688,7 @@ const formatDate = (date: string) => {
                 (!createForm.managedStoreIds ||
                   createForm.managedStoreIds.length === 0))
             "
-            class="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            class="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {{ loading ? "Creating..." : "Create User" }}
           </button>
@@ -720,7 +720,7 @@ const formatDate = (date: string) => {
             <input
               v-model="editForm.fullName"
               type="text"
-              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
+              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             />
           </div>
 
@@ -732,7 +732,7 @@ const formatDate = (date: string) => {
             <input
               v-model="editForm.phone"
               type="tel"
-              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
+              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             />
           </div>
 
@@ -743,7 +743,7 @@ const formatDate = (date: string) => {
             >
             <select
               v-model="editForm.role"
-              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
+              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             >
               <option
                 v-for="option in visibleRoleOptions"
@@ -772,7 +772,7 @@ const formatDate = (date: string) => {
                   type="checkbox"
                   :value="store.id"
                   v-model="editForm.managedStoreIds"
-                  class="w-4 h-4 text-red-600 border-gray-300 rounded focus:ring-red-500"
+                  class="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
                 />
                 <div class="flex-1">
                   <p class="text-sm font-medium text-gray-900">
@@ -793,7 +793,7 @@ const formatDate = (date: string) => {
             >
             <select
               v-model="editForm.storeId"
-              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
+              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             >
               <option value="">Select a store</option>
               <option v-for="store in stores" :key="store.id" :value="store.id">
@@ -816,7 +816,7 @@ const formatDate = (date: string) => {
           <button
             @click="updateUser"
             :disabled="loading"
-            class="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50"
+            class="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
           >
             {{ loading ? "Updating..." : "Update Assignment" }}
           </button>

@@ -8,7 +8,7 @@
         @click="$emit('update:modelValue', item.value)"
         class="flex-1 flex items-center justify-center gap-2 px-4 py-3 text-sm font-medium transition-all border-b-2 -mb-px"
         :class="{
-          'border-red-600 text-red-600': modelValue === item.value,
+          'border-blue-600 text-blue-600': modelValue === item.value,
           'border-transparent text-gray-500 hover:text-gray-700':
             modelValue !== item.value,
         }"

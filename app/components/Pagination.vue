@@ -18,7 +18,7 @@
         :class="[
           'h-10 w-10 rounded-lg text-sm font-medium transition-colors',
           page === currentPage
-            ? 'bg-red-600 text-white'
+            ? 'bg-blue-600 text-white'
             : 'border border-gray-300 bg-white text-gray-700 hover:bg-gray-50'
         ]"
         @click="goToPage(page)"

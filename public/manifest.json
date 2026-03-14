@@ -1,8 +1,8 @@
 {
-  "name": "HomeAffairs",
-  "short_name": "HomeAffairs",
-  "description": "Your local grocery delivery service",
-  "theme_color": "#ED1C24",
+  "name": "BokkuMart",
+  "short_name": "BokkuMart",
+  "description": "Your trusted online grocery marketplace",
+  "theme_color": "#0052CC",
   "background_color": "#ffffff",
   "display": "standalone",
   "orientation": "portrait",

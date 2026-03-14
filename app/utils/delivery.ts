@@ -1,5 +1,5 @@
 /**
- * Geospatial Delivery Fee Calculator for HomeAffairs
+ * Geospatial Delivery Fee Calculator for BokkuMart
  * Uses Haversine Formula for accurate distance calculations
  */
 

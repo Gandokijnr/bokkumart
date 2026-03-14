@@ -11,15 +11,15 @@
       // Width
       'w-full': block,
       // Color variants
-      'bg-red-600 text-white hover:bg-red-700 focus:ring-red-600':
+      'bg-blue-600 text-white hover:bg-blue-700 focus:ring-blue-600':
         variant === 'solid' && color === 'primary',
       'bg-gray-200 text-gray-700 hover:bg-gray-300 focus:ring-gray-400':
         variant === 'solid' && color === 'neutral',
-      'border-2 border-red-600 text-red-600 hover:bg-red-50 focus:ring-red-600':
+      'border-2 border-blue-600 text-blue-600 hover:bg-blue-50 focus:ring-blue-600':
         variant === 'outline' && color === 'primary',
       'border-2 border-gray-300 text-gray-700 hover:bg-gray-50 focus:ring-gray-400':
         variant === 'outline' && color === 'neutral',
-      'text-red-600 hover:bg-red-50 focus:ring-red-600':
+      'text-blue-600 hover:bg-blue-50 focus:ring-blue-600':
         variant === 'ghost' && color === 'primary',
       'text-gray-600 hover:bg-gray-100 focus:ring-gray-400':
         variant === 'ghost' && color === 'neutral',

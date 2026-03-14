@@ -28,7 +28,7 @@
     </p>
     <button
       @click="navigateTo('/#categories')"
-      class="mb-8 inline-flex items-center justify-center rounded-xl bg-red-600 px-6 py-3 text-sm font-bold text-white shadow-lg transition-all hover:shadow-xl sm:mb-12 sm:px-8 sm:py-3.5"
+      class="mb-8 inline-flex items-center justify-center rounded-xl bg-blue-600 px-6 py-3 text-sm font-bold text-white shadow-lg transition-all hover:shadow-xl sm:mb-12 sm:px-8 sm:py-3.5"
     >
       <svg
         class="mr-2 h-5 w-5"
@@ -60,17 +60,17 @@
           v-for="category in categories.slice(0, 8)"
           :key="category.id"
           @click="navigateTo(`/category/${category.slug}`)"
-          class="group flex flex-col items-center rounded-xl border-2 border-gray-200 bg-white p-3 transition-all hover:border-red-600 hover:shadow-md sm:p-4"
+          class="group flex flex-col items-center rounded-xl border-2 border-gray-200 bg-white p-3 transition-all hover:border-blue-600 hover:shadow-md sm:p-4"
         >
           <div
-            class="mb-2 flex h-12 w-12 items-center justify-center rounded-full bg-gray-100 transition-colors group-hover:bg-red-50 sm:mb-3 sm:h-14 sm:w-14"
+            class="mb-2 flex h-12 w-12 items-center justify-center rounded-full bg-gray-100 transition-colors group-hover:bg-blue-50 sm:mb-3 sm:h-14 sm:w-14"
           >
             <span class="text-2xl sm:text-3xl">{{
               getCategoryIcon(category)
             }}</span>
           </div>
           <span
-            class="text-center text-xs font-medium text-gray-700 group-hover:text-red-600 sm:text-sm"
+            class="text-center text-xs font-medium text-gray-700 group-hover:text-blue-600 sm:text-sm"
             >{{ category.name }}</span
           >
         </button>

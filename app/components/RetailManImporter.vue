@@ -13,7 +13,7 @@
     <!-- Store Selection (Required) -->
     <div class="mb-6 p-4 bg-amber-50 border-2 border-amber-200 rounded-xl">
       <label class="block text-sm font-bold text-amber-900 mb-2">
-        Target Store <span class="text-red-600">*</span>
+        Target Store <span class="text-blue-600">*</span>
       </label>
       <p class="text-xs text-amber-700 mb-3">
         Select the branch where this inventory will be applied. This is required
@@ -24,14 +24,14 @@
         Loading stores...
       </div>
 
-      <div v-else-if="stores.length === 0" class="text-sm text-red-600">
+      <div v-else-if="stores.length === 0" class="text-sm text-blue-600">
         No stores available. Please contact support.
       </div>
 
       <select
         v-else
         v-model="selectedStoreId"
-        class="w-full rounded-lg border-2 border-amber-300 px-4 py-3 text-sm focus:border-red-500 focus:outline-none bg-white"
+        class="w-full rounded-lg border-2 border-amber-300 px-4 py-3 text-sm focus:border-blue-500 focus:outline-none bg-white"
         :disabled="isUploading"
       >
         <option value="">-- Select a Store --</option>
@@ -54,7 +54,7 @@
         class="border-2 border-dashed rounded-xl p-8 text-center transition-all"
         :class="[
           isDragging
-            ? 'border-red-500 bg-red-50'
+            ? 'border-blue-500 bg-blue-50'
             : 'border-gray-300 bg-gray-50',
           isUploading
             ? 'opacity-50 cursor-not-allowed'
@@ -124,7 +124,7 @@
       </div>
       <button
         :disabled="isUploading || !selectedStoreId"
-        class="rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
+        class="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
         @click="startUpload"
       >
         {{ isUploading ? "Importing..." : "Start Import" }}
@@ -134,9 +134,9 @@
     <!-- Warning if no store selected -->
     <div
       v-if="selectedFile && !selectedStoreId && !result"
-      class="mb-6 p-3 bg-red-50 border border-red-200 rounded-lg"
+      class="mb-6 p-3 bg-blue-50 border border-blue-200 rounded-lg"
     >
-      <p class="text-sm text-red-700 flex items-center gap-2">
+      <p class="text-sm text-blue-700 flex items-center gap-2">
         <svg
           class="h-4 w-4"
           fill="none"
@@ -162,7 +162,7 @@
       </div>
       <div class="h-2 w-full overflow-hidden rounded-full bg-gray-200">
         <div
-          class="h-full rounded-full bg-red-600 transition-all duration-300"
+          class="h-full rounded-full bg-blue-600 transition-all duration-300"
           :style="{ width: `${progress.percentage}%` }"
         ></div>
       </div>
@@ -314,9 +314,9 @@
             <p class="text-xs text-gray-600">Inv. Updated</p>
           </div>
           <div
-            class="rounded-lg bg-white p-3 text-center border border-red-200"
+            class="rounded-lg bg-white p-3 text-center border border-blue-200"
           >
-            <p class="text-xl font-bold text-red-600">{{ result.failed }}</p>
+            <p class="text-xl font-bold text-blue-600">{{ result.failed }}</p>
             <p class="text-xs text-gray-600">Failed</p>
           </div>
         </div>
@@ -325,7 +325,7 @@
       <!-- Error Report Download -->
       <div v-if="result.errorReport" class="mt-4">
         <button
-          class="flex items-center gap-2 rounded-lg border-2 border-red-200 bg-red-50 px-4 py-2 text-sm font-medium text-red-700 hover:bg-red-100"
+          class="flex items-center gap-2 rounded-lg border-2 border-blue-200 bg-blue-50 px-4 py-2 text-sm font-medium text-blue-700 hover:bg-blue-100"
           @click="downloadErrorReport"
         >
           <svg
@@ -351,10 +351,10 @@
       <!-- Parse Errors -->
       <div
         v-if="result.parseErrors && result.parseErrors.length > 0"
-        class="mt-4 rounded-lg border border-red-200 bg-red-50 p-4"
+        class="mt-4 rounded-lg border border-blue-200 bg-blue-50 p-4"
       >
-        <h4 class="text-sm font-bold text-red-900 mb-2">CSV Parse Errors</h4>
-        <ul class="text-xs text-red-700 space-y-1 max-h-32 overflow-y-auto">
+        <h4 class="text-sm font-bold text-blue-900 mb-2">CSV Parse Errors</h4>
+        <ul class="text-xs text-blue-700 space-y-1 max-h-32 overflow-y-auto">
           <li
             v-for="(error, idx) in result.parseErrors.slice(0, 10)"
             :key="idx"
@@ -370,10 +370,10 @@
       <!-- Processing Errors -->
       <div
         v-if="result.processingErrors && result.processingErrors.length > 0"
-        class="mt-4 rounded-lg border border-red-200 bg-red-50 p-4"
+        class="mt-4 rounded-lg border border-blue-200 bg-blue-50 p-4"
       >
-        <h4 class="text-sm font-bold text-red-900 mb-2">Processing Errors</h4>
-        <ul class="text-xs text-red-700 space-y-1 max-h-32 overflow-y-auto">
+        <h4 class="text-sm font-bold text-blue-900 mb-2">Processing Errors</h4>
+        <ul class="text-xs text-blue-700 space-y-1 max-h-32 overflow-y-auto">
           <li
             v-for="(error, idx) in result.processingErrors.slice(0, 10)"
             :key="idx"
@@ -404,18 +404,18 @@
         <table class="w-full text-xs">
           <thead class="bg-gray-50">
             <tr>
-              <th class="px-2 py-1 text-left font-mono text-red-700">name *</th>
+              <th class="px-2 py-1 text-left font-mono text-blue-700">name *</th>
               <th class="px-2 py-1 text-left font-mono">sku</th>
               <th class="px-2 py-1 text-left font-mono text-green-700">
                 category
               </th>
               <th class="px-2 py-1 text-left font-mono">description</th>
-              <th class="px-2 py-1 text-left font-mono text-red-700">
+              <th class="px-2 py-1 text-left font-mono text-blue-700">
                 price *
               </th>
               <th class="px-2 py-1 text-left font-mono">cost_price</th>
               <th class="px-2 py-1 text-left font-mono">unit</th>
-              <th class="px-2 py-1 text-left font-mono text-red-700">
+              <th class="px-2 py-1 text-left font-mono text-blue-700">
                 stock_level *
               </th>
             </tr>

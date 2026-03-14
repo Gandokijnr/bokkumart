@@ -1,10 +1,10 @@
 <template>
-  <header class="sticky top-0 z-50 bg-red-700 shadow-sm">
+  <header class="sticky top-0 z-50 bg-[#0052CC] shadow-sm">
     <div class="sticky top-0 z-[60] md:static">
       <AnnounceBar />
     </div>
 
-    <div class="bg-white text-red-700">
+    <div class="bg-[#ffff] text-blue-700">
       <div class="mx-auto max-w-7xl px-4 sm:px-6">
         <div class="flex h-10 items-center justify-between gap-4">
           <div class="flex items-center gap-2 text-sm">
@@ -15,7 +15,7 @@
             }}</span>
             <button
               type="button"
-              class="ml-1 font-semibold text-black hover:text-black underline underline-offset-2"
+              class="ml-1 font-semibold text-blue-700 hover:text-blue-800 underline underline-offset-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-700/80 focus-visible:ring-offset-2 text-blue-700 rounded"
               @click="handleBranchSwitch"
             >
               Change
@@ -23,14 +23,26 @@
           </div>
 
           <div class="flex items-center gap-3">
-            <div class="hidden sm:flex items-center gap-2 opacity-90">
-              <a class="hover:opacity-100" href="#" aria-label="Instagram">
+            <div class="hidden sm:flex items-center gap-2 text-white/90">
+              <a
+                class="hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-white/80 focus-visible:ring-offset-2 text-blue-700 rounded"
+                href="#"
+                aria-label="Instagram"
+              >
                 <Icon name="mdi:instagram" class="text-2xl" />
               </a>
-              <a class="hover:opacity-100" href="#" aria-label="Twitter/X">
+              <a
+                class="hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-white/80 focus-visible:ring-offset-2 text-blue-700 rounded"
+                href="#"
+                aria-label="Twitter/X"
+              >
                 <Icon name="mdi:twitter" class="text-2xl" />
               </a>
-              <a class="hover:opacity-100" href="#" aria-label="WhatsApp">
+              <a
+                class="hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-white/80 focus-visible:ring-offset-2 text-blue-700 rounded"
+                href="#"
+                aria-label="WhatsApp"
+              >
                 <Icon name="mdi:whatsapp" class="text-2xl" />
               </a>
             </div>
@@ -43,22 +55,21 @@
       <div class="grid grid-cols-12 items-center gap-3 px-4 py-4 md:px-6">
         <NuxtLink
           to="/"
-          class="col-span-6 sm:col-span-3 flex items-center gap-2.5 md:gap-3"
+          class="col-span-6 sm:col-span-3 flex items-center gap-2.5 md:gap-3 focus:outline-none focus:ring-2 focus:ring-white/80 focus:ring-offset-2 focus:ring-offset-[#0052CC] rounded-xl"
         >
           <div
-            class="flex h-11 w-11 items-center justify-center rounded-xl bg-red-600 shadow-md md:h-12 md:w-12"
+            class="flex h-11 w-11 items-center justify-center rounded-xl bg-white shadow-md md:h-12 md:w-12"
           >
-            <span class="text-base font-bold text-white md:text-lg">HA</span>
+            <span class="text-base font-bold text-[#0052CC] md:text-lg"
+              >BM</span
+            >
           </div>
           <div class="leading-tight">
-            <div
-              class="text-base font-bold text-white md:text-lg"
-              :style="headingStyle"
-            >
-              HomeAffairs
+            <div class="text-base font-bold text-white md:text-lg">
+              BokkuMart
             </div>
-            <div class="hidden text-xs text-white sm:block">
-              Premium Supermarket
+            <div class="hidden text-xs text-white/80 sm:block">
+              Fresh. Fast. Delivered.
             </div>
           </div>
         </NuxtLink>
@@ -66,11 +77,11 @@
         <div class="col-span-12 order-last sm:col-span-6 sm:order-none">
           <NuxtLink
             to="/#deals"
-            class="group relative flex h-11 w-full items-center overflow-hidden rounded-xl border-2 border-gray-200 bg-gray-50 shadow-sm transition hover:border-gray-300 hover:shadow-md bg-[url('/discountbanner.gif')] bg-cover bg-center"
+            class="group relative flex h-11 w-full items-center overflow-hidden rounded-xl border border-white/20 bg-white/10 shadow-sm transition hover:border-white/40 hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-white/80 focus-visible:ring-offset-2 focus-visible:ring-offset-[#0052CC] bg-[url('/bukkudiscountbanner.gif')] bg-cover bg-center"
             aria-label="Advertisement"
           >
             <img
-              src="/discountbanner.gif"
+              src="/bukkudiscountbanner.gif"
               alt="Advertisement"
               class="block h-full w-full object-cover"
               fetchpriority="high"
@@ -94,7 +105,7 @@
           class="col-span-6 sm:col-span-3 flex items-center justify-end gap-2"
         >
           <button
-            class="hidden h-10 w-10 items-center justify-center rounded-xl border border-gray-200 bg-white text-gray-700 shadow-sm transition-all hover:border-gray-300 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-red-600 focus:ring-offset-1 md:flex"
+            class="hidden h-10 w-10 items-center justify-center rounded-xl border border-gray-200 bg-white text-gray-700 shadow-sm transition-all hover:border-gray-300 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-[#0052CC] focus:ring-offset-1 md:flex"
             type="button"
             aria-label="Search"
             @click="showGlobalSearch = true"
@@ -116,7 +127,7 @@
 
           <NuxtLink
             to="/cart"
-            class="relative flex h-10 w-10 items-center justify-center rounded-xl border border-gray-200 bg-white text-gray-700 shadow-sm transition-all hover:border-gray-300 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-red-600 focus:ring-offset-1"
+            class="relative flex h-10 w-10 items-center justify-center rounded-xl border border-gray-200 bg-white text-gray-700 shadow-sm transition-all hover:border-gray-300 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-[#0052CC] focus:ring-offset-1"
             aria-label="Shopping cart"
           >
             <svg
@@ -135,7 +146,7 @@
             <ClientOnly>
               <span
                 v-if="cartCount > 0"
-                class="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-600 text-xs font-bold text-white"
+                class="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-[#FFC107] text-xs font-bold text-gray-900"
                 >{{ cartCount }}</span
               >
             </ClientOnly>
@@ -143,7 +154,7 @@
 
           <NuxtLink
             to="/profile"
-            class="hidden h-10 w-10 items-center justify-center rounded-xl border border-gray-200 bg-white text-gray-700 shadow-sm transition-all hover:border-gray-300 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-red-600 focus:ring-offset-1 sm:flex"
+            class="hidden h-10 w-10 items-center justify-center rounded-xl border border-gray-200 bg-white text-gray-700 shadow-sm transition-all hover:border-gray-300 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-[#0052CC] focus:ring-offset-1 sm:flex"
             aria-label="Account"
           >
             <svg
@@ -192,7 +203,7 @@
 
           <!-- Mobile Menu Button - Hidden when bottom nav is present -->
           <button
-            class="hidden h-10 w-10 items-center justify-center rounded-xl border border-gray-200 bg-white text-gray-700 shadow-sm transition-all hover:border-gray-300 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-red-600 focus:ring-offset-1 lg:hidden"
+            class="hidden h-10 w-10 items-center justify-center rounded-xl border border-gray-200 bg-white text-gray-700 shadow-sm transition-all hover:border-gray-300 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-[#0052CC] focus:ring-offset-1 lg:hidden"
             type="button"
             aria-label="Menu"
             :aria-expanded="mobileMenuOpen ? 'true' : 'false'"
@@ -232,17 +243,17 @@
 
       <!-- <div class="border-t border-gray-100 bg-white px-4 md:px-6">
         <nav class="flex items-center gap-5 overflow-x-auto py-3 text-sm" aria-label="Primary">
-          <button class="flex items-center gap-2 font-medium text-gray-700 transition-colors hover:text-red-600" @click="navigateTo('/#prepared')">
+          <button class="flex items-center gap-2 font-medium text-gray-700 transition-colors hover:text-blue-600" @click="navigateTo('/#prepared')">
             Prepared Food
             <span class="rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-semibold text-emerald-700">New</span>
           </button>
-          <button class="flex items-center gap-2 font-medium text-gray-700 transition-colors hover:text-red-600" @click="navigateTo('/#hampers')">
+          <button class="flex items-center gap-2 font-medium text-gray-700 transition-colors hover:text-blue-600" @click="navigateTo('/#hampers')">
             Hampers
             <span class="rounded-full bg-rose-100 px-2 py-0.5 text-xs font-semibold text-rose-700">New</span>
           </button>
-          <button class="font-medium text-gray-700 transition-colors hover:text-red-600" @click="navigateTo('/#deals')">Deals</button>
-          <button class="font-medium text-gray-700 transition-colors hover:text-red-600" @click="navigateTo('/#about')">About</button>
-          <button class="font-medium text-gray-700 transition-colors hover:text-red-600" @click="navigateTo('/#contact')">Contact</button>
+          <button class="font-medium text-gray-700 transition-colors hover:text-blue-600" @click="navigateTo('/#deals')">Deals</button>
+          <button class="font-medium text-gray-700 transition-colors hover:text-blue-600" @click="navigateTo('/#about')">About</button>
+          <button class="font-medium text-gray-700 transition-colors hover:text-blue-600" @click="navigateTo('/#contact')">Contact</button>
         </nav>
       </div> -->
 
@@ -266,7 +277,7 @@
                 v-model="searchQuery"
                 type="search"
                 placeholder="Search for rice, fruits, beverages..."
-                class="w-full rounded-xl border-2 border-gray-200 bg-gray-50 py-3 pl-12 pr-4 text-sm outline-none transition focus:border-red-600 focus:bg-white"
+                class="w-full rounded-xl border-2 border-bokkumart-blue bg-bokkumart-blue-light py-3 pl-12 pr-4 text-sm outline-none transition focus:border-bokkumart-blue-dark focus:bg-white"
               />
               <svg
                 class="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400"
@@ -305,7 +316,7 @@
               v-model="searchQuery"
               type="search"
               placeholder="Search products..."
-              class="w-full rounded-xl border-2 border-gray-200 bg-gray-50 py-2.5 pl-11 pr-4 text-sm outline-none transition focus:border-red-600 focus:bg-white"
+              class="w-full rounded-xl border-2 border-gray-200 bg-gray-50 py-2.5 pl-11 pr-4 text-sm outline-none transition focus:border-[#0052CC] focus:bg-white"
             />
             <svg
               class="absolute left-3.5 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400"
@@ -330,7 +341,7 @@
                 handleBranchSwitch;
                 mobileMenuOpen = false;
               "
-              class="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-left text-sm font-semibold text-gray-700 transition-colors hover:bg-red-50 hover:text-red-700"
+              class="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-left text-sm font-semibold text-gray-700 transition-colors hover:bg-blue-50 hover:text-[#0052CC]"
             >
               <span class="text-lg">🏪</span>
               <span>{{ branchStore.activeBranchName }}</span>
@@ -338,7 +349,7 @@
             <NuxtLink
               to="/#deals"
               @click="mobileMenuOpen = false"
-              class="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-left text-sm font-semibold text-gray-700 transition-colors hover:bg-red-50 hover:text-red-700"
+              class="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-left text-sm font-semibold text-gray-700 transition-colors hover:bg-blue-50 hover:text-[#0052CC]"
             >
               <span class="text-lg">⚡</span>
               <span>Deals</span>
@@ -346,7 +357,7 @@
             <NuxtLink
               to="/#about"
               @click="mobileMenuOpen = false"
-              class="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-left text-sm font-semibold text-gray-700 transition-colors hover:bg-red-50 hover:text-red-700"
+              class="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-left text-sm font-semibold text-gray-700 transition-colors hover:bg-blue-50 hover:text-[#0052CC]"
             >
               <span class="text-lg">ℹ️</span>
               <span>About Us</span>
@@ -354,7 +365,7 @@
             <NuxtLink
               to="/#contact"
               @click="mobileMenuOpen = false"
-              class="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-left text-sm font-semibold text-gray-700 transition-colors hover:bg-red-50 hover:text-red-700"
+              class="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-left text-sm font-semibold text-gray-700 transition-colors hover:bg-blue-50 hover:text-[#0052CC]"
             >
               <span class="text-lg">📞</span>
               <span>Contact</span>
@@ -366,7 +377,7 @@
             <NuxtLink
               to="/profile"
               @click="mobileMenuOpen = false"
-              class="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-left text-sm font-semibold text-gray-700 transition-colors hover:bg-red-50 hover:text-red-700"
+              class="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-left text-sm font-semibold text-gray-700 transition-colors hover:bg-blue-50 hover:text-[#0052CC]"
             >
               <span class="text-lg">👤</span>
               <span>My Account</span>
@@ -470,7 +481,7 @@
               </button>
               <button
                 @click="confirmBranchSwitch"
-                class="flex-1 rounded-xl bg-red-600 px-4 py-3 text-sm font-medium text-white hover:bg-red-700 transition-colors"
+                class="flex-1 rounded-xl bg-[#0052CC] px-4 py-3 text-sm font-medium text-white hover:bg-[#003D8F] transition-colors"
               >
                 Clear Cart & Switch
               </button>
@@ -595,8 +606,7 @@ const confirmBranchSwitch = async () => {
 };
 
 const headingStyle = computed(() => ({
-  fontFamily:
-    "ui-serif, 'Playfair Display', Georgia, 'Times New Roman', Times, serif",
+  fontFamily: "'Inter', 'Plus Jakarta Sans', system-ui, sans-serif",
 }));
 
 // Handle escape key

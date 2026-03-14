@@ -91,7 +91,7 @@ onMounted(() => {
     >
       <div class="mx-auto max-w-3xl px-4 py-3 flex items-center gap-3">
         <div
-          class="w-11 h-11 rounded-[12px] bg-red-600 flex items-center justify-center flex-shrink-0 shadow"
+          class="w-11 h-11 rounded-[12px] bg-[#0052CC] flex items-center justify-center flex-shrink-0 shadow"
         >
           <svg
             class="w-5 h-5 text-white"
@@ -109,7 +109,7 @@ onMounted(() => {
 
         <div class="flex-1 min-w-0">
           <div class="text-sm font-bold text-gray-900 leading-tight truncate">
-            Install HomeAffairs
+            Install BokkuMart
           </div>
           <div class="text-xs text-gray-500 leading-tight mt-0.5 truncate">
             Add to Home Screen for quick access
@@ -125,7 +125,7 @@ onMounted(() => {
             Not now
           </button>
           <button
-            class="flex items-center gap-1.5 rounded-xl bg-red-600 px-4 py-2 text-xs font-bold text-white hover:bg-red-700 active:scale-95 transition-all shadow-sm"
+            class="flex items-center gap-1.5 rounded-xl bg-[#0052CC] px-4 py-2 text-xs font-bold text-white hover:bg-[#003D8F] active:scale-95 transition-all shadow-sm"
             @click="install"
             type="button"
           >

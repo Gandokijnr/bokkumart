@@ -6,7 +6,7 @@ definePageMeta({
   middleware: ["admin"],
 });
 
-useHead({ title: "Pending Riders - HomeAffairs" });
+useHead({ title: "Pending Riders - BokkuMart" });
 
 const loading = ref(false);
 const error = ref<string | null>(null);
@@ -164,7 +164,7 @@ onMounted(async () => {
     </div>
 
     <div v-if="loading" class="text-slate-600">Loading...</div>
-    <div v-else-if="error" class="text-red-600">{{ error }}</div>
+    <div v-else-if="error" class="text-blue-600">{{ error }}</div>
 
     <div v-else class="space-y-4">
       <div
@@ -243,7 +243,7 @@ onMounted(async () => {
                 </button>
                 <button
                   @click="reject(row)"
-                  class="flex-1 px-3 py-2 rounded-lg bg-red-600 text-white text-sm hover:bg-red-700"
+                  class="flex-1 px-3 py-2 rounded-lg bg-blue-600 text-white text-sm hover:bg-blue-700"
                 >
                   Confirm Reject
                 </button>
@@ -252,7 +252,7 @@ onMounted(async () => {
             <div v-else class="flex gap-2">
               <button
                 @click="startReject(row)"
-                class="flex-1 px-3 py-2 rounded-lg bg-red-100 text-red-700 text-sm hover:bg-red-200"
+                class="flex-1 px-3 py-2 rounded-lg bg-blue-100 text-blue-700 text-sm hover:bg-blue-200"
               >
                 Reject
               </button>

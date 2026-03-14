@@ -176,7 +176,7 @@ watch(
                   v-model="searchQuery"
                   type="text"
                   placeholder="Search for rice, fruits, beverages..."
-                  class="w-full rounded-xl border-2 border-gray-200 bg-gray-50 py-3.5 pl-12 pr-4 text-base outline-none transition focus:border-red-600 focus:bg-white"
+                  class="w-full rounded-xl border-2 border-gray-200 bg-gray-50 py-3.5 pl-12 pr-4 text-base outline-none transition focus:border-blue-600 focus:bg-white"
                   @input="onInput"
                 />
                 <button
@@ -212,7 +212,7 @@ watch(
               <!-- Loading State -->
               <div v-if="isSearching" class="p-8 text-center">
                 <svg
-                  class="h-8 w-8 animate-spin text-red-600 mx-auto"
+                  class="h-8 w-8 animate-spin text-blue-600 mx-auto"
                   fill="none"
                   viewBox="0 0 24 24"
                 >
@@ -318,7 +318,7 @@ watch(
                         </p>
                         <p
                           v-if="!product.isAvailable"
-                          class="text-xs text-red-500 mt-0.5"
+                          class="text-xs text-blue-500 mt-0.5"
                         >
                           Out of stock
                         </p>
@@ -327,7 +327,7 @@ watch(
                       <button
                         v-if="product.isAvailable"
                         @click="addToCart(product)"
-                        class="flex-shrink-0 flex items-center justify-center w-10 h-10 rounded-full bg-red-600 text-white hover:bg-red-700 active:scale-95 transition-all"
+                        class="flex-shrink-0 flex items-center justify-center w-10 h-10 rounded-full bg-blue-600 text-white hover:bg-blue-700 active:scale-95 transition-all"
                         :class="{
                           'bg-green-600 hover:bg-green-700': addedProducts.has(
                             product.id,

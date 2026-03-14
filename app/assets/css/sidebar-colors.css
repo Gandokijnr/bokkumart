@@ -1,69 +1,64 @@
-/* HomeAffairs Sidebar - Tailwind CSS Color Reference */
+/* BokkuMart Sidebar - Tailwind CSS Color Reference */
 
 /* ============================================
-   TEAL BRAND COLORS (Primary)
+   BOKKU BLUE BRAND COLORS (Primary)
    ============================================ */
 
 /* Active Navigation Item */
 .active-nav {
-  @apply bg-teal-500;
-  /* Gradient: #14B8A6 → #0D9488 */
+  @apply bg-[#0052CC];
+  /* Gradient: #0052CC → #003D8F */
 }
 
-/* Teal Backgrounds */
-.teal-bg-light {
-  @apply bg-teal-50;
-  /* Very light teal for subtle backgrounds */
+/* Blue Backgrounds */
+.blue-bg-light {
+  @apply bg-blue-50;
+  /* Very light blue for subtle backgrounds: #EFF6FF */
 }
 
-.teal-border {
-  @apply border-teal-200;
-  /* Light teal for borders */
+.blue-border {
+  @apply border-blue-200;
+  /* Light blue for borders: #BFDBFE */
 }
 
-.teal-text {
-  @apply text-teal-600;
-  /* Main teal text color */
+.blue-text {
+  @apply text-[#0052CC];
+  /* Main brand blue text color */
 }
 
-.teal-text-dark {
-  @apply text-teal-900;
-  /* Dark teal for emphasis */
+.blue-text-dark {
+  @apply text-blue-900;
+  /* Dark blue for emphasis: #1E3A8A */
 }
 
-/* Teal Hover States */
-.hover-teal {
-  @apply hover:text-teal-600;
+/* Blue Hover States */
+.hover-blue {
+  @apply hover:text-[#0052CC];
 }
 
-.hover-teal-bg {
-  @apply hover:bg-gray-50 hover:text-teal-600;
+.hover-blue-bg {
+  @apply hover:bg-blue-50 hover:text-[#0052CC];
 }
 
 /* ============================================
-   RED COLORS (Secondary - Notifications, Brand)
+   YELLOW COLORS (Secondary - Sale badges, CTAs)
    ============================================ */
 
-/* HomeAffairs Brand Red */
-.brand-red {
-  @apply bg-red-600;
-  /* #DC2626 - Main brand color */
+/* BokkuMart Brand Yellow */
+.brand-yellow {
+  @apply bg-[#FFC107];
+  /* #FFC107 - Sale badges, Add to Cart highlights */
 }
 
-.brand-red-gradient {
-  @apply bg-red-600;
-  /* Rich red gradient */
+.brand-yellow-light {
+  @apply bg-yellow-50;
+  /* Very light yellow backgrounds: #FEFCE8 */
 }
 
-/* Notification Badge */
-.notification-badge {
-  @apply bg-red-500 text-white;
-  /* Bright red for urgency */
-}
-
-/* Sign Out Hover */
-.signout-hover {
-  @apply hover:bg-red-50 hover:text-red-600 hover:border-red-200;
+/* Cart/CTA Button Yellow Accent */
+.cta-yellow {
+  @apply bg-[#FFC107] text-gray-900;
+  /* High contrast for important actions */
 }
 
 /* ============================================
@@ -134,38 +129,49 @@
 
 /* Active Navigation Link */
 .nav-link-active {
-  @apply bg-teal-500 text-white shadow-md;
+  @apply bg-[#0052CC] text-white shadow-md rounded-lg;
 }
 
 /* Inactive Navigation Link */
 .nav-link-inactive {
-  @apply text-gray-700 hover:bg-gray-50 hover:text-teal-600;
+  @apply text-gray-700 hover:bg-blue-50 hover:text-[#0052CC] rounded-lg;
 }
 
 /* User Avatar (Branch Manager) */
 .user-avatar {
-  @apply bg-teal-500 ring-2 ring-teal-100;
+  @apply bg-[#0052CC] ring-2 ring-blue-100;
 }
 
 /* Brand Avatar (Logo) */
 .brand-avatar {
-  @apply bg-red-600;
+  @apply bg-[#0052CC];
 }
 
 /* Store Badge (Branch Manager) */
 .store-badge {
-  @apply bg-teal-50 border-teal-200 text-teal-900;
+  @apply bg-blue-50 border-blue-200 text-blue-900;
 }
 
 /* Notification Count Badge */
 .notif-badge-active {
-  @apply bg-white text-teal-600;
+  @apply bg-white text-[#0052CC];
   /* On active navigation item */
 }
 
 .notif-badge-inactive {
-  @apply bg-red-500 text-white;
-  /* On inactive navigation item */
+  @apply bg-[#FFC107] text-gray-900;
+  /* On inactive navigation item - yellow for visibility */
+}
+
+/* Sale Badge */
+.sale-badge {
+  @apply bg-[#FFC107] text-gray-900 px-2 py-1 rounded-full text-xs font-bold;
+}
+
+/* Add to Cart Button */
+.add-to-cart-btn {
+  @apply bg-[#0052CC] text-white rounded-lg px-4 py-2 font-semibold 
+         hover:bg-[#003D8F] transition-all focus:ring-2 focus:ring-[#0052CC] focus:ring-offset-2;
 }
 
 /* ============================================
@@ -173,20 +179,19 @@
    ============================================ */
 
 /*
-PRIMARY (Teal):
-- teal-50:  #F0FDFA (lightest backgrounds)
-- teal-100: #CCFBF1 (rings, very subtle)
-- teal-200: #99F6E4 (borders)
-- teal-500: #14B8A6 (primary brand)
-- teal-600: #0D9488 (hover, text)
-- teal-900: #134E4A (dark text on teal bg)
+PRIMARY (Bokku Blue):
+- blue-50:  #EFF6FF (lightest backgrounds)
+- blue-100: #DBEAFE (rings, very subtle)
+- blue-200: #BFDBFE (borders)
+- brand-blue: #0052CC (primary brand)
+- brand-blue-dark: #003D8F (hover, dark text)
+- blue-900: #1E3A8A (dark text on blue bg)
 
-SECONDARY (Red):
-- red-50:  #FEF2F2 (hover backgrounds)
-- red-200: #FECACA (hover borders)
-- red-500: #EF4444 (notification badges)
-- red-600: #DC2626 (brand primary)
-- red-700: #B91C1C (brand gradient end)
+SECONDARY (Yellow):
+- yellow-50:  #FEFCE8 (hover backgrounds)
+- yellow-100: #FEF9C3 (hover borders)
+- brand-yellow: #FFC107 (sale badges, CTAs)
+- yellow-700: #A16207 (text on yellow)
 
 NEUTRAL (Gray):
 - gray-50:  #F9FAFB
@@ -199,7 +204,13 @@ NEUTRAL (Gray):
 
 STATUS:
 - green-500: #22C55E (active indicator)
+- red-500: #EF4444 (error states, out of stock)
+- orange-500: #F97316 (low stock warning)
 
-WHITE: #FFFFFF (active text, badges)
+WHITE: #FFFFFF (backgrounds, text on dark)
 BLACK/50: rgba(0, 0, 0, 0.5) (mobile overlay)
+
+TYPOGRAPHY:
+- Font: Inter, Plus Jakarta Sans, system-ui, sans-serif
+- Modern, clean sans-serif for "Tech-Forward" grocery look
 */

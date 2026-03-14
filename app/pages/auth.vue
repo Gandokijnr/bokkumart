@@ -24,9 +24,7 @@
             <p class="font-medium text-amber-900">Authentication Required</p>
             <p class="text-sm text-amber-700">
               Please sign in to continue to
-              {{
-                redirectPath !== "/" ? "your requested page" : "Home Affairs"
-              }}.
+              {{ redirectPath !== "/" ? "your requested page" : "BokkuMart" }}.
             </p>
           </div>
         </div>
@@ -44,7 +42,7 @@
 
       <div class="text-center mb-8">
         <div
-          class="w-16 h-16 bg-red-500 rounded-2xl mx-auto mb-4 flex items-center justify-center shadow-lg"
+          class="w-16 h-16 bg-[#0052CC] rounded-2xl mx-auto mb-4 flex items-center justify-center shadow-lg"
         >
           <svg
             class="w-8 h-8 text-white"
@@ -60,7 +58,7 @@
             />
           </svg>
         </div>
-        <h1 class="text-2xl font-bold text-gray-900">Home Affairs</h1>
+        <h1 class="text-2xl font-bold text-gray-900">BokkuMart</h1>
         <p class="text-gray-600 mt-1">
           {{ isSignUp ? "Create an account" : "Sign in to continue" }}
         </p>
@@ -191,7 +189,7 @@
               }}
               <FormButton
                 variant="ghost"
-                color="primary"
+                color="neutral"
                 size="sm"
                 @click="toggleAuthMode"
               >

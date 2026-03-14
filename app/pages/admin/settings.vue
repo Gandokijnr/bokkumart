@@ -9,7 +9,7 @@
       >
       <select
         v-model="selectedStoreId"
-        class="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-red-500 focus:outline-none"
+        class="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none"
         @change="loadStoreSettings"
       >
         <option value="">Choose a store...</option>
@@ -34,7 +34,7 @@
                 :class="
                   selectedStore?.is_active
                     ? 'bg-green-100 text-green-700'
-                    : 'bg-red-100 text-red-700'
+                    : 'bg-blue-100 text-blue-700'
                 "
               >
                 {{ selectedStore?.is_active ? "Active" : "Inactive" }}
@@ -48,7 +48,7 @@
             @click="toggleStoreStatus"
             :class="
               selectedStore?.is_active
-                ? 'rounded-lg bg-red-100 px-4 py-2 text-sm font-bold text-red-700 hover:bg-red-200'
+                ? 'rounded-lg bg-blue-100 px-4 py-2 text-sm font-bold text-blue-700 hover:bg-blue-200'
                 : 'rounded-lg bg-green-100 px-4 py-2 text-sm font-bold text-green-700 hover:bg-green-200'
             "
           >
@@ -133,7 +133,7 @@
                 paystackAccountData.accountNumber.length !== 10 ||
                 !paystackOnboarding.resolvedAccountName
               "
-              class="rounded-lg bg-red-600 px-6 py-2 text-sm font-bold text-white hover:bg-red-700 disabled:cursor-not-allowed disabled:bg-gray-300"
+              class="rounded-lg bg-blue-600 px-6 py-2 text-sm font-bold text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-gray-300"
             >
               {{
                 paystackOnboarding.loading
@@ -144,7 +144,7 @@
           </div>
         </template>
 
-        <p v-if="paystackOnboarding.error" class="mt-3 text-sm text-red-600">
+        <p v-if="paystackOnboarding.error" class="mt-3 text-sm text-blue-600">
           {{ paystackOnboarding.error }}
         </p>
         <p
@@ -229,7 +229,7 @@
                       )
                   "
                   type="checkbox"
-                  class="h-4 w-4 rounded border-gray-300 text-red-600 focus:ring-red-500"
+                  class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                 />
                 <span class="text-sm text-gray-600">Open</span>
               </label>
@@ -238,7 +238,7 @@
         </div>
         <button
           @click="saveOperatingHours"
-          class="mt-4 rounded-lg bg-red-600 px-6 py-2 text-sm font-bold text-white hover:bg-red-700"
+          class="mt-4 rounded-lg bg-blue-600 px-6 py-2 text-sm font-bold text-white hover:bg-blue-700"
         >
           Save Hours
         </button>
@@ -254,7 +254,7 @@
             >
             <select
               v-model="selectedStore.delivery_mode"
-              class="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-red-500 focus:outline-none"
+              class="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none"
             >
               <option value="manual">Manual (Staff assigns riders)</option>
               <option value="automatic">Automatic (Auto-assign riders)</option>
@@ -275,7 +275,7 @@
               v-model="selectedStore.metadata.pickupGate"
               type="text"
               placeholder="e.g. Gate 1, South Entrance"
-              class="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-red-500 focus:outline-none"
+              class="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none"
             />
             <p class="mt-1 text-xs text-gray-500">
               Where riders should pick up orders
@@ -289,7 +289,7 @@
               v-model="settings.deliveryFee"
               type="number"
               min="0"
-              class="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-red-500 focus:outline-none"
+              class="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none"
             />
           </div>
           <div>
@@ -300,7 +300,7 @@
               v-model="settings.freeDeliveryThreshold"
               type="number"
               min="0"
-              class="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-red-500 focus:outline-none"
+              class="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none"
             />
           </div>
           <div>
@@ -311,7 +311,7 @@
               v-model="settings.minOrderAmount"
               type="number"
               min="0"
-              class="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-red-500 focus:outline-none"
+              class="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none"
             />
           </div>
           <div>
@@ -322,13 +322,13 @@
               v-model="settings.maxDeliveryDistance"
               type="number"
               min="0"
-              class="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-red-500 focus:outline-none"
+              class="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none"
             />
           </div>
         </div>
         <button
           @click="saveDeliverySettings"
-          class="mt-4 rounded-lg bg-red-600 px-6 py-2 text-sm font-bold text-white hover:bg-red-700"
+          class="mt-4 rounded-lg bg-blue-600 px-6 py-2 text-sm font-bold text-white hover:bg-blue-700"
         >
           Save Settings
         </button>
@@ -342,7 +342,7 @@
             <input
               v-model="settings.notifyNewOrders"
               type="checkbox"
-              class="h-4 w-4 rounded border-gray-300 text-red-600 focus:ring-red-500"
+              class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
             />
             <span class="text-sm text-gray-700"
               >Send notifications for new orders</span
@@ -352,7 +352,7 @@
             <input
               v-model="settings.notifyLowStock"
               type="checkbox"
-              class="h-4 w-4 rounded border-gray-300 text-red-600 focus:ring-red-500"
+              class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
             />
             <span class="text-sm text-gray-700">Alert when stock is low</span>
           </label>
@@ -360,7 +360,7 @@
             <input
               v-model="settings.notifyCancellations"
               type="checkbox"
-              class="h-4 w-4 rounded border-gray-300 text-red-600 focus:ring-red-500"
+              class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
             />
             <span class="text-sm text-gray-700"
               >Notify on order cancellations</span
@@ -375,7 +375,7 @@
           <h4 class="font-bold text-gray-900">Store Staff</h4>
           <button
             @click="showAddStaffModal = true"
-            class="rounded-lg bg-red-600 px-4 py-2 text-sm font-bold text-white hover:bg-red-700"
+            class="rounded-lg bg-blue-600 px-4 py-2 text-sm font-bold text-white hover:bg-blue-700"
           >
             Add Staff
           </button>
@@ -388,9 +388,9 @@
           >
             <div class="flex items-center gap-3">
               <div
-                class="flex h-10 w-10 items-center justify-center rounded-full bg-red-100"
+                class="flex h-10 w-10 items-center justify-center rounded-full bg-blue-100"
               >
-                <span class="font-bold text-red-600">{{
+                <span class="font-bold text-blue-600">{{
                   (staff.full_name || staff.id)?.[0]?.toUpperCase()
                 }}</span>
               </div>
@@ -404,7 +404,7 @@
             <button
               v-if="staff.role !== 'admin'"
               @click="removeStaff(staff.id)"
-              class="text-sm text-red-600 hover:text-red-800"
+              class="text-sm text-blue-600 hover:text-blue-800"
             >
               Remove
             </button>
@@ -435,7 +435,7 @@
               v-model="newStaffEmail"
               type="email"
               placeholder="staff@example.com"
-              class="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-red-500 focus:outline-none"
+              class="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none"
             />
           </div>
           <div>
@@ -444,7 +444,7 @@
             >
             <select
               v-model="newStaffRole"
-              class="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-red-500 focus:outline-none"
+              class="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none"
             >
               <option value="staff">Staff (Order Management)</option>
               <option value="manager">Manager (Full Access)</option>
@@ -461,7 +461,7 @@
           <button
             @click="addStaff"
             :disabled="!newStaffEmail"
-            class="flex-1 rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700 disabled:cursor-not-allowed disabled:bg-gray-300"
+            class="flex-1 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-gray-300"
           >
             Add Staff
           </button>

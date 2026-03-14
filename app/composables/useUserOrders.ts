@@ -280,8 +280,8 @@ export const useUserOrders = () => {
       paid: { label: "Paid", color: "text-emerald-700", bg: "bg-emerald-100" },
       confirmed: {
         label: "Confirmed",
-        color: "text-red-700",
-        bg: "bg-red-100",
+        color: "text-blue-700",
+        bg: "bg-blue-100",
       },
       ready_for_pos: {
         label: "Packing",
@@ -318,8 +318,8 @@ export const useUserOrders = () => {
       },
       cancelled: {
         label: "Cancelled",
-        color: "text-red-700",
-        bg: "bg-red-100",
+        color: "text-blue-700",
+        bg: "bg-blue-100",
       },
       refunded: {
         label: "Refunded",

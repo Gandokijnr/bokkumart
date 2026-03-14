@@ -1,9 +1,237 @@
 @import "tailwindcss";
 
+/* ============================================
+   BOKKUMART DESIGN SYSTEM
+   ============================================ */
+@theme {
+  /* Brand Colors */
+  --color-brand-blue: #0052cc;
+  --color-brand-blue-light: #e6f0ff;
+  --color-brand-blue-dark: #003d8f;
+  --color-brand-yellow: #ffc107;
+  --color-brand-yellow-light: #fff8e1;
+
+  /* Semantic Colors */
+  --color-primary: var(--color-brand-blue);
+  --color-secondary: var(--color-brand-yellow);
+  --color-background: #ffffff;
+  --color-surface: #f8fafc;
+  --color-border: #e2e8f0;
+
+  /* Typography */
+  --font-sans:
+    "Inter", "Plus Jakarta Sans", system-ui, -apple-system, sans-serif;
+}
+
+/* Global Styles */
+html {
+  font-family: var(--font-sans);
+}
+
 @media (max-width: 768px) {
   input,
   select,
   textarea {
     font-size: 16px;
+  }
+}
+
+/* Utility Classes for BokkuMart */
+@layer utilities {
+  .btn-primary {
+    @apply rounded-lg bg-[#0052CC] px-4 py-2.5 font-semibold text-white shadow-sm transition-all hover:bg-[#003D8F] focus:ring-2 focus:ring-[#0052CC] focus:ring-offset-2;
+  }
+
+  .btn-secondary {
+    @apply rounded-lg bg-[#FFC107] px-4 py-2.5 font-semibold text-gray-900 shadow-sm transition-all hover:bg-[#FFB300] focus:ring-2 focus:ring-[#FFC107] focus:ring-offset-2;
+  }
+
+  .card-bokku {
+    @apply rounded-2xl border border-gray-200 bg-white p-4 shadow-sm transition-all hover:border-[#0052CC] hover:shadow-lg;
+  }
+
+  .badge-sale {
+    @apply rounded-full bg-[#FFC107] px-2.5 py-1 text-xs font-bold text-gray-900 shadow-sm;
+  }
+
+  .badge-primary {
+    @apply rounded-full bg-[#0052CC] px-2.5 py-1 text-xs font-bold text-white shadow-sm;
+  }
+
+  .text-brand {
+    @apply text-[#0052CC];
+  }
+
+  .bg-brand {
+    @apply bg-[#0052CC];
+  }
+
+  .border-brand {
+    @apply border-[#0052CC];
+  }
+}
+
+@layer utilities {
+  [class*="bg-red-"],
+  [class*="bg-teal-"],
+  [class*="bg-amber-"],
+  [class*="bg-yellow-"],
+  [class*="bg-orange-"],
+  [class*="bg-purple-"],
+  [class*="bg-pink-"],
+  [class*="bg-indigo-"],
+  [class*="bg-cyan-"],
+  [class*="bg-lime-"],
+  [class*="bg-sky-"],
+  [class*="bg-violet-"],
+  [class*="bg-fuchsia-"],
+  [class*="bg-rose-"] {
+    background-color: rgb(0 82 204 / var(--tw-bg-opacity, 1)) !important;
+  }
+
+  [class*="text-red-"],
+  [class*="text-teal-"],
+  [class*="text-amber-"],
+  [class*="text-yellow-"],
+  [class*="text-orange-"],
+  [class*="text-purple-"],
+  [class*="text-pink-"],
+  [class*="text-indigo-"],
+  [class*="text-cyan-"],
+  [class*="text-lime-"],
+  [class*="text-sky-"],
+  [class*="text-violet-"],
+  [class*="text-fuchsia-"],
+  [class*="text-rose-"] {
+    color: rgb(0 82 204 / var(--tw-text-opacity, 1)) !important;
+  }
+
+  [class*="border-red-"],
+  [class*="border-teal-"],
+  [class*="border-amber-"],
+  [class*="border-yellow-"],
+  [class*="border-orange-"],
+  [class*="border-purple-"],
+  [class*="border-pink-"],
+  [class*="border-indigo-"],
+  [class*="border-cyan-"],
+  [class*="border-lime-"],
+  [class*="border-sky-"],
+  [class*="border-violet-"],
+  [class*="border-fuchsia-"],
+  [class*="border-rose-"] {
+    border-color: rgb(0 82 204 / var(--tw-border-opacity, 1)) !important;
+  }
+
+  [class*="ring-red-"],
+  [class*="ring-teal-"],
+  [class*="ring-amber-"],
+  [class*="ring-yellow-"],
+  [class*="ring-orange-"],
+  [class*="ring-purple-"],
+  [class*="ring-pink-"],
+  [class*="ring-indigo-"],
+  [class*="ring-cyan-"],
+  [class*="ring-lime-"],
+  [class*="ring-sky-"],
+  [class*="ring-violet-"],
+  [class*="ring-fuchsia-"],
+  [class*="ring-rose-"] {
+    --tw-ring-color: rgb(0 82 204 / var(--tw-ring-opacity, 0.5)) !important;
+  }
+
+  [class*="fill-red-"],
+  [class*="fill-teal-"],
+  [class*="fill-amber-"],
+  [class*="fill-yellow-"],
+  [class*="fill-orange-"],
+  [class*="fill-purple-"],
+  [class*="fill-pink-"],
+  [class*="fill-indigo-"],
+  [class*="fill-cyan-"],
+  [class*="fill-lime-"],
+  [class*="fill-sky-"],
+  [class*="fill-violet-"],
+  [class*="fill-fuchsia-"],
+  [class*="fill-rose-"] {
+    fill: rgb(0 82 204 / 1) !important;
+  }
+
+  [class*="stroke-red-"],
+  [class*="stroke-teal-"],
+  [class*="stroke-amber-"],
+  [class*="stroke-yellow-"],
+  [class*="stroke-orange-"],
+  [class*="stroke-purple-"],
+  [class*="stroke-pink-"],
+  [class*="stroke-indigo-"],
+  [class*="stroke-cyan-"],
+  [class*="stroke-lime-"],
+  [class*="stroke-sky-"],
+  [class*="stroke-violet-"],
+  [class*="stroke-fuchsia-"],
+  [class*="stroke-rose-"] {
+    stroke: rgb(0 82 204 / 1) !important;
+  }
+
+  [class*="from-red-"],
+  [class*="from-green-"],
+  [class*="from-emerald-"],
+  [class*="from-teal-"],
+  [class*="from-amber-"],
+  [class*="from-yellow-"],
+  [class*="from-orange-"],
+  [class*="from-purple-"],
+  [class*="from-pink-"],
+  [class*="from-indigo-"],
+  [class*="from-cyan-"],
+  [class*="from-lime-"],
+  [class*="from-sky-"],
+  [class*="from-violet-"],
+  [class*="from-fuchsia-"],
+  [class*="from-rose-"] {
+    --tw-gradient-from: rgb(0 82 204 / 1) !important;
+    --tw-gradient-to: rgb(0 82 204 / 0) !important;
+    --tw-gradient-stops:
+      var(--tw-gradient-from), var(--tw-gradient-to) !important;
+  }
+
+  [class*="via-red-"],
+  [class*="via-green-"],
+  [class*="via-emerald-"],
+  [class*="via-teal-"],
+  [class*="via-amber-"],
+  [class*="via-yellow-"],
+  [class*="via-orange-"],
+  [class*="via-purple-"],
+  [class*="via-pink-"],
+  [class*="via-indigo-"],
+  [class*="via-cyan-"],
+  [class*="via-lime-"],
+  [class*="via-sky-"],
+  [class*="via-violet-"],
+  [class*="via-fuchsia-"],
+  [class*="via-rose-"] {
+    --tw-gradient-stops:
+      var(--tw-gradient-from), rgb(0 82 204 / 1), var(--tw-gradient-to) !important;
+  }
+
+  [class*="to-red-"],
+  [class*="to-green-"],
+  [class*="to-emerald-"],
+  [class*="to-teal-"],
+  [class*="to-amber-"],
+  [class*="to-yellow-"],
+  [class*="to-orange-"],
+  [class*="to-purple-"],
+  [class*="to-pink-"],
+  [class*="to-indigo-"],
+  [class*="to-cyan-"],
+  [class*="to-lime-"],
+  [class*="to-sky-"],
+  [class*="to-violet-"],
+  [class*="to-fuchsia-"],
+  [class*="to-rose-"] {
+    --tw-gradient-to: rgb(0 82 204 / 1) !important;
   }
 }

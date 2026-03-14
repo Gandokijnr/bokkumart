@@ -10,7 +10,7 @@
             </h1>
             <p class="text-gray-600 mt-2">
               Pick and pack orders with location guidance
-              <span v-if="selectedStore" class="font-medium text-red-600">
+              <span v-if="selectedStore" class="font-medium text-blue-600">
                 - {{ selectedStore.name }}
               </span>
             </p>
@@ -18,7 +18,7 @@
           <div class="flex items-center gap-3">
             <select
               v-model="selectedStoreId"
-              class="rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-red-500 focus:outline-none"
+              class="rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none"
             >
               <option value="">All Stores</option>
               <option v-for="store in stores" :key="store.id" :value="store.id">
@@ -28,7 +28,7 @@
             <button
               @click="refreshOrders"
               :disabled="loading"
-              class="rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700 disabled:opacity-50"
+              class="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
             >
               <span v-if="loading" class="flex items-center gap-2">
                 <svg
@@ -62,7 +62,7 @@
       <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
         <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
           <p class="text-sm text-gray-600">Ready to Pick</p>
-          <p class="text-2xl font-bold text-red-600 mt-1">
+          <p class="text-2xl font-bold text-blue-600 mt-1">
             {{ readyToPickCount }}
           </p>
         </div>
@@ -96,11 +96,11 @@
                 v-model="searchQuery"
                 type="text"
                 placeholder="Search orders..."
-                class="rounded-lg border border-gray-300 px-3 py-1.5 text-sm focus:border-red-500 focus:outline-none"
+                class="rounded-lg border border-gray-300 px-3 py-1.5 text-sm focus:border-blue-500 focus:outline-none"
               />
               <select
                 v-model="statusFilter"
-                class="rounded-lg border border-gray-300 px-3 py-1.5 text-sm focus:border-red-500 focus:outline-none"
+                class="rounded-lg border border-gray-300 px-3 py-1.5 text-sm focus:border-blue-500 focus:outline-none"
               >
                 <option value="">All Status</option>
                 <option value="confirmed">Confirmed</option>
@@ -198,7 +198,7 @@
                           :class="
                             isItemPicked(order.id, Number(idx))
                               ? 'bg-green-500 border-green-500 text-white'
-                              : 'border-gray-300 hover:border-red-400'
+                              : 'border-gray-300 hover:border-blue-400'
                           "
                         >
                           <svg
@@ -228,7 +228,7 @@
                           </p>
                           <p
                             v-if="item.location"
-                            class="text-xs font-medium text-red-600 mt-0.5 truncate"
+                            class="text-xs font-medium text-blue-600 mt-0.5 truncate"
                             :title="item.location"
                           >
                             📍 {{ item.location }}
@@ -362,7 +362,7 @@ definePageMeta({
 });
 
 useHead({
-  title: "Picking Dashboard - HomeAffairs",
+  title: "Picking Dashboard - BokkuMart",
 });
 
 const supabase = useSupabaseClient<Database>();

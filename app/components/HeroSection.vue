@@ -75,7 +75,7 @@
           </div>
 
           <div
-            class="relative overflow-hidden rounded-3xl bg-red-700 p-6 text-white"
+            class="relative overflow-hidden rounded-3xl bg-blue-700 p-6 text-white"
           >
             <div
               class="absolute -right-6 -top-6 h-24 w-24 rounded-full bg-white/10 blur-xl"
@@ -166,7 +166,7 @@ const sideCardData = {
     // title: 'Valentine Hampers',
     // desc: 'Curated gift bundles',
     bg: "bg-rose-600",
-    image: "/discount.gif",
+    image: "/milkbanner.gif",
     href: "/#hampers",
   },
   prepared: {
@@ -185,8 +185,8 @@ const slides = [
     // kicker: 'Premium Groceries',
     // title: 'Shop Smarter. Live Better.',
     // subtitle: 'Items too heavy to carry? Order next time and get FREE delivery on your first order of NGN 20,000',
-    image: "/buycott.png",
-    backgroundClass: "bg-red-700",
+    image: "/buycott.gif",
+    backgroundClass: "bg-blue-700",
     ctaHref: "/#deals",
   },
   {

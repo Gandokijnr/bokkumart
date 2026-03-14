@@ -146,7 +146,7 @@ async function handleSubmit() {
       <!-- Loading State -->
       <div v-if="checkingSession" class="text-center py-12">
         <svg
-          class="w-8 h-8 animate-spin mx-auto text-red-600 mb-4"
+          class="w-8 h-8 animate-spin mx-auto text-blue-600 mb-4"
           fill="none"
           viewBox="0 0 24 24"
         >
@@ -172,7 +172,7 @@ async function handleSubmit() {
         <!-- Header -->
         <div class="text-center mb-8">
           <div
-            class="inline-flex items-center justify-center w-16 h-16 bg-red-600 rounded-full mb-4"
+            class="inline-flex items-center justify-center w-16 h-16 bg-blue-600 rounded-full mb-4"
           >
             <svg
               class="w-8 h-8 text-white"
@@ -197,7 +197,7 @@ async function handleSubmit() {
         <!-- Error Message -->
         <div
           v-if="error"
-          class="mb-4 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700"
+          class="mb-4 rounded-xl border border-blue-200 bg-blue-50 p-4 text-sm text-blue-700"
         >
           {{ error }}
         </div>
@@ -212,7 +212,7 @@ async function handleSubmit() {
               :class="[
                 'flex-1 py-4 text-sm font-medium transition-colors',
                 activeTab === 'signup'
-                  ? 'text-red-600 border-b-2 border-red-600 bg-red-50/50'
+                  ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50/50'
                   : 'text-gray-500 hover:text-gray-700',
               ]"
             >
@@ -223,7 +223,7 @@ async function handleSubmit() {
               :class="[
                 'flex-1 py-4 text-sm font-medium transition-colors',
                 activeTab === 'login'
-                  ? 'text-red-600 border-b-2 border-red-600 bg-red-50/50'
+                  ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50/50'
                   : 'text-gray-500 hover:text-gray-700',
               ]"
             >
@@ -270,7 +270,7 @@ async function handleSubmit() {
               :class="[
                 'w-full py-3 px-4 rounded-xl font-medium transition-all',
                 canSubmit && !loading
-                  ? 'bg-red-600 text-white hover:bg-red-700 shadow-md hover:shadow-lg'
+                  ? 'bg-blue-600 text-white hover:bg-blue-700 shadow-md hover:shadow-lg'
                   : 'bg-gray-200 text-gray-400 cursor-not-allowed',
               ]"
             >

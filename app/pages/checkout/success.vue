@@ -87,7 +87,7 @@
             <p class="font-bold text-amber-900">Forgot something?</p>
             <p class="text-sm text-amber-800 mt-1">
               Grab these items at the counter for
-              <span class="font-bold text-red-600">10% off</span> when you pick
+              <span class="font-bold text-blue-600">10% off</span> when you pick
               up your order!
             </p>
 
@@ -109,7 +109,7 @@
                 <p class="text-xs text-gray-500">
                   {{ formatPrice(item.price) }}
                 </p>
-                <p class="text-xs font-bold text-red-600">
+                <p class="text-xs font-bold text-blue-600">
                   -{{ item.discount }}%
                 </p>
               </div>
@@ -139,7 +139,7 @@
           </div>
           <div class="flex justify-between text-sm">
             <span class="text-gray-600">Total Paid</span>
-            <span class="font-bold text-red-600">{{
+            <span class="font-bold text-blue-600">{{
               formatPrice(orderTotalPaid)
             }}</span>
           </div>
@@ -149,7 +149,7 @@
       <div class="mt-6 space-y-3">
         <NuxtLink
           to="/"
-          class="w-full rounded-xl bg-red-600 py-3.5 text-sm font-bold text-white hover:bg-red-700 text-center inline-block"
+          class="w-full rounded-xl bg-blue-600 py-3.5 text-sm font-bold text-white hover:bg-blue-700 text-center inline-block"
         >
           Continue Shopping
         </NuxtLink>

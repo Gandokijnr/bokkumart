@@ -30,7 +30,7 @@ const pendingUrgent = computed(() => {
         class="bg-white rounded-xl shadow-sm border p-6 transition-shadow"
         :class="[
           pendingUrgent
-            ? 'border-red-300 shadow-red-100/60 shadow-lg ring-1 ring-red-200 animate-pulse'
+            ? 'border-blue-300 shadow-red-100/60 shadow-lg ring-1 ring-blue-200 animate-pulse'
             : 'border-gray-200 hover:shadow-md',
         ]"
       >
@@ -44,14 +44,14 @@ const pendingUrgent = computed(() => {
             <p
               v-else
               class="text-2xl font-bold mt-1"
-              :class="pendingUrgent ? 'text-red-700' : 'text-gray-900'"
+              :class="pendingUrgent ? 'text-blue-700' : 'text-gray-900'"
             >
               {{ stats?.pending_count || 0 }}
             </p>
           </div>
           <div
             class="w-12 h-12 rounded-lg flex items-center justify-center"
-            :class="pendingUrgent ? 'bg-red-100' : 'bg-amber-100'"
+            :class="pendingUrgent ? 'bg-blue-100' : 'bg-amber-100'"
           >
             <span class="text-2xl">⏳</span>
           </div>
@@ -122,7 +122,7 @@ const pendingUrgent = computed(() => {
             </p>
           </div>
           <div
-            class="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center"
+            class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center"
           >
             <span class="text-2xl">⚠️</span>
           </div>
@@ -152,7 +152,7 @@ const pendingUrgent = computed(() => {
             </p>
           </div>
           <div
-            class="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center"
+            class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center"
           >
             <span class="text-2xl">📞</span>
           </div>
@@ -196,7 +196,7 @@ const pendingUrgent = computed(() => {
             </p>
           </div>
           <div
-            class="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center"
+            class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center"
           >
             <span class="text-2xl">⚠️</span>
           </div>

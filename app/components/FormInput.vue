@@ -20,13 +20,13 @@
         :disabled="disabled"
         :maxlength="maxlength"
         :inputmode="inputmode"
-        class="w-full rounded-xl border-2 border-gray-200 bg-white px-4 py-2.5 text-sm text-gray-900 transition-all outline-none placeholder:text-gray-400 focus:border-red-500 focus:ring-2 focus:ring-red-200 disabled:opacity-50 disabled:cursor-not-allowed"
+        class="w-full rounded-xl border-2 border-gray-200 bg-white px-4 py-2.5 text-sm text-gray-900 transition-all outline-none placeholder:text-gray-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 disabled:opacity-50 disabled:cursor-not-allowed"
         :class="{
           'pl-16': $slots.leading,
           'text-center': center,
           'h-14 text-2xl font-bold': size === 'otp',
           'py-3 text-base': size === 'lg',
-          'border-red-500 ring-2 ring-red-200': active,
+          'border-blue-500 ring-2 ring-blue-200': active,
         }"
         @keydown="$emit('keydown', $event)"
         @paste="$emit('paste', $event)"

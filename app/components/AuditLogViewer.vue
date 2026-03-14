@@ -77,7 +77,7 @@ const getActionColor = (actionType: string) => {
     stock_adjustment: "text-purple-600 bg-purple-50",
     product_visibility_change: "text-gray-600 bg-gray-50",
     manager_assignment: "text-green-600 bg-green-50",
-    role_change: "text-red-600 bg-red-50",
+    role_change: "text-blue-600 bg-blue-50",
   };
   return colors[actionType] || "text-gray-600 bg-gray-50";
 };
@@ -133,7 +133,7 @@ const formatValue = (value: any) => {
           >
           <select
             v-model="filterActionType"
-            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
+            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
           >
             <option
               v-for="option in actionTypeOptions"
@@ -153,7 +153,7 @@ const formatValue = (value: any) => {
             v-model="startDate"
             type="date"
             @change="fetchLogs"
-            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
+            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
           />
         </div>
 
@@ -165,7 +165,7 @@ const formatValue = (value: any) => {
             v-model="endDate"
             type="date"
             @change="fetchLogs"
-            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
+            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
           />
         </div>
       </div>

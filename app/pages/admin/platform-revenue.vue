@@ -9,7 +9,7 @@ definePageMeta({
 });
 
 useHead({
-  title: "Platform Revenue - HomeAffairs",
+  title: "Platform Revenue - BokkuMart",
 });
 
 // Initialize Pinia store
@@ -238,7 +238,7 @@ function getStatusBadgeClass(status: RevenueStatus, size: "sm" | "lg") {
     case "amber":
       return `${base} ${sizeClass} bg-amber-50 text-amber-700 ring-amber-200`;
     case "red":
-      return `${base} ${sizeClass} bg-red-50 text-red-700 ring-red-200`;
+      return `${base} ${sizeClass} bg-blue-50 text-blue-700 ring-blue-200`;
     default:
       return `${base} ${sizeClass} bg-gray-50 text-gray-700 ring-gray-200`;
   }
@@ -269,9 +269,8 @@ onMounted(() => {
       <div class="mb-8">
         <h1 class="text-2xl font-bold text-gray-900">Platform Revenue</h1>
         <p class="mt-2 text-sm text-gray-600">
-          Monthly 8% service fee revenue from digital sales. Home Affairs
-          receives 100% of payments; platform fees are calculated and invoiced
-          monthly.
+          Monthly 8% service fee revenue from digital sales. BokkuMart receives
+          100% of payments; platform fees are calculated and invoiced monthly.
         </p>
       </div>
 
@@ -299,7 +298,7 @@ onMounted(() => {
         </div>
         <div class="bg-white rounded-xl shadow-sm p-6">
           <p class="text-sm font-medium text-gray-600">Effective Rate</p>
-          <p class="mt-2 text-2xl font-bold text-red-600">8%</p>
+          <p class="mt-2 text-2xl font-bold text-blue-600">8%</p>
         </div>
       </div>
 
@@ -319,7 +318,7 @@ onMounted(() => {
           <div class="flex items-center gap-2">
             <select
               v-model="selectedBranchId"
-              class="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm focus:border-red-500 focus:outline-none"
+              class="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm focus:border-blue-500 focus:outline-none"
               @change="fetchAllTimeBranchSubtotalSales"
             >
               <option value="">All Branches</option>
@@ -341,7 +340,7 @@ onMounted(() => {
 
         <div
           v-if="branchGrossError"
-          class="mt-4 rounded-lg bg-red-50 p-3 text-sm text-red-700"
+          class="mt-4 rounded-lg bg-blue-50 p-3 text-sm text-blue-700"
         >
           {{ branchGrossError }}
         </div>
@@ -416,7 +415,7 @@ onMounted(() => {
       <div class="flex flex-wrap gap-4 mb-6">
         <button
           type="button"
-          class="inline-flex items-center gap-2 rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-red-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-600"
+          class="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-600"
           @click="showCalculateModal = true"
         >
           Calculate Monthly Revenue
@@ -453,7 +452,7 @@ onMounted(() => {
           </div>
           <div>
             <p class="text-sm text-gray-500">Platform Share (8%)</p>
-            <p class="text-xl font-bold text-red-600">
+            <p class="text-xl font-bold text-blue-600">
               {{ formatCurrency(currentMonthRevenue.platform_fee) }}
             </p>
           </div>
@@ -511,7 +510,7 @@ onMounted(() => {
                     {{ formatCurrency(b.subtotal) }}
                   </td>
                   <td
-                    class="px-4 py-2 text-sm text-right font-medium text-red-600"
+                    class="px-4 py-2 text-sm text-right font-medium text-blue-600"
                   >
                     {{ formatCurrency(b.platform_fee) }}
                   </td>
@@ -582,7 +581,7 @@ onMounted(() => {
 
         <div v-if="loading" class="p-8 text-center">
           <div
-            class="animate-spin rounded-full h-8 w-8 border-b-2 border-red-600 mx-auto"
+            class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"
           ></div>
           <p class="mt-2 text-sm text-gray-500">Loading...</p>
         </div>
@@ -653,7 +652,7 @@ onMounted(() => {
                 {{ formatCurrency(record.subtotal) }}
               </td>
               <td
-                class="px-6 py-4 whitespace-nowrap text-sm text-right font-bold text-red-600"
+                class="px-6 py-4 whitespace-nowrap text-sm text-right font-bold text-blue-600"
               >
                 {{ formatCurrency(record.platform_fee) }}
               </td>
@@ -742,7 +741,7 @@ onMounted(() => {
                   >
                   <select
                     v-model.number="selectedMonth"
-                    class="block w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500"
+                    class="block w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
                   >
                     <option
                       v-for="opt in monthOptions"
@@ -760,7 +759,7 @@ onMounted(() => {
                   <input
                     v-model.number="selectedYear"
                     type="number"
-                    class="block w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500"
+                    class="block w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
                   />
                 </div>
               </div>
@@ -770,7 +769,7 @@ onMounted(() => {
                   <input
                     v-model="excludeDeliveryFees"
                     type="checkbox"
-                    class="h-4 w-4 rounded border-gray-300 text-red-600 focus:ring-red-500"
+                    class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                   />
                   <span>Exclude delivery fees from calculation</span>
                 </label>
@@ -785,7 +784,7 @@ onMounted(() => {
                   <input
                     v-model="forceRecalculate"
                     type="checkbox"
-                    class="h-4 w-4 rounded border-gray-300 text-red-600 focus:ring-red-500"
+                    class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                   />
                   <span>Force recalculate (even if locked)</span>
                 </label>
@@ -805,7 +804,7 @@ onMounted(() => {
               </button>
               <button
                 type="button"
-                class="inline-flex items-center justify-center rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-red-700 disabled:opacity-60"
+                class="inline-flex items-center justify-center rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-700 disabled:opacity-60"
                 :disabled="calculating"
                 @click="calculateRevenue"
               >
@@ -928,7 +927,7 @@ onMounted(() => {
                         'bg-blue-50 text-blue-700':
                           log.action === 'calculated' ||
                           log.action === 'recalculated',
-                        'bg-red-50 text-red-700':
+                        'bg-blue-50 text-blue-700':
                           log.action === 'force_recalculate',
                         'bg-amber-50 text-amber-700': log.action === 'locked',
                         'bg-green-50 text-green-700':

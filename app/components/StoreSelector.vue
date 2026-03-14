@@ -71,11 +71,11 @@ const getBranchStatus = (
   if (isBranchOpen(branch)) {
     return {
       text: "Open Now",
-      color: "text-green-600 bg-green-50",
+      color: "text-green-700 bg-green-50",
       icon: "check",
     };
   }
-  return { text: "Closed", color: "text-red-500 bg-red-50", icon: "x" };
+  return { text: "Closed", color: "text-gray-600 bg-gray-100", icon: "x" };
 };
 
 // Get today's hours for a branch
@@ -195,17 +195,17 @@ const handleBackdropClick = () => {
         >
           <!-- Header -->
           <div
-            class="px-4 sm:px-6 py-4 sm:py-5 border-b border-gray-200 flex items-center justify-between bg-red-600"
+            class="px-4 sm:px-6 py-4 sm:py-5 border-b border-gray-200 flex items-center justify-between bg-[#0052CC]"
           >
             <div>
               <h2 class="text-lg sm:text-xl font-bold text-white">
                 {{
                   branchStore.hasActiveBranch
                     ? "Switch Store"
-                    : "Welcome to HomeAffairs"
+                    : "Welcome to BokkuMart"
                 }}
               </h2>
-              <p class="mt-1 text-sm text-red-100">
+              <p class="mt-1 text-sm text-white/80">
                 {{
                   branchStore.hasActiveBranch
                     ? "Select a different location to shop from"
@@ -216,7 +216,7 @@ const handleBackdropClick = () => {
             <button
               v-if="branchStore.hasActiveBranch"
               @click="close"
-              class="text-red-100 hover:text-white p-1 rounded-lg hover:bg-white/10 transition-colors"
+              class="text-white/80 hover:text-white p-1 rounded-lg hover:bg-white/10 transition-colors"
             >
               <svg
                 class="w-6 h-6"
@@ -281,13 +281,13 @@ const handleBackdropClick = () => {
             <!-- Branch List -->
             <div v-else class="p-4 sm:p-6 space-y-3">
               <div
-                v-for="branch in branchStore.activeBranches"
+                v-for="branch in branchStore.branches"
                 :key="branch.id"
                 class="relative rounded-xl border-2 p-3 sm:p-4 transition-all cursor-pointer"
                 :class="[
                   selectedBranchId === branch.id
-                    ? 'border-red-600 bg-red-50 shadow-md'
-                    : 'border-gray-200 hover:border-red-300 hover:shadow-sm bg-white',
+                    ? 'border-[#0052CC] bg-blue-50 shadow-md'
+                    : 'border-gray-200 hover:border-blue-300 hover:shadow-sm bg-white',
                 ]"
                 @click="selectBranch(branch)"
               >
@@ -297,7 +297,7 @@ const handleBackdropClick = () => {
                     class="flex-shrink-0 w-6 h-6 rounded-full border-2 flex items-center justify-center transition-colors"
                     :class="
                       selectedBranchId === branch.id
-                        ? 'border-red-600 bg-red-600'
+                        ? 'border-[#0052CC] bg-[#0052CC]'
                         : 'border-gray-300'
                     "
                   >
@@ -418,7 +418,7 @@ const handleBackdropClick = () => {
             </button>
             <button
               :disabled="!selectedBranchId || isLoading"
-              class="rounded-xl bg-red-600 px-4 sm:px-6 py-2 sm:py-2.5 text-xs sm:text-sm font-medium text-white hover:bg-red-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-sm hover:shadow-md flex items-center gap-2"
+              class="rounded-xl bg-[#0052CC] px-4 sm:px-6 py-2 sm:py-2.5 text-xs sm:text-sm font-medium text-white hover:bg-[#003D8F] transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-sm hover:shadow-md flex items-center gap-2"
               @click="handleConfirmSelection"
             >
               <svg
@@ -516,7 +516,7 @@ const handleBackdropClick = () => {
               <p class="text-sm text-amber-800 mt-2">
                 Switching to a different store will
                 <span class="font-bold">clear your current cart</span>. You can
-                only order from one HomeAffairs branch at a time.
+                only order from one BokkuMart branch at a time.
               </p>
             </div>
 
@@ -529,7 +529,7 @@ const handleBackdropClick = () => {
               </button>
               <button
                 @click="confirmSelection"
-                class="flex-1 rounded-xl bg-red-600 px-4 py-3 text-sm font-medium text-white hover:bg-red-700 transition-colors"
+                class="flex-1 rounded-xl bg-[#0052CC] px-4 py-3 text-sm font-medium text-white hover:bg-[#003D8F] transition-colors"
               >
                 Clear Cart & Switch
               </button>

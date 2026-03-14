@@ -6,10 +6,10 @@
   >
     <div class="w-full max-w-sm rounded-2xl bg-white p-5 shadow-xl sm:p-6">
       <div
-        class="mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-red-100 sm:mb-4"
+        class="mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-blue-100 sm:mb-4"
       >
         <svg
-          class="h-6 w-6 text-red-600"
+          class="h-6 w-6 text-blue-600"
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
@@ -37,7 +37,7 @@
         </button>
         <button
           @click="$emit('confirm')"
-          class="flex-1 rounded-xl bg-red-600 py-2.5 text-sm font-bold text-white hover:bg-red-700 sm:py-3"
+          class="flex-1 rounded-xl bg-blue-600 py-2.5 text-sm font-bold text-white hover:bg-blue-700 sm:py-3"
         >
           Clear Cart
         </button>

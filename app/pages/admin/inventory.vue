@@ -22,7 +22,7 @@
       </div>
       <div class="rounded-xl bg-white p-4 shadow-sm">
         <p class="text-sm text-gray-600">Out of Stock</p>
-        <p class="mt-1 text-2xl font-bold text-red-600">
+        <p class="mt-1 text-2xl font-bold text-blue-600">
           {{ stats.outOfStock }}
         </p>
       </div>
@@ -37,7 +37,7 @@
           v-model="searchQuery"
           type="text"
           placeholder="Search products..."
-          class="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-red-500 focus:outline-none"
+          class="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none"
         />
       </div>
 
@@ -114,7 +114,7 @@
       <select
         v-if="!isBranchManager"
         v-model="storeFilter"
-        class="rounded-lg border border-gray-300 px-3 py-2 focus:border-red-500 focus:outline-none"
+        class="rounded-lg border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none"
       >
         <option value="">All Stores</option>
         <option v-for="store in stores" :key="store.id" :value="store.id">
@@ -124,7 +124,7 @@
       <select
         v-else-if="managedStores.length > 1"
         v-model="storeFilter"
-        class="rounded-lg border border-gray-300 px-3 py-2 focus:border-red-500 focus:outline-none"
+        class="rounded-lg border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none"
       >
         <option value="">All My Stores</option>
         <option
@@ -144,7 +144,7 @@
 
       <select
         v-model="statusFilter"
-        class="rounded-lg border border-gray-300 px-3 py-2 focus:border-red-500 focus:outline-none"
+        class="rounded-lg border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none"
       >
         <option value="">All Status</option>
         <option value="in_stock">In Stock</option>
@@ -155,7 +155,7 @@
       <!-- Missing Images Filter -->
       <select
         v-model="imageFilter"
-        class="rounded-lg border border-gray-300 px-3 py-2 focus:border-red-500 focus:outline-none"
+        class="rounded-lg border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none"
       >
         <option value="">All Images</option>
         <option value="missing">Missing Images Only</option>
@@ -190,7 +190,7 @@
 
       <button
         @click="openManualModal"
-        class="rounded-lg bg-red-600 px-4 py-2 text-sm font-bold text-white hover:bg-red-700"
+        class="rounded-lg bg-blue-600 px-4 py-2 text-sm font-bold text-white hover:bg-blue-700"
       >
         Add Item
       </button>
@@ -229,7 +229,7 @@
         <button
           v-if="!isBranchManager"
           @click="confirmBulkDelete"
-          class="rounded-lg bg-red-100 px-3 py-1.5 text-xs font-bold text-red-700 hover:bg-red-200"
+          class="rounded-lg bg-blue-100 px-3 py-1.5 text-xs font-bold text-blue-700 hover:bg-blue-200"
         >
           Bulk Delete
         </button>
@@ -253,7 +253,7 @@
                   type="checkbox"
                   :checked="isAllSelected"
                   @change="toggleSelectAll"
-                  class="h-4 w-4 rounded border-gray-300 text-red-600 focus:ring-red-500"
+                  class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                 />
               </th>
               <th
@@ -306,7 +306,7 @@
                   type="checkbox"
                   :checked="selectedItems.has(item.product?.sku)"
                   @change="toggleSelection(item)"
-                  class="h-4 w-4 rounded border-gray-300 text-red-600 focus:ring-red-500"
+                  class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                 />
               </td>
               <td v-if="columnVisibility.product" class="px-4 py-3">
@@ -446,7 +446,7 @@
                   <button
                     v-if="!isBranchManager"
                     @click="confirmDelete(item)"
-                    class="p-1.5 rounded-lg text-red-600 hover:bg-red-100 transition-colors"
+                    class="p-1.5 rounded-lg text-blue-600 hover:bg-blue-100 transition-colors"
                     title="Delete Product"
                   >
                     <svg
@@ -485,7 +485,7 @@
       <div class="flex flex-wrap gap-3">
         <button
           @click="markAllOutOfStock"
-          class="rounded-lg bg-red-100 px-4 py-2 text-sm font-bold text-red-700 hover:bg-red-200"
+          class="rounded-lg bg-blue-100 px-4 py-2 text-sm font-bold text-blue-700 hover:bg-blue-200"
         >
           Mark Low Stock as Out of Stock
         </button>
@@ -519,7 +519,7 @@
         </p>
         <select
           v-model="bulkCategoryId"
-          class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-red-500 focus:outline-none mb-4"
+          class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none mb-4"
         >
           <option value="">Select category...</option>
           <option v-for="cat in categories" :key="cat.id" :value="cat.id">
@@ -552,10 +552,10 @@
       <div class="bg-white rounded-xl shadow-2xl max-w-md w-full p-6">
         <div class="flex items-center gap-3 mb-4">
           <div
-            class="h-10 w-10 rounded-full bg-red-100 flex items-center justify-center"
+            class="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center"
           >
             <svg
-              class="h-6 w-6 text-red-600"
+              class="h-6 w-6 text-blue-600"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -583,12 +583,12 @@
           class="mb-4"
         >
           <label class="block text-sm font-medium text-gray-700 mb-2">
-            Type <span class="font-bold text-red-600">DELETE</span> to confirm:
+            Type <span class="font-bold text-blue-600">DELETE</span> to confirm:
           </label>
           <input
             v-model="deleteConfirmText"
             type="text"
-            class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-red-500 focus:outline-none"
+            class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none"
             placeholder="Type DELETE"
           />
         </div>
@@ -603,7 +603,7 @@
           <button
             @click="executeDelete"
             :disabled="requiresDeleteConfirm && deleteConfirmText !== 'DELETE'"
-            class="px-4 py-2 rounded-lg bg-red-600 text-white text-sm font-bold hover:bg-red-700 disabled:opacity-50"
+            class="px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-bold hover:bg-blue-700 disabled:opacity-50"
           >
             {{ deleteProcessing ? "Deleting..." : "Delete Permanently" }}
           </button>
@@ -619,10 +619,10 @@
       <div class="bg-white rounded-xl shadow-2xl max-w-md w-full p-6">
         <div class="flex items-center gap-3 mb-4">
           <div
-            class="h-10 w-10 rounded-full bg-red-100 flex items-center justify-center"
+            class="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center"
           >
             <svg
-              class="h-6 w-6 text-red-600"
+              class="h-6 w-6 text-blue-600"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -646,12 +646,12 @@
 
         <div class="mb-4">
           <label class="block text-sm font-medium text-gray-700 mb-2">
-            Type <span class="font-bold text-red-600">DELETE</span> to confirm:
+            Type <span class="font-bold text-blue-600">DELETE</span> to confirm:
           </label>
           <input
             v-model="bulkDeleteConfirmText"
             type="text"
-            class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-red-500 focus:outline-none"
+            class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none"
             placeholder="Type DELETE"
           />
         </div>
@@ -666,7 +666,7 @@
           <button
             @click="executeBulkDelete"
             :disabled="bulkDeleteConfirmText !== 'DELETE' || bulkProcessing"
-            class="px-4 py-2 rounded-lg bg-red-600 text-white text-sm font-bold hover:bg-red-700 disabled:opacity-50"
+            class="px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-bold hover:bg-blue-700 disabled:opacity-50"
           >
             {{ bulkProcessing ? "Deleting..." : "Delete All Selected" }}
           </button>
@@ -720,7 +720,7 @@
             >
             <select
               v-model="manualForm.store_id"
-              class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-red-500 focus:outline-none"
+              class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none"
             >
               <option value="">Choose a store...</option>
               <option
@@ -741,7 +741,7 @@
               <input
                 v-model="manualForm.name"
                 type="text"
-                class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-red-500 focus:outline-none"
+                class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none"
                 placeholder="e.g. Fresh Cow Milk"
               />
             </div>
@@ -752,7 +752,7 @@
               <input
                 v-model="manualForm.sku"
                 type="text"
-                class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-red-500 focus:outline-none"
+                class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none"
                 placeholder="e.g. DAIRY-001"
               />
             </div>
@@ -766,7 +766,7 @@
               <input
                 v-model="manualForm.barcode"
                 type="text"
-                class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-red-500 focus:outline-none"
+                class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none"
                 placeholder="e.g. 123456789012"
               />
             </div>
@@ -777,7 +777,7 @@
               <input
                 v-model="manualForm.retailman_product_id"
                 type="text"
-                class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-red-500 focus:outline-none"
+                class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none"
                 placeholder="RetailMan system ID"
               />
             </div>
@@ -790,7 +790,7 @@
             <textarea
               v-model="manualForm.description"
               rows="3"
-              class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-red-500 focus:outline-none"
+              class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none"
               placeholder="Optional description"
             ></textarea>
           </div>
@@ -805,7 +805,7 @@
                 type="number"
                 min="0"
                 step="0.01"
-                class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-red-500 focus:outline-none"
+                class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none"
                 placeholder="e.g. 850"
               />
               <p class="text-xs text-gray-500 mt-1">
@@ -821,7 +821,7 @@
                 type="number"
                 min="0"
                 step="1"
-                class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-red-500 focus:outline-none"
+                class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none"
               />
             </div>
             <div>
@@ -831,7 +831,7 @@
               <input
                 v-model="manualForm.unit"
                 type="text"
-                class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-red-500 focus:outline-none"
+                class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none"
                 placeholder="unit"
               />
             </div>
@@ -847,7 +847,7 @@
                 type="number"
                 min="0"
                 step="0.01"
-                class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-red-500 focus:outline-none"
+                class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none"
               />
             </div>
             <div>
@@ -859,7 +859,7 @@
                 type="number"
                 min="0"
                 step="0.01"
-                class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-red-500 focus:outline-none"
+                class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none"
               />
             </div>
             <div>
@@ -871,7 +871,7 @@
                 type="number"
                 min="0"
                 step="1"
-                class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-red-500 focus:outline-none"
+                class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none"
               />
             </div>
           </div>
@@ -884,7 +884,7 @@
               <input
                 v-model="manualForm.image_url"
                 type="url"
-                class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-red-500 focus:outline-none"
+                class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none"
                 placeholder="https://..."
               />
             </div>
@@ -983,7 +983,7 @@
                 !manualForm.name ||
                 manualForm.stock_level === null
               "
-              class="px-4 py-2 rounded-lg bg-red-600 text-white text-sm font-bold hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed"
+              class="px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-bold hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {{ manualSaving ? "Saving..." : "Save Item" }}
             </button>
@@ -1232,7 +1232,7 @@ const formatTime = (timestamp: string) => {
 
 const getStatusClass = (item: any) => {
   if (!item.is_available || item.quantity === 0)
-    return "bg-red-100 text-red-700";
+    return "bg-blue-100 text-blue-700";
   if (item.quantity <= 5) return "bg-orange-100 text-orange-700";
   return "bg-green-100 text-green-700";
 };

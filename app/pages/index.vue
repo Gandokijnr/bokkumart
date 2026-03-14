@@ -3,7 +3,7 @@
     <!-- Skip to content for accessibility -->
     <a
       href="#main"
-      class="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:rounded-lg focus:bg-white focus:px-4 focus:py-2 focus:shadow-lg focus:ring-2 focus:ring-red-600"
+      class="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:rounded-lg focus:bg-white focus:px-4 focus:py-2 focus:shadow-lg focus:ring-2 focus:ring-blue-600"
     >
       Skip to content
     </a>
@@ -82,22 +82,22 @@ onMounted(async () => {
 });
 
 useHead({
-  title: "HomeAffairs — Premium Nigerian Supermarket Online",
+  title: "BokkuMart — Your Trusted Online Grocery Marketplace",
   meta: [
     {
       name: "description",
       content:
-        "Shop premium groceries online from HomeAffairs. Fresh produce, dairy, beverages, bakery items, and household essentials with fast delivery or convenient pickup.",
+        "Shop fresh groceries online from BokkuMart. Fresh produce, dairy, beverages, bakery items, and household essentials with fast delivery or convenient pickup.",
     },
-    { name: "theme-color", content: "#DC2626" },
+    { name: "theme-color", content: "#0052CC" },
     {
       property: "og:title",
-      content: "HomeAffairs — Shop Smarter, Live Better.",
+      content: "BokkuMart — Shop Fresh, Live Better.",
     },
     {
       property: "og:description",
       content:
-        "Your favorite premium supermarket is now online. Fresh essentials, curated brands, and fast delivery.",
+        "Your favorite grocery marketplace is now online. Fresh essentials, curated brands, and fast delivery.",
     },
     { property: "og:type", content: "website" },
   ],

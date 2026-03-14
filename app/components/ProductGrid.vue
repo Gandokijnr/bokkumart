@@ -47,10 +47,10 @@
       >
         <div class="flex items-center gap-3">
           <div
-            class="flex h-10 w-10 items-center justify-center rounded-lg bg-red-100"
+            class="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-100 text-white"
           >
             <svg
-              class="h-5 w-5 text-red-600"
+              class="h-5 w-5 text-[#FFFF]"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -72,7 +72,7 @@
         </div>
         <button
           @click="$emit('showBranchSelector')"
-          class="text-sm font-medium text-red-600 hover:text-red-700 transition-colors"
+          class="text-sm font-medium text-[#0052CC] hover:text-[#003D8F] transition-colors"
         >
           Change
         </button>
@@ -103,12 +103,12 @@
       <!-- Error state -->
       <div
         v-else-if="error"
-        class="rounded-2xl border border-red-200 bg-red-50 p-6 text-center"
+        class="rounded-2xl border border-blue-200 bg-blue-50 p-6 text-center"
       >
-        <p class="text-sm text-red-800">{{ error }}</p>
+        <p class="text-sm text-blue-800">{{ error }}</p>
         <button
           @click="refreshProducts"
-          class="mt-4 rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700"
+          class="mt-4 rounded-lg bg-[#0052CC] px-4 py-2 text-sm font-medium text-white hover:bg-[#003D8F]"
         >
           Try Again
         </button>
@@ -144,12 +144,12 @@
         </div>
         <h3 class="text-lg font-semibold text-gray-900">Select a Store</h3>
         <p class="mt-2 text-sm text-gray-600">
-          Please select your preferred HomeAffairs branch to view available
+          Please select your preferred BokkuMart branch to view available
           products.
         </p>
         <button
           @click="$emit('showBranchSelector')"
-          class="mt-4 rounded-xl bg-red-600 px-6 py-2.5 text-sm font-medium text-white hover:bg-red-700 transition-colors"
+          class="mt-4 rounded-xl bg-blue-600 px-6 py-2.5 text-sm font-medium text-white hover:bg-blue-700 transition-colors"
         >
           Choose Store
         </button>
@@ -186,7 +186,7 @@
         </p>
         <button
           @click="$emit('showBranchSelector')"
-          class="mt-4 rounded-xl border border-gray-300 px-6 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+          class="mt-4 rounded-xl bg-[#0052CC] px-6 py-2.5 text-sm font-medium text-white hover:bg-[#003D8F] transition-colors"
         >
           Try Another Store
         </button>
@@ -200,7 +200,7 @@
           <article
             v-for="product in paginatedProducts"
             :key="product.id"
-            class="group relative rounded-2xl border-2 border-gray-200 bg-white p-3 shadow-sm transition-all hover:border-red-600 hover:shadow-lg"
+            class="group relative rounded-2xl border-2 border-gray-200 bg-white p-3 shadow-sm transition-all hover:border-[#0052CC] hover:shadow-lg"
             :class="{
               'opacity-60':
                 !product.isAvailable || getStockStatus(product.id).isOutOfStock,
@@ -214,7 +214,7 @@
               class="absolute inset-0 z-10 flex items-center justify-center rounded-2xl bg-black/60"
             >
               <span
-                class="rounded-full bg-red-600 px-3 py-1 text-xs font-bold text-white"
+                class="rounded-full bg-gray-600 px-3 py-1 text-xs font-bold text-white"
               >
                 Out of Stock
               </span>
@@ -235,7 +235,7 @@
             <!-- Deal Badge -->
             <div v-else-if="product.badge" class="absolute left-2 top-2 z-10">
               <span
-                class="rounded-full bg-red-600 px-2.5 py-1 text-xs font-bold text-white shadow-sm"
+                class="rounded-full bg-[#FFC107] px-2.5 py-1 text-xs font-bold text-gray-900 shadow-sm"
               >
                 {{ product.badge }}
               </span>
@@ -262,18 +262,18 @@
 
               <div class="mt-2 flex items-baseline gap-2">
                 <span class="text-base font-bold text-gray-900 sm:text-lg">{{
-                  formatPrice(product.price)
+                  formatPrice(getDisplayPrice(product.price))
                 }}</span>
                 <span
                   v-if="product.oldPrice"
                   class="text-xs text-gray-500 line-through sm:text-sm"
-                  >{{ formatPrice(product.oldPrice) }}</span
+                  >{{ formatPrice(getDisplayPrice(product.oldPrice)) }}</span
                 >
               </div>
 
               <!-- Add to Cart Button -->
               <button
-                class="mt-3 flex w-full items-center justify-center gap-2 rounded-xl bg-red-600 px-4 py-2.5 text-sm font-bold text-white shadow-sm transition-all hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-600 focus:ring-offset-2 disabled:cursor-not-allowed disabled:bg-gray-300"
+                class="mt-3 flex w-full items-center justify-center gap-2 rounded-xl bg-[#0052CC] px-4 py-2.5 text-sm font-bold text-white shadow-sm transition-all hover:bg-[#003D8F] focus:outline-none focus:ring-2 focus:ring-[#0052CC] focus:ring-offset-2 disabled:cursor-not-allowed disabled:bg-gray-300"
                 type="button"
                 :disabled="
                   !product.isAvailable ||
@@ -357,7 +357,7 @@
               toast.type === 'success'
                 ? 'bg-green-600'
                 : toast.type === 'error'
-                  ? 'bg-red-600'
+                  ? 'bg-blue-600'
                   : 'bg-blue-600'
             "
           >
@@ -424,7 +424,7 @@
             : 'none',
         }"
       >
-        <div class="h-16 w-16 rounded-xl bg-red-600 p-2 shadow-lg">
+        <div class="h-16 w-16 rounded-xl bg-[#0052CC] p-2 shadow-lg">
           <img
             v-if="flyingItem.image"
             :src="flyingItem.image"
@@ -456,6 +456,7 @@ import { useProducts, type Product } from "../composables/useProducts";
 import { useCartStore } from "../stores/useCartStore";
 import { useStoreStore } from "../stores/store";
 import { useBranchStore } from "../stores/useBranchStore";
+import { getDisplayPrice, formatPrice } from "../utils/pricing";
 import type { Database } from "../types/database.types";
 
 const {
@@ -466,7 +467,6 @@ const {
   subscribeToStockUpdates,
   unsubscribeFromStockUpdates,
   checkStock,
-  formatPrice,
   stockUpdates,
 } = useProducts();
 const cartStore = useCartStore();

@@ -205,7 +205,7 @@
                 <td class="whitespace-nowrap px-6 py-4">
                   <NuxtLink
                     :to="`/admin/orders?orderId=${order.id}`"
-                    class="font-mono text-sm font-semibold text-gray-900 hover:text-red-600"
+                    class="font-mono text-sm font-semibold text-gray-900 hover:text-blue-600"
                   >
                     #{{ order.id.slice(-6).toUpperCase() }}
                   </NuxtLink>
@@ -264,7 +264,7 @@ definePageMeta({
 });
 
 useHead({
-  title: "Global Dashboard - HomeAffairs",
+  title: "Global Dashboard - BokkuMart",
 });
 
 const supabase = useSupabaseClient<Database>();
@@ -437,8 +437,8 @@ function getStatusColor(status: string) {
     picked_up: "bg-purple-100 text-purple-800 border-purple-200",
     arrived: "bg-purple-100 text-purple-800 border-purple-200",
     delivered: "bg-gray-100 text-gray-800 border-gray-200",
-    cancelled: "bg-red-100 text-red-800 border-red-200",
-    refunded: "bg-red-100 text-red-800 border-red-200",
+    cancelled: "bg-blue-100 text-blue-800 border-blue-200",
+    refunded: "bg-blue-100 text-blue-800 border-blue-200",
   };
   return colors[status] || "bg-gray-100 text-gray-800 border-gray-200";
 }

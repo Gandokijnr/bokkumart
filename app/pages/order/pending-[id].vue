@@ -11,7 +11,7 @@
         aria-live="polite"
       >
         <div
-          class="mx-auto h-12 w-12 animate-spin rounded-full border-4 border-red-200 border-t-red-600"
+          class="mx-auto h-12 w-12 animate-spin rounded-full border-4 border-blue-200 border-t-red-600"
           aria-label="Loading order details"
         />
         <p class="mt-4 text-gray-600">Loading order details...</p>
@@ -20,10 +20,10 @@
       <!-- Order Not Found -->
       <div v-else-if="!order" class="text-center py-12">
         <div
-          class="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-red-100"
+          class="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-blue-100"
         >
           <svg
-            class="h-8 w-8 text-red-600"
+            class="h-8 w-8 text-blue-600"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -43,7 +43,7 @@
         </p>
         <NuxtLink
           to="/"
-          class="mt-6 rounded-xl bg-red-600 px-6 py-3 font-bold text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition-colors inline-block"
+          class="mt-6 rounded-xl bg-blue-600 px-6 py-3 font-bold text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors inline-block"
         >
           Continue Shopping
         </NuxtLink>
@@ -80,7 +80,7 @@
 
           <!-- Working Hours Message -->
           <p v-if="isWithinWorkingHours" class="mt-3 text-center text-gray-600">
-            A HomeAffairs representative will call you at
+            A BokkuMart representative will call you at
             <span class="font-bold text-gray-900">{{
               order.contact_phone
             }}</span>
@@ -167,12 +167,12 @@
         <!-- Call Failed Message -->
         <div
           v-if="order.call_attempt_count > 0"
-          class="rounded-xl border-2 border-red-200 bg-red-50 p-4"
+          class="rounded-xl border-2 border-blue-200 bg-blue-50 p-4"
           role="alert"
         >
           <div class="flex items-start gap-3">
             <svg
-              class="mt-0.5 h-5 w-5 flex-shrink-0 text-red-600"
+              class="mt-0.5 h-5 w-5 flex-shrink-0 text-blue-600"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -186,16 +186,16 @@
               />
             </svg>
             <div>
-              <p class="font-bold text-red-900">
+              <p class="font-bold text-blue-900">
                 We tried calling but couldn't reach you
               </p>
-              <p class="mt-1 text-sm text-red-700">
+              <p class="mt-1 text-sm text-blue-700">
                 Attempt #{{ order.call_attempt_count }} was made at
                 {{ formatTime(order.last_call_attempt_at) }}. Please check your
                 signal or call us at
                 <a
                   href="tel:+23412345678"
-                  class="font-bold underline hover:text-red-900 focus:outline-none focus:ring-2 focus:ring-red-500 rounded"
+                  class="font-bold underline hover:text-blue-900 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded"
                 >
                   +234 1 234 5678 </a
                 >.
@@ -210,10 +210,10 @@
           <div class="grid gap-3 sm:grid-cols-2">
             <a
               href="tel:+23412345678"
-              class="flex items-center gap-2 rounded-xl border-2 border-gray-200 bg-white p-3 text-sm font-medium text-gray-700 transition hover:border-red-200 hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
+              class="flex items-center gap-2 rounded-xl border-2 border-gray-200 bg-white p-3 text-sm font-medium text-gray-700 transition hover:border-blue-200 hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
             >
               <svg
-                class="h-5 w-5 text-red-600"
+                class="h-5 w-5 text-blue-600"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -231,7 +231,7 @@
             <button
               @click="showCancelModal = true"
               type="button"
-              class="flex items-center gap-2 rounded-xl border-2 border-gray-200 bg-white p-3 text-sm font-medium text-gray-700 transition hover:border-red-200 hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
+              class="flex items-center gap-2 rounded-xl border-2 border-gray-200 bg-white p-3 text-sm font-medium text-gray-700 transition hover:border-blue-200 hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
             >
               <svg
                 class="h-5 w-5 text-gray-500"
@@ -315,7 +315,7 @@
 
           <NuxtLink
             to="/profile"
-            class="mt-6 w-full rounded-xl bg-red-600 py-3 font-bold text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition-colors text-center inline-block"
+            class="mt-6 w-full rounded-xl bg-blue-600 py-3 font-bold text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors text-center inline-block"
           >
             View Order Details
           </NuxtLink>
@@ -327,10 +327,10 @@
         <div class="rounded-2xl bg-white p-6 shadow-sm">
           <div class="mb-4 flex items-center justify-center">
             <div
-              class="flex h-20 w-20 items-center justify-center rounded-full bg-red-100"
+              class="flex h-20 w-20 items-center justify-center rounded-full bg-blue-100"
             >
               <svg
-                class="h-10 w-10 text-red-600"
+                class="h-10 w-10 text-blue-600"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -355,7 +355,7 @@
 
           <NuxtLink
             to="/"
-            class="mt-6 w-full rounded-xl bg-red-600 py-3 font-bold text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition-colors text-center inline-block"
+            class="mt-6 w-full rounded-xl bg-blue-600 py-3 font-bold text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors text-center inline-block"
           >
             Continue Shopping
           </NuxtLink>
@@ -424,7 +424,7 @@
 
           <NuxtLink
             to="/profile"
-            class="mt-6 w-full rounded-xl bg-red-600 py-3 font-bold text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition-colors text-center inline-block"
+            class="mt-6 w-full rounded-xl bg-blue-600 py-3 font-bold text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors text-center inline-block"
           >
             Back to Profile
           </NuxtLink>
@@ -470,7 +470,7 @@
                 @click="handleCancelOrder"
                 :disabled="cancelling"
                 type="button"
-                class="flex-1 rounded-xl bg-red-600 py-3 font-bold text-white hover:bg-red-700 disabled:bg-gray-400 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition-colors"
+                class="flex-1 rounded-xl bg-blue-600 py-3 font-bold text-white hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors"
               >
                 {{ cancelling ? "Cancelling..." : "Yes, Cancel" }}
               </button>
@@ -631,7 +631,7 @@ function handleOrderUpdate(payload: any) {
   if (oldOrder?.status === "awaiting_call" && newOrder.status === "confirmed") {
     sendNotification(
       "Order Verified!",
-      "Your HomeAffairs order has been confirmed and is being prepared.",
+      "Your BokkuMart order has been confirmed and is being prepared.",
     );
   }
 }

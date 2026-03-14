@@ -4,7 +4,7 @@ import { getSafeErrorMessage } from "~/utils/errorHandler";
 
 definePageMeta({});
 
-useHead({ title: "Rider Onboarding - HomeAffairs" });
+useHead({ title: "Rider Onboarding - BokkuMart" });
 
 type StepKey = "personal" | "branches" | "vehicle" | "payout";
 
@@ -343,7 +343,7 @@ async function submitApplication() {
 
       <div
         v-if="error"
-        class="mb-4 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700"
+        class="mb-4 rounded-xl border border-blue-200 bg-blue-50 p-4 text-sm text-blue-700"
       >
         {{ error }}
       </div>
@@ -406,7 +406,7 @@ async function submitApplication() {
             </p>
             <NuxtLink
               to="/driver/auth?redirect=/driver/onboarding"
-              class="inline-flex items-center px-4 py-2 bg-red-600 text-white text-sm font-medium rounded-lg hover:bg-red-700 transition-colors"
+              class="inline-flex items-center px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors"
             >
               Sign In / Create Account
             </NuxtLink>
@@ -459,7 +459,7 @@ async function submitApplication() {
                 class="flex items-start gap-3 p-3 rounded-xl border-2 cursor-pointer transition-all"
                 :class="
                   form.selected_branches.includes(branch.id)
-                    ? 'border-red-500 bg-red-50'
+                    ? 'border-blue-500 bg-blue-50'
                     : 'border-gray-200 hover:border-gray-300'
                 "
               >
@@ -468,7 +468,7 @@ async function submitApplication() {
                     class="w-5 h-5 rounded border-2 flex items-center justify-center transition-colors"
                     :class="
                       form.selected_branches.includes(branch.id)
-                        ? 'bg-red-600 border-red-600'
+                        ? 'bg-blue-600 border-blue-600'
                         : 'border-gray-300'
                     "
                   >
@@ -517,7 +517,7 @@ async function submitApplication() {
             >
             <select
               v-model="form.vehicle_type"
-              class="w-full rounded-xl border-2 border-gray-200 bg-white px-4 py-2.5 text-sm text-gray-900 transition-all outline-none focus:border-red-500 focus:ring-2 focus:ring-red-200"
+              class="w-full rounded-xl border-2 border-gray-200 bg-white px-4 py-2.5 text-sm text-gray-900 transition-all outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
             >
               <option value="motorcycle">Motorcycle</option>
               <option value="bicycle">Bicycle</option>
@@ -536,7 +536,7 @@ async function submitApplication() {
               form.vehicle_type !== 'bicycle' &&
               String(form.plate_number).trim().length < 3
             "
-            class="text-xs text-red-600"
+            class="text-xs text-blue-600"
           >
             Plate number is required for this vehicle type.
           </p>
@@ -548,13 +548,13 @@ async function submitApplication() {
             <input
               type="file"
               accept="image/*,application/pdf"
-              class="block w-full cursor-pointer rounded-xl border-2 border-gray-200 bg-white text-sm text-gray-900 transition-all outline-none focus:border-red-500 focus:ring-2 focus:ring-red-200 file:mr-4 file:rounded-lg file:border-0 file:bg-red-50 file:px-4 file:py-2.5 file:text-sm file:font-semibold file:text-red-700 hover:file:bg-red-100"
+              class="block w-full cursor-pointer rounded-xl border-2 border-gray-200 bg-white text-sm text-gray-900 transition-all outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 file:mr-4 file:rounded-lg file:border-0 file:bg-blue-50 file:px-4 file:py-2.5 file:text-sm file:font-semibold file:text-blue-700 hover:file:bg-blue-100"
               @change="onPickIdCard"
             />
             <p v-if="idCardPath" class="text-xs font-medium text-emerald-700">
               Uploaded.
             </p>
-            <p v-else class="text-xs text-red-600">
+            <p v-else class="text-xs text-blue-600">
               ID card upload is required.
             </p>
           </div>
@@ -566,7 +566,7 @@ async function submitApplication() {
             <input
               type="file"
               accept="image/*"
-              class="block w-full cursor-pointer rounded-xl border-2 border-gray-200 bg-white text-sm text-gray-900 transition-all outline-none focus:border-red-500 focus:ring-2 focus:ring-red-200 file:mr-4 file:rounded-lg file:border-0 file:bg-red-50 file:px-4 file:py-2.5 file:text-sm file:font-semibold file:text-red-700 hover:file:bg-red-100"
+              class="block w-full cursor-pointer rounded-xl border-2 border-gray-200 bg-white text-sm text-gray-900 transition-all outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 file:mr-4 file:rounded-lg file:border-0 file:bg-blue-50 file:px-4 file:py-2.5 file:text-sm file:font-semibold file:text-blue-700 hover:file:bg-blue-100"
               @change="onPickVehicleReg"
             />
             <p
@@ -575,7 +575,7 @@ async function submitApplication() {
             >
               Uploaded.
             </p>
-            <p v-else class="text-xs text-red-600">
+            <p v-else class="text-xs text-blue-600">
               Vehicle photo upload is required.
             </p>
           </div>

@@ -40,7 +40,7 @@
         <div class="mt-6 flex flex-col gap-3">
           <NuxtLink
             to="/"
-            class="w-full rounded-xl bg-red-600 px-4 py-3 text-sm font-semibold text-white hover:bg-red-700 transition-colors"
+            class="w-full rounded-xl bg-blue-600 px-4 py-3 text-sm font-semibold text-white hover:bg-blue-700 transition-colors"
           >
             Back to home
           </NuxtLink>

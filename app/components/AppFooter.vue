@@ -6,13 +6,13 @@
         <div class="sm:col-span-2 lg:col-span-1">
           <a href="#" class="inline-flex items-center gap-2.5">
             <div
-              class="flex h-11 w-11 items-center justify-center rounded-xl bg-red-600 shadow-lg"
+              class="flex h-11 w-11 items-center justify-center rounded-xl bg-[#0052CC] shadow-lg"
             >
-              <span class="text-base font-bold text-white">HA</span>
+              <span class="text-base font-bold text-white">BM</span>
             </div>
             <div>
               <div class="text-base font-bold" :style="headingStyle">
-                HomeAffairs
+                BokkuMart
               </div>
               <div class="text-xs text-gray-400">Premium Supermarket</div>
             </div>
@@ -25,7 +25,7 @@
           <!-- Social links -->
           <div class="mt-5 flex items-center gap-2">
             <a
-              class="flex h-9 w-9 items-center justify-center rounded-lg border border-gray-700 bg-gray-800 text-gray-400 transition-all hover:border-red-600 hover:bg-gray-700 hover:text-white"
+              class="flex h-9 w-9 items-center justify-center rounded-lg border border-gray-700 bg-gray-800 text-gray-400 transition-all hover:border-[#0052CC] hover:bg-gray-700 hover:text-white"
               href="#"
               aria-label="Instagram"
             >
@@ -36,7 +36,7 @@
               </svg>
             </a>
             <a
-              class="flex h-9 w-9 items-center justify-center rounded-lg border border-gray-700 bg-gray-800 text-gray-400 transition-all hover:border-red-600 hover:bg-gray-700 hover:text-white"
+              class="flex h-9 w-9 items-center justify-center rounded-lg border border-gray-700 bg-gray-800 text-gray-400 transition-all hover:border-[#0052CC] hover:bg-gray-700 hover:text-white"
               href="#"
               aria-label="Facebook"
             >
@@ -47,7 +47,7 @@
               </svg>
             </a>
             <a
-              class="flex h-9 w-9 items-center justify-center rounded-lg border border-gray-700 bg-gray-800 text-gray-400 transition-all hover:border-red-600 hover:bg-gray-700 hover:text-white"
+              class="flex h-9 w-9 items-center justify-center rounded-lg border border-gray-700 bg-gray-800 text-gray-400 transition-all hover:border-[#0052CC] hover:bg-gray-700 hover:text-white"
               href="#"
               aria-label="Twitter"
             >
@@ -156,7 +156,7 @@
           <ul class="mt-4 space-y-2.5 text-sm text-gray-400">
             <li class="flex items-start gap-2">
               <svg
-                class="mt-0.5 h-5 w-5 flex-shrink-0 text-red-500"
+                class="mt-0.5 h-5 w-5 flex-shrink-0 text-[#0052CC]"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -168,11 +168,11 @@
                   d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"
                 />
               </svg>
-              <span>+234 (0) 800-HOMEAFFAIRS</span>
+              <span>+234 (0) 800-BOKKUMART</span>
             </li>
             <li class="flex items-start gap-2">
               <svg
-                class="mt-0.5 h-5 w-5 flex-shrink-0 text-red-500"
+                class="mt-0.5 h-5 w-5 flex-shrink-0 text-[#0052CC]"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -184,11 +184,11 @@
                   d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
                 />
               </svg>
-              <span>hello@homeaffairs.ng</span>
+              <span>hello@bokkumart.ng</span>
             </li>
             <li class="flex items-start gap-2">
               <svg
-                class="mt-0.5 h-5 w-5 flex-shrink-0 text-red-500"
+                class="mt-0.5 h-5 w-5 flex-shrink-0 text-[#0052CC]"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -217,7 +217,7 @@
         class="mt-10 border-t border-gray-800 pt-6 text-center text-xs text-gray-500 sm:text-left"
       >
         <p>
-          2024 HomeAffairs. All rights reserved. |
+          2024 BokkuMart. All rights reserved. |
           <a href="#" class="hover:text-gray-300">Privacy Policy</a> |
           <a href="#" class="hover:text-gray-300">Terms of Service</a>
         </p>

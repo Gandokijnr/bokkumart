@@ -6,12 +6,12 @@
   >
     <div class="mb-2.5 flex items-center justify-between sm:mb-3">
       <span class="text-xs text-gray-600 sm:text-sm">Total</span>
-      <span class="text-lg font-bold text-red-600 sm:text-xl">{{ formatPrice(total) }}</span>
+      <span class="text-lg font-bold text-blue-600 sm:text-xl">{{ formatPrice(total) }}</span>
     </div>
     <button
       @click="$emit('checkout')"
       :disabled="disabled"
-      class="w-full rounded-xl bg-red-600 py-3 text-sm font-bold text-white transition-opacity disabled:opacity-50 sm:py-3.5"
+      class="w-full rounded-xl bg-blue-600 py-3 text-sm font-bold text-white transition-opacity disabled:opacity-50 sm:py-3.5"
     >
       {{ disabled ? 'Update Cart' : 'Proceed to Checkout' }}
     </button>

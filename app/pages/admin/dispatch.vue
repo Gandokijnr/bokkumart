@@ -27,7 +27,7 @@
 
         <div
           v-if="error"
-          class="mt-4 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700"
+          class="mt-4 rounded-xl border border-blue-200 bg-blue-50 p-4 text-sm text-blue-700"
         >
           {{ error }}
         </div>
@@ -82,7 +82,7 @@
               class="rounded-2xl border border-gray-200 bg-white p-4"
               :class="{
                 'ring-2 ring-indigo-500': selectedOrderIds.has(o.id),
-                'border-red-300 bg-red-50': isExpired(o),
+                'border-blue-300 bg-blue-50': isExpired(o),
               }"
             >
               <div class="flex items-start justify-between gap-3">
@@ -102,7 +102,7 @@
                     </p>
                     <span
                       v-if="isExpired(o)"
-                      class="rounded-full bg-red-200 px-2 py-0.5 text-xs font-semibold text-red-800 truncate"
+                      class="rounded-full bg-blue-200 px-2 py-0.5 text-xs font-semibold text-blue-800 truncate"
                       title="Needs reassignment"
                     >
                       Needs reassignment
@@ -327,7 +327,7 @@
 import { computed, onMounted, onUnmounted, ref } from "vue";
 import type { Database } from "~/types/database.types";
 
-useHead({ title: "Dispatch - HomeAffairs" });
+useHead({ title: "Dispatch - BokkuMart" });
 
 definePageMeta({
   layout: "admin",

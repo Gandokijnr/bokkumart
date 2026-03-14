@@ -86,7 +86,7 @@ const isBlocked = computed(() => {
               'bg-green-100 text-green-700': isSubscribed,
               'bg-gray-100 text-gray-600': !isSubscribed && !needsPermission,
               'bg-yellow-100 text-yellow-700': needsPermission && !isBlocked,
-              'bg-red-100 text-red-700': isBlocked
+              'bg-blue-100 text-blue-700': isBlocked
             }"
           >
             {{ isSubscribed ? 'Active' : needsPermission ? 'Permission Needed' : isBlocked ? 'Blocked' : 'Inactive' }}
@@ -99,7 +99,7 @@ const isBlocked = computed(() => {
         </div>
 
         <!-- Blocked Message -->
-        <div v-else-if="isBlocked" class="text-sm text-red-600 bg-red-50 p-3 rounded-lg">
+        <div v-else-if="isBlocked" class="text-sm text-blue-600 bg-blue-50 p-3 rounded-lg">
           Notifications are blocked. Please enable them in your browser settings to receive updates.
         </div>
 
@@ -111,7 +111,7 @@ const isBlocked = computed(() => {
           <button
             @click="handleRequestPermission"
             :disabled="isLoading"
-            class="w-full py-2.5 px-4 bg-[#ED1C24] text-white rounded-lg font-medium text-sm hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            class="w-full py-2.5 px-4 bg-[#ED1C24] text-white rounded-lg font-medium text-sm hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <span v-if="isLoading">Enabling...</span>
             <span v-else>Enable Notifications</span>
@@ -137,7 +137,7 @@ const isBlocked = computed(() => {
             v-if="!isSubscribed"
             @click="handleSubscribe"
             :disabled="isLoading"
-            class="w-full py-2.5 px-4 bg-[#ED1C24] text-white rounded-lg font-medium text-sm hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            class="w-full py-2.5 px-4 bg-[#ED1C24] text-white rounded-lg font-medium text-sm hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <span v-if="isLoading">Subscribing...</span>
             <span v-else>Subscribe to Notifications</span>

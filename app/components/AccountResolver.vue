@@ -146,7 +146,7 @@ watch(bankCode, () => {
         type="button"
         @click="resolveAccount"
         :disabled="isResolving || !canResolve || disabled"
-        class="rounded-lg border border-red-600 px-6 py-2 text-sm font-bold text-red-600 hover:bg-red-50 disabled:cursor-not-allowed disabled:border-gray-300 disabled:text-gray-400"
+        class="rounded-lg border border-blue-600 px-6 py-2 text-sm font-bold text-blue-600 hover:bg-blue-50 disabled:cursor-not-allowed disabled:border-gray-300 disabled:text-gray-400"
       >
         {{ isResolving ? "Resolving..." : "Resolve Account" }}
       </button>
@@ -158,12 +158,12 @@ watch(bankCode, () => {
     >
       Resolved Name:
       <span class="font-semibold">{{ resolvedAccountName }}</span>
-      <div v-if="!namesMatch" class="mt-1 text-red-600">
+      <div v-if="!namesMatch" class="mt-1 text-blue-600">
         Account name does not match resolved name.
       </div>
     </div>
 
-    <p v-if="error" class="text-sm text-red-600">
+    <p v-if="error" class="text-sm text-blue-600">
       {{ error }}
     </p>
   </div>

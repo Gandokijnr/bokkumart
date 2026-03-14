@@ -6,7 +6,7 @@
     <!-- Stock Warning Badge -->
     <div
       v-if="item.quantity > item.max_quantity"
-      class="absolute -top-2 left-3 rounded-full bg-red-600 px-2 py-1 text-xs font-bold text-white shadow-md sm:left-4 sm:px-3"
+      class="absolute -top-2 left-3 rounded-full bg-blue-600 px-2 py-1 text-xs font-bold text-white shadow-md sm:left-4 sm:px-3"
     >
       Only {{ item.max_quantity }} in stock
     </div>
@@ -70,7 +70,7 @@
               @blur="handleQuantityInput"
               min="1"
               :max="item.max_quantity"
-              class="h-10 w-14 appearance-none border-x-2 border-gray-200 bg-white text-center text-sm font-semibold text-gray-900 focus:border-red-600 focus:outline-none sm:h-11 sm:w-16 sm:text-base"
+              class="h-10 w-14 appearance-none border-x-2 border-gray-200 bg-white text-center text-sm font-semibold text-gray-900 focus:border-blue-600 focus:outline-none sm:h-11 sm:w-16 sm:text-base"
             />
             <button
               @click="increaseQuantity"
@@ -104,7 +104,7 @@
       <!-- Delete Button -->
       <button
         @click="remove"
-        class="absolute right-3 top-3 flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full text-gray-400 transition-colors hover:bg-red-50 hover:text-red-500 sm:static sm:h-10 sm:w-10"
+        class="absolute right-3 top-3 flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full text-gray-400 transition-colors hover:bg-blue-50 hover:text-blue-500 sm:static sm:h-10 sm:w-10"
         aria-label="Remove item"
       >
         <svg

@@ -3,7 +3,7 @@
     <div class="w-full max-w-md">
       <div class="text-center mb-8">
         <div
-          class="w-16 h-16 bg-red-500 rounded-2xl mx-auto mb-4 flex items-center justify-center shadow-lg"
+          class="w-16 h-16 bg-blue-500 rounded-2xl mx-auto mb-4 flex items-center justify-center shadow-lg"
         >
           <svg
             class="w-8 h-8 text-white"
@@ -56,7 +56,7 @@
             </div>
             <NuxtLink
               to="/auth"
-              class="w-full py-3 px-4 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-lg text-center inline-block"
+              class="w-full py-3 px-4 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg text-center inline-block"
             >
               Sign In
             </NuxtLink>
@@ -65,10 +65,10 @@
           <!-- Error State -->
           <div v-else-if="resetError" class="text-center space-y-4 py-4">
             <div
-              class="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto"
+              class="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto"
             >
               <svg
-                class="w-8 h-8 text-red-600"
+                class="w-8 h-8 text-blue-600"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -87,7 +87,7 @@
             </div>
             <NuxtLink
               to="/auth"
-              class="w-full py-3 px-4 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-lg text-center inline-block"
+              class="w-full py-3 px-4 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg text-center inline-block"
             >
               Back to Sign In
             </NuxtLink>
@@ -160,7 +160,7 @@
               </p>
             </div>
 
-            <p v-if="passwordMismatch" class="text-sm text-red-600">
+            <p v-if="passwordMismatch" class="text-sm text-blue-600">
               Passwords do not match
             </p>
 

@@ -5,7 +5,7 @@
     <main class="mx-auto max-w-7xl px-4 py-8 sm:px-6">
       <!-- Breadcrumb -->
       <nav class="mb-6 flex items-center gap-2 text-sm text-gray-600">
-        <NuxtLink to="/" class="hover:text-red-600">Home</NuxtLink>
+        <NuxtLink to="/" class="hover:text-blue-600">Home</NuxtLink>
         <span>/</span>
         <span class="font-medium text-gray-900">{{
           category?.name || "Category"
@@ -47,12 +47,12 @@
       <!-- Error state -->
       <div
         v-else-if="error"
-        class="rounded-2xl border border-red-200 bg-red-50 p-6 text-center"
+        class="rounded-2xl border border-blue-200 bg-blue-50 p-6 text-center"
       >
-        <p class="text-red-700">{{ error }}</p>
+        <p class="text-blue-700">{{ error }}</p>
         <button
           @click="fetchCategoryAndProducts"
-          class="mt-4 rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700"
+          class="mt-4 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
         >
           Try Again
         </button>
@@ -67,7 +67,7 @@
         <h3 class="text-lg font-semibold text-gray-900">Category not found</h3>
         <NuxtLink
           to="/#deals"
-          class="mt-6 rounded-xl bg-red-600 px-6 py-3 font-medium text-white hover:bg-red-700 inline-block"
+          class="mt-6 rounded-xl bg-blue-600 px-6 py-3 font-medium text-white hover:bg-blue-700 inline-block"
         >
           Browse All Products
         </NuxtLink>
@@ -84,7 +84,7 @@
         </p>
         <NuxtLink
           to="/#deals"
-          class="mt-6 rounded-xl bg-red-600 px-6 py-3 font-medium text-white hover:bg-red-700 inline-block"
+          class="mt-6 rounded-xl bg-blue-600 px-6 py-3 font-medium text-white hover:bg-blue-700 inline-block"
         >
           Browse All Products
         </NuxtLink>
@@ -98,7 +98,7 @@
         <article
           v-for="product in products"
           :key="product.id"
-          class="group relative rounded-2xl border-2 border-gray-200 bg-white p-3 shadow-sm transition-all hover:border-red-600 hover:shadow-lg"
+          class="group relative rounded-2xl border-2 border-gray-200 bg-white p-3 shadow-sm transition-all hover:border-blue-600 hover:shadow-lg"
           :class="{
             'opacity-60':
               !product.isAvailable || getStockStatus(product.id).isOutOfStock,
@@ -112,7 +112,7 @@
             class="absolute inset-0 z-10 flex items-center justify-center rounded-2xl bg-black/60"
           >
             <span
-              class="rounded-full bg-red-600 px-3 py-1 text-xs font-bold text-white"
+              class="rounded-full bg-blue-600 px-3 py-1 text-xs font-bold text-white"
             >
               Out of Stock
             </span>
@@ -133,7 +133,7 @@
           <!-- Deal Badge -->
           <div v-else-if="product.badge" class="absolute left-2 top-2 z-10">
             <span
-              class="rounded-full bg-red-600 px-2.5 py-1 text-xs font-bold text-white shadow-sm"
+              class="rounded-full bg-blue-600 px-2.5 py-1 text-xs font-bold text-white shadow-sm"
             >
               {{ product.badge }}
             </span>
@@ -171,7 +171,7 @@
 
             <!-- Add to Cart Button -->
             <button
-              class="mt-3 flex w-full items-center justify-center gap-2 rounded-xl bg-red-600 px-4 py-2.5 text-sm font-bold text-white shadow-sm transition-all hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-600 focus:ring-offset-2 disabled:cursor-not-allowed disabled:bg-gray-300"
+              class="mt-3 flex w-full items-center justify-center gap-2 rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-bold text-white shadow-sm transition-all hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:ring-offset-2 disabled:cursor-not-allowed disabled:bg-gray-300"
               type="button"
               :disabled="
                 !product.isAvailable ||
@@ -246,7 +246,7 @@
             toast.type === 'success'
               ? 'bg-green-600'
               : toast.type === 'error'
-                ? 'bg-red-600'
+                ? 'bg-blue-600'
                 : 'bg-blue-600'
           "
         >
@@ -271,7 +271,7 @@
           : 'none',
       }"
     >
-      <div class="h-16 w-16 rounded-xl bg-red-600 p-2 shadow-lg">
+      <div class="h-16 w-16 rounded-xl bg-blue-600 p-2 shadow-lg">
         <img
           v-if="flyingItem.image"
           :src="flyingItem.image"
@@ -472,8 +472,8 @@ const headingStyle = computed(() => ({
 useHead({
   title: computed(() =>
     category.value
-      ? `${category.value.name} | HomeAffairs`
-      : "Category | HomeAffairs",
+      ? `${category.value.name} | BokkuMart`
+      : "Category | BokkuMart",
   ),
 });
 </script>

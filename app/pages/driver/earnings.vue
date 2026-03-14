@@ -50,12 +50,12 @@
       <!-- Error State -->
       <div
         v-else-if="error"
-        class="bg-red-500/10 border border-red-500/30 rounded-2xl p-6 text-center"
+        class="bg-blue-500/10 border border-blue-500/30 rounded-2xl p-6 text-center"
       >
-        <p class="text-red-400">{{ error }}</p>
+        <p class="text-blue-400">{{ error }}</p>
         <button
           @click="fetchEarnings"
-          class="mt-4 px-4 py-2 bg-red-500/20 hover:bg-red-500/30 text-red-400 rounded-xl transition-all"
+          class="mt-4 px-4 py-2 bg-blue-500/20 hover:bg-blue-500/30 text-blue-400 rounded-xl transition-all"
         >
           Try Again
         </button>
@@ -318,7 +318,7 @@
                         'text-amber-400': activity.data.status === 'pending',
                         'text-green-400': activity.data.status === 'paid',
                         'text-blue-400': activity.data.status === 'approved',
-                        'text-red-400': activity.data.status === 'rejected',
+                        'text-blue-400': activity.data.status === 'rejected',
                       }"
                       class="ml-2"
                     >
@@ -327,7 +327,7 @@
                   </p>
                 </div>
                 <div class="text-right">
-                  <p class="text-red-400 font-semibold">
+                  <p class="text-blue-400 font-semibold">
                     -₦{{ formatMoney(activity.data.amount) }}
                   </p>
                 </div>
@@ -455,7 +455,7 @@
             />
           </div>
 
-          <p v-if="payoutError" class="text-red-400 text-sm">
+          <p v-if="payoutError" class="text-blue-400 text-sm">
             {{ payoutError }}
           </p>
 

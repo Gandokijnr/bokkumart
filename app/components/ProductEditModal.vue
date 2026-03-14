@@ -70,7 +70,7 @@
           <!-- Loading State -->
           <div v-if="loading" class="flex items-center justify-center py-12">
             <div
-              class="animate-spin rounded-full h-8 w-8 border-b-2 border-red-600"
+              class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"
             ></div>
           </div>
 
@@ -88,7 +88,7 @@
                 class="border-2 border-dashed rounded-xl p-6 text-center transition-all cursor-pointer"
                 :class="[
                   imageDragActive
-                    ? 'border-red-500 bg-red-50'
+                    ? 'border-blue-500 bg-blue-50'
                     : 'border-gray-300 hover:border-gray-400 bg-gray-50',
                 ]"
                 @dragenter.prevent="imageDragActive = true"
@@ -147,7 +147,7 @@
                     class="h-2 w-full bg-gray-200 rounded-full overflow-hidden"
                   >
                     <div
-                      class="h-full bg-red-600 transition-all duration-300"
+                      class="h-full bg-blue-600 transition-all duration-300"
                       :style="{ width: `${uploadProgress}%` }"
                     />
                   </div>
@@ -170,7 +170,7 @@
                 <button
                   type="button"
                   @click.stop="removeImage"
-                  class="text-sm text-red-600 hover:text-red-700 font-medium"
+                  class="text-sm text-blue-600 hover:text-blue-700 font-medium"
                 >
                   Remove image
                 </button>
@@ -182,12 +182,12 @@
               <!-- Name -->
               <div class="md:col-span-2">
                 <label class="block text-sm font-medium text-gray-700 mb-1">
-                  Product Name <span class="text-red-600">*</span>
+                  Product Name <span class="text-blue-600">*</span>
                 </label>
                 <input
                   v-model="form.name"
                   type="text"
-                  class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500"
+                  class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
                   placeholder="e.g., Fresh Cow Milk 1L"
                 />
               </div>
@@ -200,7 +200,7 @@
                 <input
                   v-model="form.sku"
                   type="text"
-                  class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500"
+                  class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
                   placeholder="e.g., DAIRY-001"
                   :disabled="isEditing"
                 />
@@ -216,7 +216,7 @@
                 </label>
                 <select
                   v-model="form.category_id"
-                  class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500"
+                  class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
                 >
                   <option value="">Select category...</option>
                   <option
@@ -232,14 +232,14 @@
               <!-- Price -->
               <div>
                 <label class="block text-sm font-medium text-gray-700 mb-1">
-                  Price (₦) <span class="text-red-600">*</span>
+                  Price (₦) <span class="text-blue-600">*</span>
                 </label>
                 <input
                   v-model.number="form.price"
                   type="number"
                   min="0"
                   step="0.01"
-                  class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500"
+                  class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
                   placeholder="0.00"
                 />
               </div>
@@ -254,7 +254,7 @@
                   type="number"
                   min="0"
                   step="0.01"
-                  class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500"
+                  class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
                   placeholder="0.00"
                 />
               </div>
@@ -267,7 +267,7 @@
                 <input
                   v-model="form.barcode"
                   type="text"
-                  class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500"
+                  class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
                   placeholder="Scan or enter barcode"
                 />
               </div>
@@ -280,7 +280,7 @@
                 <textarea
                   v-model="form.description"
                   rows="3"
-                  class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500"
+                  class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
                   placeholder="Product description..."
                 />
               </div>
@@ -293,7 +293,7 @@
                   id="is-visible"
                   v-model="form.is_visible"
                   type="checkbox"
-                  class="h-4 w-4 text-red-600 focus:ring-red-500 border-gray-300 rounded"
+                  class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
                 />
                 <label
                   for="is-visible"
@@ -314,7 +314,7 @@
             v-if="isEditing"
             type="button"
             @click="confirmDelete"
-            class="text-red-600 hover:text-red-700 font-medium text-sm"
+            class="text-blue-600 hover:text-blue-700 font-medium text-sm"
             :disabled="saving"
           >
             Delete Product
@@ -334,7 +334,7 @@
               type="button"
               @click="saveProduct"
               :disabled="saving || !isFormValid"
-              class="px-4 py-2 rounded-lg bg-red-600 text-white text-sm font-bold hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+              class="px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-bold hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
             >
               <svg
                 v-if="saving"
@@ -386,10 +386,10 @@
           <div class="bg-white rounded-xl shadow-2xl max-w-md w-full p-6">
             <div class="flex items-center gap-3 mb-4">
               <div
-                class="h-10 w-10 rounded-full bg-red-100 flex items-center justify-center"
+                class="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center"
               >
                 <svg
-                  class="h-6 w-6 text-red-600"
+                  class="h-6 w-6 text-blue-600"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -413,13 +413,13 @@
             <!-- High-value confirmation -->
             <div v-if="requiresDeleteConfirmation" class="mb-4">
               <label class="block text-sm font-medium text-gray-700 mb-2">
-                Type <span class="font-bold text-red-600">DELETE</span> to
+                Type <span class="font-bold text-blue-600">DELETE</span> to
                 confirm:
               </label>
               <input
                 v-model="deleteConfirmText"
                 type="text"
-                class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500"
+                class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
                 placeholder="Type DELETE"
               />
             </div>
@@ -436,7 +436,7 @@
                 :disabled="
                   requiresDeleteConfirmation && deleteConfirmText !== 'DELETE'
                 "
-                class="px-4 py-2 rounded-lg bg-red-600 text-white text-sm font-bold hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                class="px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-bold hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {{ deleting ? "Deleting..." : "Delete Permanently" }}
               </button>

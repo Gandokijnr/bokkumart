@@ -733,9 +733,9 @@
         <!-- Error Message -->
         <div
           v-if="pinError"
-          class="mb-4 p-3 bg-red-500/10 border border-red-500/30 rounded-xl"
+          class="mb-4 p-3 bg-blue-500/10 border border-blue-500/30 rounded-xl"
         >
-          <p class="text-sm text-red-400 text-center">{{ pinError }}</p>
+          <p class="text-sm text-blue-400 text-center">{{ pinError }}</p>
         </div>
 
         <!-- Actions -->
@@ -899,7 +899,7 @@ const currentOrderStatus = computed(() => {
 // WhatsApp message pre-filled
 const whatsappMessage = computed(() => {
   const orderId = shortOrderId.value;
-  return `Hi, this is your HomeAffairs delivery driver. I'm outside with your order #${orderId}. Could you please guide me to your location?`;
+  return `Hi, this is your BokkuMart delivery driver. I'm outside with your order #${orderId}. Could you please guide me to your location?`;
 });
 
 // Select an order to work on

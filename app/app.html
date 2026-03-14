@@ -4,13 +4,13 @@
     {{ HEAD }}
     <style>
       :root {
-        --ha-red: #ed1c24;
+        --bokku-blue: #0052cc;
       }
       html,
       body {
         background: #fff;
       }
-      .ha-splash {
+      .bokku-splash {
         position: fixed;
         inset: 0;
         z-index: 100000;
@@ -19,55 +19,62 @@
         align-items: center;
         justify-content: center;
       }
-      .ha-splash__inner {
+      .bokku-splash__inner {
         display: flex;
         align-items: center;
         justify-content: center;
         padding: 24px;
       }
-      .ha-splash__brand {
+      .bokku-splash__brand {
         display: flex;
         align-items: center;
         gap: 10px;
-        color: var(--ha-red);
-        animation: haPulse 1.2s ease-in-out infinite;
+        color: var(--bokku-blue);
+        animation: bokkuPulse 1.2s ease-in-out infinite;
       }
-      .ha-splash__icon {
-        width: 24px;
-        height: 24px;
+      .bokku-splash__icon {
+        width: 28px;
+        height: 28px;
       }
-      .ha-splash__text {
+      .bokku-splash__text {
         font-weight: 800;
-        letter-spacing: 0.2px;
-        font-size: 20px;
+        letter-spacing: -0.5px;
+        font-size: 22px;
+        font-family:
+          system-ui,
+          -apple-system,
+          BlinkMacSystemFont,
+          "Segoe UI",
+          Roboto,
+          sans-serif;
       }
-      @keyframes haPulse {
+      @keyframes bokkuPulse {
         0%,
         100% {
           opacity: 1;
           transform: scale(1);
         }
         50% {
-          opacity: 0.6;
+          opacity: 0.7;
           transform: scale(0.985);
         }
       }
       @media (prefers-reduced-motion: reduce) {
-        .ha-splash__brand {
+        .bokku-splash__brand {
           animation: none;
         }
       }
     </style>
   </head>
   <body {{ BODY_ATTRS }}>
-    <div id="__ha-splash" class="ha-splash">
-      <div class="ha-splash__inner">
-        <div class="ha-splash__brand">
+    <div id="__bokku-splash" class="bokku-splash">
+      <div class="bokku-splash__inner">
+        <div class="bokku-splash__brand">
           <svg
-            class="ha-splash__icon"
+            class="bokku-splash__icon"
             xmlns="http://www.w3.org/2000/svg"
-            width="24"
-            height="24"
+            width="28"
+            height="28"
             viewBox="0 0 24 24"
             fill="none"
             stroke="currentColor"
@@ -82,7 +89,7 @@
               d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.72a2 2 0 0 0 2-1.5l1.38-6.55H6.12"
             />
           </svg>
-          <div class="ha-splash__text">Home Affairs</div>
+          <div class="bokku-splash__text">BokkuMart</div>
         </div>
       </div>
     </div>

@@ -6,7 +6,7 @@
       <div class="text-center">
         <div
           v-if="verifying"
-          class="mx-auto h-20 w-20 animate-spin rounded-full border-4 border-red-200 border-t-red-600"
+          class="mx-auto h-20 w-20 animate-spin rounded-full border-4 border-blue-200 border-t-red-600"
         ></div>
         <div
           v-else-if="success"
@@ -46,10 +46,10 @@
         </div>
         <div
           v-else
-          class="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-red-100"
+          class="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-blue-100"
         >
           <svg
-            class="h-10 w-10 text-red-600"
+            class="h-10 w-10 text-blue-600"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -94,7 +94,7 @@
           class="w-full rounded-xl py-3.5 text-sm font-bold text-white text-center inline-block"
           :class="
             success
-              ? 'bg-red-600 hover:bg-red-700'
+              ? 'bg-blue-600 hover:bg-blue-700'
               : 'bg-gray-600 hover:bg-gray-700'
           "
         >

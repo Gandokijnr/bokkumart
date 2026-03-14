@@ -64,7 +64,7 @@
           v-model="searchQuery"
           type="text"
           placeholder="Search orders..."
-          class="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-red-500 focus:outline-none"
+          class="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none"
         />
       </div>
 
@@ -82,7 +82,7 @@
         <select
           v-else-if="currentUserRole !== 'branch_manager'"
           v-model="storeFilter"
-          class="rounded-lg border border-gray-300 px-3 py-2 focus:border-red-500 focus:outline-none"
+          class="rounded-lg border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none"
         >
           <option value="">All Stores</option>
           <option v-for="store in stores" :key="store.id" :value="store.id">
@@ -99,7 +99,7 @@
         </div>
         <div
           v-else
-          class="rounded-lg border border-red-300 px-3 py-2 bg-red-50 text-red-700 text-sm font-medium"
+          class="rounded-lg border border-blue-300 px-3 py-2 bg-blue-50 text-blue-700 text-sm font-medium"
         >
           No branch assigned - contact admin
         </div>
@@ -107,7 +107,7 @@
 
       <select
         v-model="paymentFilter"
-        class="rounded-lg border border-gray-300 px-3 py-2 focus:border-red-500 focus:outline-none"
+        class="rounded-lg border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none"
       >
         <option value="">All Payment Methods</option>
         <option value="prepaid">Prepaid</option>
@@ -145,7 +145,7 @@
         v-for="column in kanbanColumns"
         :key="column.status"
         class="rounded-xl bg-gray-100 p-3"
-        :class="{ 'bg-red-50': column.status === 'pending' }"
+        :class="{ 'bg-blue-50': column.status === 'pending' }"
       >
         <div class="mb-3 flex items-center justify-between">
           <h3 class="font-semibold text-gray-900">{{ column.title }}</h3>
@@ -162,7 +162,7 @@
             :key="order.id"
             class="relative cursor-pointer rounded-lg bg-white p-3 shadow-sm transition-shadow hover:shadow-md overflow-hidden max-h-[350px] overflow-y-auto"
             :class="{
-              'border-l-4 border-red-500': order.fraudRisk?.isHighRisk,
+              'border-l-4 border-blue-500': order.fraudRisk?.isHighRisk,
               'ring-2 ring-emerald-300':
                 order.delivery_method === 'pickup' &&
                 order.metadata?.pickup_arrived_at,
@@ -240,7 +240,7 @@
             >
               <div class="h-1.5 w-full rounded-full bg-gray-200">
                 <div
-                  class="h-1.5 rounded-full bg-red-600 transition-all"
+                  class="h-1.5 rounded-full bg-blue-600 transition-all"
                   :style="{ width: getProgressPercentage(column.status) + '%' }"
                 ></div>
               </div>
@@ -248,7 +248,7 @@
                 <button
                   @click.stop="handleStatusUpdateWithVerify(order)"
                   :disabled="processing.has(order.id)"
-                  class="flex-1 rounded-lg bg-red-600 px-2 py-1.5 text-xs font-bold text-white hover:bg-red-700 disabled:cursor-not-allowed disabled:bg-gray-300 truncate"
+                  class="flex-1 rounded-lg bg-blue-600 px-2 py-1.5 text-xs font-bold text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-gray-300 truncate"
                   :title="getNextStatusLabel(order)"
                 >
                   {{
@@ -316,7 +316,7 @@
               :key="order.id"
               class="hover:bg-gray-50"
               :class="{
-                'bg-red-50': order.fraudRisk?.isHighRisk,
+                'bg-blue-50': order.fraudRisk?.isHighRisk,
                 'bg-emerald-50':
                   order.delivery_method === 'pickup' &&
                   order.metadata?.pickup_arrived_at,
@@ -385,7 +385,7 @@
                       order.status === 'delivered' ||
                       order.status === 'cancelled'
                     "
-                    class="rounded-lg bg-red-600 px-3 py-1.5 text-xs font-bold text-white hover:bg-red-700 disabled:cursor-not-allowed disabled:bg-gray-300"
+                    class="rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-bold text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-gray-300"
                   >
                     {{ getNextStatusLabel(order) }}
                   </button>
@@ -501,7 +501,7 @@
             </p>
             <a
               :href="`tel:${selectedOrder.delivery_details?.contactPhone || selectedOrder.customer_phone}`"
-              class="text-red-600 hover:underline"
+              class="text-blue-600 hover:underline"
             >
               {{
                 selectedOrder.delivery_details?.contactPhone ||
@@ -637,7 +637,7 @@
                 selectedOrder.status !== 'cancelled'
               "
               @click="cancelOrder(selectedOrder)"
-              class="rounded-xl border-2 border-red-600 px-6 py-3 font-bold text-red-600 hover:bg-red-50"
+              class="rounded-xl border-2 border-blue-600 px-6 py-3 font-bold text-blue-600 hover:bg-blue-50"
             >
               Cancel
             </button>
@@ -1570,7 +1570,7 @@ const getStatusBadgeClass = (status: string) => {
     picked_up: "bg-yellow-100 text-yellow-700",
     arrived: "bg-indigo-100 text-indigo-700",
     delivered: "bg-green-100 text-green-700",
-    cancelled: "bg-red-100 text-red-700",
+    cancelled: "bg-blue-100 text-blue-700",
   };
   return classes[status] || "bg-gray-100 text-gray-700";
 };

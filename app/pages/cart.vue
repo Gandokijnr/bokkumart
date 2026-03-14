@@ -12,7 +12,7 @@
           <div class="flex min-h-[400px] items-center justify-center">
             <div class="text-center">
               <div
-                class="mb-4 h-12 w-12 animate-spin rounded-full border-4 border-red-200 border-t-red-600 mx-auto"
+                class="mb-4 h-12 w-12 animate-spin rounded-full border-4 border-blue-200 border-t-[#0052CC] mx-auto"
               ></div>
               <p class="text-gray-500">Loading your cart...</p>
             </div>
@@ -37,7 +37,7 @@
           <button
             v-if="cartStore.items.length > 0"
             @click="showClearConfirm = true"
-            class="text-xs font-medium text-red-500 hover:text-red-700 sm:text-sm"
+            class="text-xs font-medium text-[#0052CC] hover:text-[#003D8F] sm:text-sm"
           >
             Clear Cart
           </button>
@@ -74,7 +74,7 @@
             <!-- Continue Shopping Link -->
             <NuxtLink
               to="/#categories"
-              class="flex items-center gap-2 text-sm font-medium text-red-600 transition-colors hover:text-red-700 sm:text-base"
+              class="flex items-center gap-2 text-sm font-medium text-[#0052CC] transition-colors hover:text-[#003D8F] sm:text-base"
             >
               <svg
                 class="h-4 w-4 rotate-180 sm:h-5 sm:w-5"
@@ -108,7 +108,7 @@
               :handling-fee="cartStore.handlingFee"
               :total="displayTotal"
               :delivery-details="cartStore.deliveryDetails"
-              :store-name="cartStore.currentStoreName || 'HomeAffairs Store'"
+              :store-name="cartStore.currentStoreName || 'BokkuMart Store'"
               v-model:order-note="orderNote"
               :has-out-of-stock-items="hasOutOfStockItems"
               @checkout="proceedToCheckout"
@@ -150,10 +150,10 @@ definePageMeta({
 });
 
 useSeoMeta({
-  title: "Shopping Cart - HomeAffairs",
+  title: "Shopping Cart - BokkuMart",
   description:
     "Review your cart items and proceed to checkout. Fresh groceries delivered to your doorstep in Lagos.",
-  ogTitle: "Shopping Cart - HomeAffairs",
+  ogTitle: "Shopping Cart - BokkuMart",
   ogDescription:
     "Review your cart items and proceed to checkout. Fresh groceries delivered to your doorstep in Lagos.",
 });

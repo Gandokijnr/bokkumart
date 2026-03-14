@@ -8,7 +8,7 @@
             class="text-2xl font-bold text-gray-900 sm:text-3xl"
             :style="headingStyle"
           >
-            Why Choose HomeAffairs?
+            Why Choose BokkuMart?
           </h2>
           <p class="mt-2 text-sm text-gray-600 sm:text-base">
             Premium groceries delivered with care. Designed for busy families
@@ -19,10 +19,10 @@
             <div
               v-for="b in benefits"
               :key="b.title"
-              class="flex items-start gap-4 rounded-2xl border-2 border-gray-200 bg-white p-4 shadow-sm transition-all hover:border-red-600 hover:shadow-md"
+              class="flex items-start gap-4 rounded-2xl border-2 border-gray-200 bg-white p-4 shadow-sm transition-all hover:border-blue-600 hover:shadow-md"
             >
               <div
-                class="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-xl bg-red-50 text-2xl"
+                class="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-xl bg-blue-50 text-2xl"
               >
                 {{ b.icon }}
               </div>
@@ -52,7 +52,7 @@
               class="flex items-start gap-4 rounded-xl border border-gray-200 bg-white p-4 shadow-sm"
             >
               <div
-                class="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-red-600 text-base font-bold text-white"
+                class="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-blue-600 text-base font-bold text-white"
               >
                 1
               </div>
@@ -69,7 +69,7 @@
               class="flex items-start gap-4 rounded-xl border border-gray-200 bg-white p-4 shadow-sm"
             >
               <div
-                class="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-red-600 text-base font-bold text-white"
+                class="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-blue-600 text-base font-bold text-white"
               >
                 2
               </div>
@@ -84,7 +84,7 @@
               class="flex items-start gap-4 rounded-xl border border-gray-200 bg-white p-4 shadow-sm"
             >
               <div
-                class="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-red-600 text-base font-bold text-white"
+                class="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-blue-600 text-base font-bold text-white"
               >
                 3
               </div>
@@ -101,7 +101,7 @@
 
           <button
             @click="navigateTo('/#categories')"
-            class="mt-6 flex w-full items-center justify-center gap-2 rounded-xl bg-red-600 px-6 py-3.5 text-sm font-bold text-white shadow-lg transition-all hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-600 focus:ring-offset-2"
+            class="mt-6 flex w-full items-center justify-center gap-2 rounded-xl bg-blue-600 px-6 py-3.5 text-sm font-bold text-white shadow-lg transition-all hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:ring-offset-2"
           >
             <span>Start Shopping Now</span>
             <svg

@@ -12,7 +12,7 @@ import OrderVerificationModal from "~/components/OrderVerificationModal.vue";
 
 // Page meta
 useHead({
-  title: "Admin ERP Dashboard - HomeAffairs",
+  title: "Admin ERP Dashboard - BokkuMart",
 });
 
 definePageMeta({
@@ -192,8 +192,8 @@ function getStatusColor(status: string) {
     confirmed: "bg-blue-100 text-blue-800 border-blue-200",
     picked_up: "bg-indigo-100 text-indigo-800 border-indigo-200",
     delivered: "bg-gray-100 text-gray-800 border-gray-200",
-    cancelled: "bg-red-100 text-red-800 border-red-200",
-    refunded: "bg-red-100 text-red-800 border-red-200",
+    cancelled: "bg-blue-100 text-blue-800 border-blue-200",
+    refunded: "bg-blue-100 text-blue-800 border-blue-200",
   };
   return colors[status] || "bg-gray-100 text-gray-800";
 }
@@ -508,7 +508,7 @@ async function handleVerifyDeliveryPinCode(pin: string) {
           <!-- Logo & Title -->
           <div class="flex items-center gap-3">
             <div
-              class="w-8 h-8 bg-red-600 rounded-lg flex items-center justify-center"
+              class="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center"
             >
               <svg
                 class="w-5 h-5 text-white"
@@ -623,7 +623,7 @@ async function handleVerifyDeliveryPinCode(pin: string) {
               class="flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-colors"
               :class="[
                 activeTab === tab.key
-                  ? 'border-red-500 text-red-600'
+                  ? 'border-blue-500 text-blue-600'
                   : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300',
               ]"
             >
@@ -665,7 +665,7 @@ async function handleVerifyDeliveryPinCode(pin: string) {
               {{ tab.label }}
               <span
                 v-if="tab.count"
-                class="ml-1 px-2 py-0.5 text-xs rounded-full bg-red-100 text-red-700"
+                class="ml-1 px-2 py-0.5 text-xs rounded-full bg-blue-100 text-blue-700"
               >
                 {{ tab.count }}
               </span>
@@ -730,14 +730,14 @@ async function handleVerifyDeliveryPinCode(pin: string) {
                   <button
                     v-if="order.status === 'awaiting_call' && !order.claimed_by"
                     @click="handleClaimOrder(order.id)"
-                    class="px-3 py-1 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 transition-colors"
+                    class="px-3 py-1 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors"
                   >
                     Claim
                   </button>
                   <button
                     v-else-if="order.claimed_by"
                     @click="handleReleaseOrder(order.id)"
-                    class="px-3 py-1 text-sm font-medium text-red-600 bg-red-50 rounded-lg hover:bg-red-100 transition-colors"
+                    class="px-3 py-1 text-sm font-medium text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors"
                   >
                     Release
                   </button>
@@ -764,7 +764,7 @@ async function handleVerifyDeliveryPinCode(pin: string) {
           v-for="order in filteredOrders"
           :key="order.id"
           class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden"
-          :class="{ 'ring-2 ring-red-500': order.claimed_by }"
+          :class="{ 'ring-2 ring-blue-500': order.claimed_by }"
         >
           <!-- Order Header -->
           <div class="px-6 py-4 bg-gray-50 border-b border-gray-200">
@@ -785,7 +785,7 @@ async function handleVerifyDeliveryPinCode(pin: string) {
               <div class="flex items-center gap-2">
                 <span
                   v-if="order.claimed_by"
-                  class="text-xs text-red-600 font-medium"
+                  class="text-xs text-blue-600 font-medium"
                 >
                   Claimed
                 </span>
@@ -886,7 +886,7 @@ async function handleVerifyDeliveryPinCode(pin: string) {
                   <button
                     v-if="!order.claimed_by"
                     @click="handleClaimOrder(order.id)"
-                    class="flex-1 px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 transition-colors"
+                    class="flex-1 px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors"
                   >
                     Claim Order
                   </button>
@@ -901,7 +901,7 @@ async function handleVerifyDeliveryPinCode(pin: string) {
                       @click="
                         handleRejectOrder(order.id, 'customer_not_available')
                       "
-                      class="px-4 py-2 text-sm font-medium text-red-600 bg-red-50 rounded-lg hover:bg-red-100 transition-colors"
+                      class="px-4 py-2 text-sm font-medium text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors"
                     >
                       Reject
                     </button>
@@ -1027,7 +1027,7 @@ async function handleVerifyDeliveryPinCode(pin: string) {
                   v-model="orderNotes[order.id]"
                   type="text"
                   placeholder="Add a note..."
-                  class="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
+                  class="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 />
                 <button
                   @click="saveNote(order.id)"
@@ -1112,7 +1112,7 @@ async function handleVerifyDeliveryPinCode(pin: string) {
           <button
             @click="switchBranch(null)"
             class="w-full px-4 py-3 text-left rounded-lg hover:bg-gray-100 transition-colors"
-            :class="{ 'bg-red-50 text-red-700': !adminStore.currentStoreId }"
+            :class="{ 'bg-blue-50 text-blue-700': !adminStore.currentStoreId }"
           >
             <span class="font-medium">All Stores</span>
           </button>
@@ -1122,7 +1122,7 @@ async function handleVerifyDeliveryPinCode(pin: string) {
             @click="switchBranch(store.id)"
             class="w-full px-4 py-3 text-left rounded-lg hover:bg-gray-100 transition-colors"
             :class="{
-              'bg-red-50 text-red-700': adminStore.currentStoreId === store.id,
+              'bg-blue-50 text-blue-700': adminStore.currentStoreId === store.id,
             }"
           >
             <span class="font-medium">{{ store.name }}</span>
@@ -1158,7 +1158,7 @@ async function handleVerifyDeliveryPinCode(pin: string) {
               <input
                 v-model="verificationForm.verifiedAddress"
                 type="checkbox"
-                class="mt-1 w-4 h-4 text-red-600 border-gray-300 rounded focus:ring-red-500"
+                class="mt-1 w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
               />
               <div>
                 <span class="font-medium text-gray-900"
@@ -1173,7 +1173,7 @@ async function handleVerifyDeliveryPinCode(pin: string) {
               <input
                 v-model="verificationForm.verifiedAmount"
                 type="checkbox"
-                class="mt-1 w-4 h-4 text-red-600 border-gray-300 rounded focus:ring-red-500"
+                class="mt-1 w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
               />
               <div>
                 <span class="font-medium text-gray-900"
@@ -1188,7 +1188,7 @@ async function handleVerifyDeliveryPinCode(pin: string) {
               <input
                 v-model="verificationForm.verifiedSubstitutions"
                 type="checkbox"
-                class="mt-1 w-4 h-4 text-red-600 border-gray-300 rounded focus:ring-red-500"
+                class="mt-1 w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
               />
               <div>
                 <span class="font-medium text-gray-900"
@@ -1209,7 +1209,7 @@ async function handleVerifyDeliveryPinCode(pin: string) {
               <input
                 v-model="verificationForm.substitutionApproved"
                 type="checkbox"
-                class="w-4 h-4 text-red-600 border-gray-300 rounded focus:ring-red-500"
+                class="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
               />
               <span class="text-sm text-gray-700"
                 >Customer approved substitutions</span
@@ -1219,7 +1219,7 @@ async function handleVerifyDeliveryPinCode(pin: string) {
               v-model="verificationForm.substitutionDetails"
               placeholder="Enter substitution details..."
               rows="2"
-              class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
+              class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             />
           </div>
 
@@ -1227,7 +1227,7 @@ async function handleVerifyDeliveryPinCode(pin: string) {
             v-model="verificationForm.notes"
             placeholder="Additional notes (optional)..."
             rows="3"
-            class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
+            class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
           />
         </div>
         <div class="px-6 py-4 border-t border-gray-200 flex gap-3">
@@ -1272,7 +1272,7 @@ async function handleVerifyDeliveryPinCode(pin: string) {
               v-model="riderForm.name"
               type="text"
               placeholder="Enter rider name"
-              class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
+              class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             />
           </div>
           <div>
@@ -1283,7 +1283,7 @@ async function handleVerifyDeliveryPinCode(pin: string) {
               v-model="riderForm.phone"
               type="tel"
               placeholder="Enter rider phone number"
-              class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
+              class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             />
           </div>
           <div>
@@ -1293,7 +1293,7 @@ async function handleVerifyDeliveryPinCode(pin: string) {
             <input
               v-model="riderForm.estimatedArrival"
               type="datetime-local"
-              class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
+              class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             />
           </div>
         </div>

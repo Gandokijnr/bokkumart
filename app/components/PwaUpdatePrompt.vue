@@ -95,7 +95,7 @@ onMounted(() => {
   <Transition name="update-banner">
     <div
       v-if="needRefresh"
-      class="fixed top-0 left-0 right-0 z-[10001] bg-red-600 text-white shadow-lg"
+      class="fixed top-0 left-0 right-0 z-[10001] bg-blue-600 text-white shadow-lg"
     >
       <div class="mx-auto max-w-7xl px-4 py-3 flex items-center gap-3">
         <!-- Update icon -->
@@ -120,7 +120,7 @@ onMounted(() => {
         <div class="flex-1 min-w-0">
           <div class="text-sm font-bold leading-tight">Update Available</div>
           <div class="text-xs leading-tight mt-0.5 opacity-90">
-            A new version of HomeAffairs is ready to install
+            A new version of BokkuMart is ready to install
           </div>
         </div>
 
@@ -134,7 +134,7 @@ onMounted(() => {
             Later
           </button>
           <button
-            class="flex items-center gap-1.5 rounded-lg bg-white px-4 py-1.5 text-xs font-bold text-red-600 hover:bg-gray-100 active:scale-95 transition-all shadow-sm"
+            class="flex items-center gap-1.5 rounded-lg bg-white px-4 py-1.5 text-xs font-bold text-[#0052CC] hover:bg-gray-100 active:scale-95 transition-all shadow-sm"
             @click="updateApp"
             type="button"
           >

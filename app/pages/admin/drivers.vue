@@ -27,7 +27,7 @@
 
         <div
           v-if="error"
-          class="mt-4 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700"
+          class="mt-4 rounded-xl border border-blue-200 bg-blue-50 p-4 text-sm text-blue-700"
         >
           {{ error }}
         </div>
@@ -198,7 +198,7 @@
 import { computed, onMounted, onUnmounted, ref } from "vue";
 import type { Database } from "~/types/database.types";
 
-useHead({ title: "Drivers - HomeAffairs" });
+useHead({ title: "Drivers - BokkuMart" });
 
 definePageMeta({
   layout: "admin",

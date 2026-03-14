@@ -13,7 +13,7 @@
             <select
               v-if="managedStores.length > 1"
               v-model="dashboard.selectedStoreId.value"
-              class="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm focus:border-red-500 focus:outline-none"
+              class="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm focus:border-blue-500 focus:outline-none"
             >
               <option value="">All My Stores</option>
               <option
@@ -109,7 +109,7 @@ definePageMeta({
 });
 
 useHead({
-  title: "Branch Dashboard - HomeAffairs",
+  title: "Branch Dashboard - BokkuMart",
 });
 
 const managedStores = computed(() => userStore.managedStores);

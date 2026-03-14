@@ -4,15 +4,19 @@ import { useCartStore } from "~/stores/useCartStore";
 import { subscribeToPush } from "~/composables/usePushNotifications";
 
 useHead({
+  titleTemplate: (title) =>
+    title
+      ? `${title} | BokkuMart`
+      : "BokkuMart - Your Trusted Online Grocery Marketplace",
   meta: [
     {
       name: "viewport",
       content: "width=device-width, initial-scale=1, viewport-fit=cover",
     },
-    { name: "theme-color", content: "#ED1C24" },
+    { name: "theme-color", content: "#0052CC" },
     { name: "apple-mobile-web-app-capable", content: "yes" },
     { name: "apple-mobile-web-app-status-bar-style", content: "default" },
-    { name: "apple-mobile-web-app-title", content: "HomeAffairs" },
+    { name: "apple-mobile-web-app-title", content: "BokkuMart" },
   ],
   link: [
     { rel: "icon", type: "image/svg+xml", href: "/favicon.svg" },
@@ -35,7 +39,7 @@ const roleGateRedirecting = useState<boolean>(
 onMounted(() => {
   if (!import.meta.client) return;
 
-  const splash = document.getElementById("__ha-splash");
+  const splash = document.getElementById("__bokku-splash");
   if (splash) splash.remove();
 
   watch(
@@ -69,9 +73,9 @@ onMounted(() => {
       v-if="isNavigating"
       class="fixed inset-0 z-[9998] flex items-center justify-center bg-white"
     >
-      <div class="flex items-center gap-3 text-[#ED1C24] animate-pulse">
-        <Icon name="lucide:shopping-cart" size="24" />
-        <div class="text-lg font-extrabold tracking-tight">Home Affairs</div>
+      <div class="flex items-center gap-3 text-[#0052CC] animate-pulse">
+        <Icon name="lucide:shopping-basket" size="24" />
+        <div class="text-lg font-extrabold tracking-tight">BokkuMart</div>
       </div>
     </div>
 
@@ -84,7 +88,7 @@ onMounted(() => {
       >
         <div class="flex items-center gap-3">
           <div
-            class="h-4 w-4 animate-spin rounded-full border-2 border-gray-300 border-t-red-600"
+            class="h-4 w-4 animate-spin rounded-full border-2 border-gray-300 border-t-[#0052CC]"
           />
           <div class="text-sm font-semibold text-gray-900">
             Redirecting to your workspace...

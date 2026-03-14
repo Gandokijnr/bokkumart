@@ -51,12 +51,12 @@
               :maxlength="maxLength"
               :placeholder="inputPlaceholder"
               class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-center text-lg tracking-widest focus:border-blue-500 focus:outline-none"
-              :class="{ 'border-red-500': localError }"
+              :class="{ 'border-blue-500': localError }"
               @keyup.enter="onVerify"
             />
             <p
               v-if="localError"
-              class="mt-2 text-sm font-semibold text-red-600"
+              class="mt-2 text-sm font-semibold text-blue-600"
             >
               {{ localError }}
             </p>

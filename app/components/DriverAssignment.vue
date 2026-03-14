@@ -43,7 +43,7 @@
     <!-- Error message -->
     <div
       v-if="error"
-      class="mt-2 rounded-lg border border-red-200 bg-red-50 p-2 text-xs text-red-700"
+      class="mt-2 rounded-lg border border-blue-200 bg-blue-50 p-2 text-xs text-blue-700"
     >
       {{ error }}
     </div>

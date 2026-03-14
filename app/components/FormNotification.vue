@@ -13,7 +13,7 @@
         class="fixed bottom-4 right-4 z-50 max-w-sm rounded-xl shadow-lg border-2 p-4"
         :class="{
           'bg-green-50 border-green-200 text-green-800': color === 'green',
-          'bg-red-50 border-red-200 text-red-800': color === 'red',
+          'bg-blue-50 border-blue-200 text-blue-800': color === 'red',
           'bg-blue-50 border-blue-200 text-blue-800': color === 'blue',
         }"
       >
@@ -36,7 +36,7 @@
             </svg>
             <svg
               v-else-if="color === 'red'"
-              class="w-5 h-5 text-red-500"
+              class="w-5 h-5 text-blue-500"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"

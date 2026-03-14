@@ -11,7 +11,7 @@
               class="flex h-10 w-10 items-center justify-center rounded-full font-bold text-sm transition-colors"
               :class="
                 step >= 1
-                  ? 'bg-red-600 text-white'
+                  ? 'bg-blue-600 text-white'
                   : 'bg-gray-200 text-gray-600'
               "
             >
@@ -33,7 +33,7 @@
             </div>
             <div
               class="h-1 flex-1 mx-2 rounded-full transition-colors"
-              :class="step >= 2 ? 'bg-red-600' : 'bg-gray-200'"
+              :class="step >= 2 ? 'bg-blue-600' : 'bg-gray-200'"
             ></div>
           </div>
 
@@ -42,7 +42,7 @@
               class="flex h-10 w-10 items-center justify-center rounded-full font-bold text-sm transition-colors"
               :class="
                 step >= 2
-                  ? 'bg-red-600 text-white'
+                  ? 'bg-blue-600 text-white'
                   : 'bg-gray-200 text-gray-600'
               "
             >
@@ -64,14 +64,14 @@
             </div>
             <div
               class="h-1 flex-1 mx-2 rounded-full transition-colors"
-              :class="step >= 3 ? 'bg-red-600' : 'bg-gray-200'"
+              :class="step >= 3 ? 'bg-blue-600' : 'bg-gray-200'"
             ></div>
           </div>
 
           <div
             class="flex h-10 w-10 items-center justify-center rounded-full font-bold text-sm transition-colors"
             :class="
-              step >= 3 ? 'bg-red-600 text-white' : 'bg-gray-200 text-gray-600'
+              step >= 3 ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-600'
             "
           >
             3
@@ -79,15 +79,15 @@
         </div>
         <div class="mt-2 flex justify-between text-xs sm:text-sm">
           <span
-            :class="step >= 1 ? 'text-red-600 font-medium' : 'text-gray-500'"
+            :class="step >= 1 ? 'text-blue-600 font-medium' : 'text-gray-500'"
             >Fulfillment</span
           >
           <span
-            :class="step >= 2 ? 'text-red-600 font-medium' : 'text-gray-500'"
+            :class="step >= 2 ? 'text-blue-600 font-medium' : 'text-gray-500'"
             >Details</span
           >
           <span
-            :class="step >= 3 ? 'text-red-600 font-medium' : 'text-gray-500'"
+            :class="step >= 3 ? 'text-blue-600 font-medium' : 'text-gray-500'"
             >Payment</span
           >
         </div>
@@ -111,7 +111,7 @@
             class="relative rounded-xl border-2 p-5 text-left transition-all"
             :class="
               fulfillmentMode === 'delivery'
-                ? 'border-red-600 bg-red-50'
+                ? 'border-blue-600 bg-blue-50'
                 : 'border-gray-200 hover:border-gray-300'
             "
           >
@@ -120,7 +120,7 @@
                 class="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-xl"
                 :class="
                   fulfillmentMode === 'delivery'
-                    ? 'bg-red-600 text-white'
+                    ? 'bg-blue-600 text-white'
                     : 'bg-gray-100 text-gray-600'
                 "
               >
@@ -146,7 +146,7 @@
                   class="font-bold"
                   :class="
                     fulfillmentMode === 'delivery'
-                      ? 'text-red-600'
+                      ? 'text-blue-600'
                       : 'text-gray-900'
                   "
                 >
@@ -165,7 +165,7 @@
               class="absolute top-3 right-3"
             >
               <svg
-                class="h-5 w-5 text-red-600"
+                class="h-5 w-5 text-blue-600"
                 fill="currentColor"
                 viewBox="0 0 20 20"
               >
@@ -183,7 +183,7 @@
             class="relative rounded-xl border-2 p-5 text-left transition-all"
             :class="
               fulfillmentMode === 'pickup'
-                ? 'border-red-600 bg-red-50'
+                ? 'border-blue-600 bg-blue-50'
                 : 'border-gray-200 hover:border-gray-300'
             "
           >
@@ -192,7 +192,7 @@
                 class="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-xl"
                 :class="
                   fulfillmentMode === 'pickup'
-                    ? 'bg-red-600 text-white'
+                    ? 'bg-blue-600 text-white'
                     : 'bg-gray-100 text-gray-600'
                 "
               >
@@ -215,14 +215,14 @@
                   class="font-bold"
                   :class="
                     fulfillmentMode === 'pickup'
-                      ? 'text-red-600'
+                      ? 'text-blue-600'
                       : 'text-gray-900'
                   "
                 >
                   Store Pickup
                 </p>
                 <p class="text-sm text-gray-600 mt-1">
-                  Pick up from a HomeAffairs location
+                  Pick up from a BokkuMart location
                 </p>
                 <p class="text-sm font-medium text-green-600 mt-2">FREE</p>
               </div>
@@ -232,7 +232,7 @@
               class="absolute top-3 right-3"
             >
               <svg
-                class="h-5 w-5 text-red-600"
+                class="h-5 w-5 text-blue-600"
                 fill="currentColor"
                 viewBox="0 0 20 20"
               >
@@ -252,12 +252,12 @@
           class="rounded-xl border-2 border-gray-200 bg-white p-5"
         >
           <label class="block text-sm font-medium text-gray-700 mb-2">
-            Select Your Area in Lagos <span class="text-red-600">*</span>
+            Select Your Area in Lagos <span class="text-blue-600">*</span>
           </label>
           <select
             v-model="selectedArea"
             @change="updateDeliveryFee"
-            class="w-full rounded-xl border-2 border-gray-200 px-4 py-3 text-sm focus:border-red-600 focus:outline-none"
+            class="w-full rounded-xl border-2 border-gray-200 px-4 py-3 text-sm focus:border-blue-600 focus:outline-none"
           >
             <option value="">Choose your area...</option>
             <option
@@ -284,7 +284,7 @@
             <button
               v-if="userLocation"
               @click="getUserLocation"
-              class="text-xs text-red-600 hover:text-red-700 flex items-center gap-1"
+              class="text-xs text-blue-600 hover:text-blue-700 flex items-center gap-1"
             >
               <svg
                 class="h-3 w-3"
@@ -336,7 +336,7 @@
                   <span class="text-gray-500">{{ selectedStore.hours }}</span>
                   <span
                     v-if="selectedStore.distance !== null"
-                    class="text-red-600 font-medium"
+                    class="text-blue-600 font-medium"
                   >
                     {{ selectedStore.distance.toFixed(1) }} km away
                   </span>
@@ -349,7 +349,7 @@
                   :class="
                     selectedStore.isOpen
                       ? 'bg-green-100 text-green-800'
-                      : 'bg-red-100 text-red-800'
+                      : 'bg-gray-100 text-gray-800'
                   "
                 >
                   {{ selectedStore.isOpen ? "Open" : "Closed" }}
@@ -375,7 +375,7 @@
               </div>
               <button
                 type="button"
-                class="whitespace-nowrap rounded-lg bg-red-600 px-3 py-2 text-xs font-bold text-white hover:bg-red-700"
+                class="whitespace-nowrap rounded-lg bg-blue-600 px-3 py-2 text-xs font-bold text-white hover:bg-blue-700"
                 @click="switchToDeliveryFromPickup"
               >
                 Switch to Delivery
@@ -419,7 +419,7 @@
             <div class="flex items-start justify-between gap-3">
               <div>
                 <p class="text-sm font-medium text-gray-900">
-                  Pickup time <span class="text-red-600">*</span>
+                  Pickup time <span class="text-blue-600">*</span>
                 </p>
                 <p class="mt-1 text-xs text-gray-500">
                   Choose a time slot. We typically prepare orders within 30
@@ -467,7 +467,7 @@
                     v-model="selectedPickupTime"
                   />
                   <div
-                    class="rounded-xl border-2 border-gray-200 bg-white px-3 py-3 text-left transition-colors peer-checked:border-red-600 peer-checked:bg-red-50 hover:border-gray-300"
+                    class="rounded-xl border-2 border-gray-200 bg-white px-3 py-3 text-left transition-colors peer-checked:border-blue-600 peer-checked:bg-blue-50 hover:border-gray-300"
                   >
                     <div class="flex items-center justify-between gap-2">
                       <p class="text-sm font-medium text-gray-900">
@@ -553,7 +553,7 @@
           <button
             @click="goToStep2"
             :disabled="!canProceedStep1"
-            class="flex-1 rounded-xl bg-red-600 py-4 text-sm font-bold text-white hover:bg-red-700 disabled:bg-gray-300 disabled:cursor-not-allowed"
+            class="flex-1 rounded-xl bg-blue-600 py-4 text-sm font-bold text-white hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed"
           >
             Continue
           </button>
@@ -578,7 +578,7 @@
               for="fullName"
               class="block text-sm font-medium text-gray-700 mb-2"
             >
-              Full Name <span class="text-red-600">*</span>
+              Full Name <span class="text-blue-600">*</span>
             </label>
             <input
               id="fullName"
@@ -588,7 +588,7 @@
               autocomplete="name"
               placeholder="John Doe"
               required
-              class="w-full rounded-xl border-2 border-gray-200 px-4 py-3 text-sm focus:border-red-600 focus:outline-none"
+              class="w-full rounded-xl border-2 border-gray-200 px-4 py-3 text-sm focus:border-blue-600 focus:outline-none"
             />
           </div>
 
@@ -598,7 +598,7 @@
               for="phone"
               class="block text-sm font-medium text-gray-700 mb-2"
             >
-              Phone Number <span class="text-red-600">*</span>
+              Phone Number <span class="text-blue-600">*</span>
             </label>
             <input
               id="phone"
@@ -608,7 +608,7 @@
               autocomplete="tel"
               placeholder="08012345678"
               required
-              class="w-full rounded-xl border-2 border-gray-200 px-4 py-3 text-sm focus:border-red-600 focus:outline-none"
+              class="w-full rounded-xl border-2 border-gray-200 px-4 py-3 text-sm focus:border-blue-600 focus:outline-none"
             />
           </div>
 
@@ -618,7 +618,7 @@
               for="streetAddress"
               class="block text-sm font-medium text-gray-700 mb-2"
             >
-              Street Address <span class="text-red-600">*</span>
+              Street Address <span class="text-blue-600">*</span>
             </label>
             <input
               id="streetAddress"
@@ -628,7 +628,7 @@
               autocomplete="street-address"
               placeholder="123 Adeola Odeku Street"
               required
-              class="w-full rounded-xl border-2 border-gray-200 px-4 py-3 text-sm focus:border-red-600 focus:outline-none"
+              class="w-full rounded-xl border-2 border-gray-200 px-4 py-3 text-sm focus:border-blue-600 focus:outline-none"
             />
           </div>
 
@@ -638,7 +638,7 @@
               for="landmark"
               class="block text-sm font-medium text-gray-700 mb-2"
             >
-              Nearest Landmark or Bus Stop <span class="text-red-600">*</span>
+              Nearest Landmark or Bus Stop <span class="text-blue-600">*</span>
             </label>
             <input
               id="landmark"
@@ -648,7 +648,7 @@
               autocomplete="off"
               placeholder="e.g., Near Zenith Bank, Gbagada Branch"
               required
-              class="w-full rounded-xl border-2 border-gray-200 px-4 py-3 text-sm focus:border-red-600 focus:outline-none"
+              class="w-full rounded-xl border-2 border-gray-200 px-4 py-3 text-sm focus:border-blue-600 focus:outline-none"
             />
             <p class="mt-1 text-xs text-gray-500">
               <svg
@@ -679,7 +679,7 @@
             </button>
             <button
               type="submit"
-              class="flex-1 rounded-xl bg-red-600 py-4 text-sm font-bold text-white hover:bg-red-700"
+              class="flex-1 rounded-xl bg-blue-600 py-4 text-sm font-bold text-white hover:bg-blue-700"
             >
               Continue to Payment
             </button>
@@ -694,7 +694,7 @@
             Review & Pay
           </h1>
           <p class="mt-2 text-sm text-gray-600">
-            To ensure priority packing and safety, HomeAffairs currently accepts
+            To ensure priority packing and safety, BokkuMart currently accepts
             secure online payments only.
           </p>
         </div>
@@ -776,7 +776,7 @@
                 <span class="text-base font-bold text-gray-900"
                   >Total to Pay</span
                 >
-                <span class="text-2xl font-bold text-red-600">{{
+                <span class="text-2xl font-bold text-blue-600">{{
                   formatPrice(cartStore.finalTotal)
                 }}</span>
               </div>
@@ -807,7 +807,7 @@
           <button
             @click="initiatePaystackPayment()"
             :disabled="!canSubmitPayment"
-            class="w-full rounded-xl bg-red-600 py-4 text-sm font-bold text-white hover:bg-red-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-all"
+            class="w-full rounded-xl bg-blue-600 py-4 text-sm font-bold text-white hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-all"
           >
             <span
               v-if="processingPayment"
@@ -876,7 +876,7 @@
     >
       <div class="w-full max-w-md rounded-2xl bg-white p-6 text-center">
         <div
-          class="mx-auto h-16 w-16 animate-spin rounded-full border-4 border-red-200 border-t-red-600"
+          class="mx-auto h-16 w-16 animate-spin rounded-full border-4 border-blue-200 border-t-red-600"
         ></div>
         <h3 class="mt-4 text-lg font-bold text-gray-900">Processing Payment</h3>
         <p class="mt-2 text-sm text-gray-600">
@@ -902,7 +902,7 @@
             toast.type === 'success'
               ? 'bg-green-600'
               : toast.type === 'error'
-                ? 'bg-red-600'
+                ? 'bg-blue-600'
                 : 'bg-blue-600'
           "
         >
@@ -1301,7 +1301,7 @@ function getDefaultPickupInstructions(storeName: string): string {
     Lekki:
       "Enter through the main gate. Pickup is at the customer service counter on the ground floor.",
     Ikeja:
-      "Use the rear parking lot. Pickup window is marked with HomeAffairs signage.",
+      "Use the rear parking lot. Pickup window is marked with BokkuMart signage.",
     "Victoria Island": "Valet parking available. Pickup at the concierge desk.",
   };
   for (const [key, value] of Object.entries(instructions)) {
