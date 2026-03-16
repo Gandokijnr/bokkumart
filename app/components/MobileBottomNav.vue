@@ -16,6 +16,7 @@
         <button
           v-if="item.isButton"
           class="flex flex-col items-center justify-center gap-1 min-h-[64px] min-w-[44px] tap-highlight-transparent"
+          :class="isActive(item.to) ? 'text-amber-900' : 'text-gray-500'"
           @click="handleNavClick(item)"
         >
           <!-- Icon Container -->
@@ -23,18 +24,24 @@
             <!-- Cart Badge -->
             <span
               v-if="item.name === 'Cart' && cartCount > 0"
-              class="absolute -top-1 -right-2 z-10 flex h-5 w-5 items-center justify-center rounded-full bg-[#ED1C24] text-[10px] font-bold text-white shadow-sm"
+              class="absolute -top-1 -right-2 z-10 flex h-5 w-5 items-center justify-center rounded-full bg-[#FFC107] text-[10px] font-bold text-white shadow-sm"
               :class="{ 'animate-pulse': cartPulse }"
             >
               {{ cartCount > 9 ? "9+" : cartCount }}
             </span>
 
             <!-- Icon -->
+            <Icon
+              v-if="item.name === 'Cart'"
+              name="lucide:shopping-basket"
+              size="24"
+              class="transition-all duration-200"
+              :class="isActive(item.to) ? 'scale-110' : ''"
+            />
             <svg
+              v-else
               class="w-6 h-6 transition-all duration-200"
-              :class="
-                isActive(item.to) ? 'text-[#ED1C24] scale-110' : 'text-gray-500'
-              "
+              :class="isActive(item.to) ? 'scale-110' : ''"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -44,10 +51,7 @@
           </div>
 
           <!-- Label -->
-          <span
-            class="text-[10px] font-medium transition-colors duration-200"
-            :class="isActive(item.to) ? 'text-[#ED1C24]' : 'text-gray-500'"
-          >
+          <span class="text-[10px] font-medium transition-colors duration-200">
             {{ item.name }}
           </span>
         </button>
@@ -56,8 +60,13 @@
         <NuxtLink
           v-else
           :to="item.to"
+          active-class=""
+          exact-active-class=""
           class="flex flex-col items-center justify-center gap-1 min-h-[64px] min-w-[44px] tap-highlight-transparent"
-          :class="{ 'pointer-events-none': item.disabled }"
+          :class="[
+            isActive(item.to) ? 'text-amber-900' : 'text-gray-500',
+            { 'pointer-events-none': item.disabled },
+          ]"
           @click="handleNavClick(item)"
         >
           <!-- Icon Container -->
@@ -65,18 +74,24 @@
             <!-- Cart Badge -->
             <span
               v-if="item.name === 'Cart' && cartCount > 0"
-              class="absolute -top-1 -right-2 z-10 flex h-5 w-5 items-center justify-center rounded-full bg-[#ED1C24] text-[10px] font-bold text-white shadow-sm"
+              class="absolute -top-1 -right-2 z-10 flex h-5 w-5 items-center justify-center rounded-full bg-[#FFC107] text-[10px] font-bold text-white shadow-sm"
               :class="{ 'animate-pulse': cartPulse }"
             >
               {{ cartCount > 9 ? "9+" : cartCount }}
             </span>
 
             <!-- Icon -->
+            <Icon
+              v-if="item.name === 'Cart'"
+              name="lucide:shopping-basket"
+              size="24"
+              class="transition-all duration-200"
+              :class="isActive(item.to) ? 'scale-110' : ''"
+            />
             <svg
+              v-else
               class="w-6 h-6 transition-all duration-200"
-              :class="
-                isActive(item.to) ? 'text-[#ED1C24] scale-110' : 'text-gray-500'
-              "
+              :class="isActive(item.to) ? 'scale-110' : ''"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -86,10 +101,7 @@
           </div>
 
           <!-- Label -->
-          <span
-            class="text-[10px] font-medium transition-colors duration-200"
-            :class="isActive(item.to) ? 'text-[#ED1C24]' : 'text-gray-500'"
-          >
+          <span class="text-[10px] font-medium transition-colors duration-200">
             {{ item.name }}
           </span>
         </NuxtLink>
@@ -133,7 +145,24 @@ const icons = {
 };
 
 // Navigation items
-const navItems = [
+type NavItemBase = {
+  name: string;
+  to: string;
+  icon: string;
+  disabled?: boolean;
+};
+
+type NavItem = NavItemBase &
+  (
+    | {
+        isButton: true;
+      }
+    | {
+        isButton?: false;
+      }
+  );
+
+const navItems: NavItem[] = [
   { name: "Home", to: "/", icon: icons.home },
   {
     name: "Categories",
@@ -161,7 +190,7 @@ const emit = defineEmits<{
   openCategories: [];
 }>();
 
-const handleNavClick = (item: (typeof navItems)[0]) => {
+const handleNavClick = (item: NavItem) => {
   // Trigger haptic feedback if available (PWA)
   if (window.navigator && "vibrate" in window.navigator) {
     window.navigator.vibrate(10); // 10ms subtle vibration
