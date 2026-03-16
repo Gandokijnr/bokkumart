@@ -130,19 +130,7 @@
             class="relative flex h-10 w-10 items-center justify-center rounded-xl border border-gray-200 bg-white text-gray-700 shadow-sm transition-all hover:border-gray-300 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-[#0052CC] focus:ring-offset-1"
             aria-label="Shopping cart"
           >
-            <svg
-              class="h-5 w-5"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"
-              />
-            </svg>
+            <Icon name="lucide:shopping-basket" size="20" />
             <ClientOnly>
               <span
                 v-if="cartCount > 0"
@@ -454,10 +442,8 @@
               </div>
             </div>
 
-            <div
-              class="bg-amber-50 border border-amber-200 rounded-xl p-4 mb-6"
-            >
-              <p class="text-sm text-amber-800">
+            <div class="border border-amber-200 rounded-xl p-4 mb-6">
+              <p class="text-sm text-gray-200">
                 <span class="font-semibold">Warning:</span> Your cart contains
                 <span class="font-bold">{{ cartStore.cartCount }}</span> item{{
                   cartStore.cartCount === 1 ? "" : "s"
@@ -466,7 +452,7 @@
                 <span class="font-bold">{{ cartStore.currentStoreName }}</span
                 >.
               </p>
-              <p class="text-sm text-amber-800 mt-2">
+              <p class="text-sm text-gray-200 mt-2">
                 Switching stores will
                 <span class="font-bold">clear your current cart</span>. Proceed?
               </p>

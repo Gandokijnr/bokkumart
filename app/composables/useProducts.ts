@@ -81,13 +81,13 @@ export const useProducts = () => {
 
       const branchName = branchData?.name || branchStore.activeBranchName;
 
-      // Fetch inventory for this branch - only items with quantity > 0
+      // Fetch inventory for this branch - only items with stock_level > 0
       const { data: inventoryData, error: inventoryError } = (await supabase
         .from("store_inventory")
         .select("*")
         .eq("store_id", branchId)
         .eq("is_visible", true)
-        .gt("available_stock", 0)) as { data: any[] | null; error: any };
+        .gt("stock_level", 0)) as { data: any[] | null; error: any };
 
       if (inventoryError) throw inventoryError;
       if (!inventoryData || inventoryData.length === 0) {
@@ -154,8 +154,8 @@ export const useProducts = () => {
       const transformed: Product[] = (productsData || [])
         .filter((product: any) => {
           const inventory = inventoryMap[product.id];
-          // Double-check quantity > 0
-          return inventory && inventory.available_stock > 0;
+          // Double-check stock_level > 0
+          return inventory && inventory.stock_level > 0;
         })
         .map((product: any) => {
           const inventory = inventoryMap[product.id];
@@ -165,7 +165,7 @@ export const useProducts = () => {
           const finalPrice = inventory.store_price || product.price;
           const effectiveStock = Math.max(
             0,
-            (inventory.available_stock || 0) - (inventory.digital_buffer || 2),
+            (inventory.stock_level || 0) - (inventory.digital_buffer || 2),
           );
 
           // Generate public URL for image if it's a storage path
@@ -254,11 +254,10 @@ export const useProducts = () => {
 
             const effectiveStock = Math.max(
               0,
-              (newData.available_stock || 0) - (newData.digital_buffer || 2),
+              (newData.stock_level || 0) - (newData.digital_buffer || 2),
             );
             const wasAvailable = oldData
-              ? (oldData.available_stock || 0) - (oldData.digital_buffer || 2) >
-                0
+              ? (oldData.stock_level || 0) - (oldData.digital_buffer || 2) > 0
               : false;
             const isNowAvailable = effectiveStock > 0;
 
@@ -318,13 +317,12 @@ export const useProducts = () => {
 
     const { data, error } = (await supabase
       .from("store_inventory")
-      .select("available_stock, digital_buffer")
+      .select("stock_level, digital_buffer")
       .eq("store_id", targetBranchId)
       .eq("product_id", productId)
       .single()) as {
       data: {
-        quantity: number;
-        available_stock: number;
+        stock_level: number;
         digital_buffer: number;
       } | null;
       error: any;
@@ -336,7 +334,7 @@ export const useProducts = () => {
 
     const effectiveStock = Math.max(
       0,
-      (data.available_stock || 0) - (data.digital_buffer || 2),
+      (data.stock_level || 0) - (data.digital_buffer || 2),
     );
     return {
       available: effectiveStock,
@@ -408,7 +406,7 @@ export const useProducts = () => {
             .select("*")
             .eq("store_id", branchId)
             .eq("is_visible", true)
-            .gt("available_stock", 0)
+            .gt("stock_level", 0)
             .in("product_id", chunk),
         ),
       );
@@ -433,11 +431,11 @@ export const useProducts = () => {
         .eq("id", branchId)
         .single()) as { data: { id: string; name: string } | null };
 
-      // Transform and join data - only include products with quantity > 0
+      // Transform and join data - only include products with stock_level > 0
       const transformed: Product[] = productsData
         .filter((product: any) => {
           const inventory = inventoryMap[product.id];
-          return inventory && inventory.available_stock > 0;
+          return inventory && inventory.stock_level > 0;
         })
         .map((product: any) => {
           const inventory = inventoryMap[product.id];
@@ -445,7 +443,7 @@ export const useProducts = () => {
           const finalPrice = inventory.store_price || product.price;
           const effectiveStock = Math.max(
             0,
-            (inventory.available_stock || 0) - (inventory.digital_buffer || 2),
+            (inventory.stock_level || 0) - (inventory.digital_buffer || 2),
           );
 
           // Generate public URL for image if it's a storage path
@@ -566,7 +564,7 @@ export const useProducts = () => {
       // Check inventory at all other branches for products not available at current branch
       const currentBranchProductIds = new Set(
         (currentBranchInventory || [])
-          .filter((item) => item.available_stock > 0)
+          .filter((item) => item.stock_level > 0)
           .map((item) => item.product_id),
       );
 
@@ -583,7 +581,7 @@ export const useProducts = () => {
           .neq("store_id", branchId)
           .eq("is_visible", true)
           .in("product_id", unavailableProductIds)
-          .gt("available_stock", 0)) as { data: any[] | null };
+          .gt("stock_level", 0)) as { data: any[] | null };
 
         alternativeBranchData = otherBranchesInventory || [];
       }
@@ -604,8 +602,7 @@ export const useProducts = () => {
             : { name: "Uncategorized", slug: "uncategorized" };
           const effectiveStock = Math.max(
             0,
-            (inventory?.available_stock || 0) -
-              (inventory?.digital_buffer || 2),
+            (inventory?.stock_level || 0) - (inventory?.digital_buffer || 2),
           );
           const finalPrice = inventory?.store_price || product.price;
 
@@ -655,7 +652,7 @@ export const useProducts = () => {
             .map((item) => ({
               branchId: item.store_id,
               branchName: item.stores?.name || "Unknown Store",
-              quantity: item.available_stock || 0,
+              quantity: item.stock_level || 0,
             }))
             .sort((a, b) => b.quantity - a.quantity);
 

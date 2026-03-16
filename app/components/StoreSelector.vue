@@ -478,7 +478,7 @@ const handleBackdropClick = () => {
                 class="flex-shrink-0 w-12 h-12 rounded-full bg-amber-100 flex items-center justify-center"
               >
                 <svg
-                  class="w-6 h-6 text-amber-600"
+                  class="w-6 h-6 text-gray-100"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -501,10 +501,8 @@ const handleBackdropClick = () => {
               </div>
             </div>
 
-            <div
-              class="bg-amber-50 border border-amber-200 rounded-xl p-4 mb-6"
-            >
-              <p class="text-sm text-amber-800">
+            <div class="border border-amber-200/60 rounded-xl p-4 mb-6">
+              <p class="text-sm !text-gray-900">
                 <span class="font-semibold">Warning:</span> Your cart contains
                 <span class="font-bold">{{ cartStore.cartCount }}</span> item{{
                   cartStore.cartCount === 1 ? "" : "s"
@@ -513,7 +511,7 @@ const handleBackdropClick = () => {
                 <span class="font-bold">{{ cartStore.currentStoreName }}</span
                 >.
               </p>
-              <p class="text-sm text-amber-800 mt-2">
+              <p class="text-sm !text-gray-900 mt-2">
                 Switching to a different store will
                 <span class="font-bold">clear your current cart</span>. You can
                 only order from one BokkuMart branch at a time.
