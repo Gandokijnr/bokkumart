@@ -116,7 +116,8 @@ function parseCSV(content: string): ParseResult {
       row[header] = val ? val.replace(/"/g, "").trim() : "";
     });
 
-    const stockLevel = parseInt(row.stock_level);
+    const stockLevelRaw = row.stock_level?.trim();
+    const stockLevel = stockLevelRaw ? parseInt(stockLevelRaw) : 0;
     if (isNaN(stockLevel) || stockLevel < 0) {
       errors.push({
         row: i + 1,

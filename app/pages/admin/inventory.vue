@@ -299,7 +299,7 @@
               v-for="item in filteredInventory"
               :key="item.id"
               class="hover:bg-gray-50"
-              :class="{ 'bg-blue-50': selectedItems.has(item.product?.sku) }"
+              :class="{ 'bg-blue-50/30': selectedItems.has(item.product?.sku) }"
             >
               <td class="px-3 py-3">
                 <input
@@ -356,7 +356,7 @@
                   <span class="text-xs text-gray-500">units</span>
                 </div>
               </td>
-              <td v-if="columnVisibility.status" class="px-4 py-3">
+              <td v-if="columnVisibility.status">
                 <span
                   class="rounded-full px-2 py-1 text-xs font-bold"
                   :class="getStatusClass(item)"
@@ -1663,11 +1663,21 @@ const fetchInventory = async () => {
     return;
   }
 
-  inventory.value = (data || []).map((item: any) => ({
-    ...item,
-    quantity: item.available_stock || 0,
-    is_available: item.is_visible !== false,
-  }));
+  inventory.value = (data || []).map((item: any) => {
+    console.log("[Inventory Debug]", {
+      id: item.id,
+      product: item.product?.name,
+      stock_level: item.stock_level,
+      available_stock: item.available_stock,
+      reserved_stock: item.reserved_stock,
+      digital_buffer: item.digital_buffer,
+    });
+    return {
+      ...item,
+      quantity: item.stock_level || 0,
+      is_available: item.is_visible !== false,
+    };
+  });
 };
 
 const updateStock = async (item: any) => {
