@@ -24,6 +24,20 @@ const error = ref<string | null>(null);
 const showCartWarning = ref(false);
 const pendingBranchId = ref<string | null>(null);
 
+const searchQuery = ref("");
+
+const filteredBranches = computed(() => {
+  const q = searchQuery.value.trim().toLowerCase();
+  if (!q) return branchStore.branches;
+
+  return branchStore.branches.filter((branch) => {
+    const name = branch.name?.toLowerCase() ?? "";
+    const address = branch.address?.toLowerCase() ?? "";
+    const phone = branch.phone?.toLowerCase() ?? "";
+    return name.includes(q) || address.includes(q) || phone.includes(q);
+  });
+});
+
 // Fetch branches when component mounts
 onMounted(async () => {
   if (branchStore.branches.length === 0) {
@@ -280,8 +294,39 @@ const handleBackdropClick = () => {
 
             <!-- Branch List -->
             <div v-else class="p-4 sm:p-6 space-y-3">
+              <div class="mb-3">
+                <div class="relative">
+                  <input
+                    v-model="searchQuery"
+                    type="search"
+                    placeholder="Search stores..."
+                    class="w-full rounded-xl border border-gray-200 bg-white py-3 pl-11 pr-4 text-sm outline-none transition focus:border-[#0052CC] focus:ring-2 focus:ring-[#0052CC]/20"
+                  />
+                  <svg
+                    class="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                    />
+                  </svg>
+                </div>
+              </div>
+
               <div
-                v-for="branch in branchStore.branches"
+                v-if="filteredBranches.length === 0"
+                class="rounded-xl border border-gray-200 bg-gray-50 p-4 text-sm text-gray-600"
+              >
+                No stores found.
+              </div>
+
+              <div
+                v-for="branch in filteredBranches"
                 :key="branch.id"
                 class="relative rounded-xl border-2 p-3 sm:p-4 transition-all cursor-pointer"
                 :class="[

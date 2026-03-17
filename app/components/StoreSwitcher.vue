@@ -31,6 +31,19 @@ const nearestStore = ref<StoreWithDistanceKm | null>(null);
 const detectingLocation = ref(false);
 const shoppingMode = ref<"delivery" | "pickup">(storeStore.shoppingMode);
 
+const searchQuery = ref("");
+
+const filteredStores = computed(() => {
+  const q = searchQuery.value.trim().toLowerCase();
+  if (!q) return stores.value;
+
+  return stores.value.filter((store) => {
+    const name = store.name?.toLowerCase() ?? "";
+    const address = store.address?.toLowerCase() ?? "";
+    return name.includes(q) || address.includes(q);
+  });
+});
+
 // Load stores on mount using public API
 onMounted(async () => {
   await fetchStores();
@@ -275,6 +288,30 @@ const isFlagship = (store: Store): boolean => store.is_flagship;
 
       <!-- Store List -->
       <div class="px-6 py-4 max-h-96 overflow-y-auto">
+        <div class="mb-4">
+          <div class="relative">
+            <input
+              v-model="searchQuery"
+              type="search"
+              placeholder="Search stores..."
+              class="w-full rounded-lg border border-gray-200 bg-white py-2.5 pl-10 pr-3 text-sm text-gray-900 outline-none transition focus:border-blue-600 focus:ring-2 focus:ring-blue-600/20"
+            />
+            <svg
+              class="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+              />
+            </svg>
+          </div>
+        </div>
+
         <div v-if="loading" class="space-y-4">
           <div
             v-for="i in 4"
@@ -305,7 +342,13 @@ const isFlagship = (store: Store): boolean => store.is_flagship;
 
         <div v-else class="space-y-3">
           <div
-            v-for="store in stores"
+            v-if="filteredStores.length === 0"
+            class="rounded-lg border border-gray-200 bg-gray-50 p-4 text-sm text-gray-600"
+          >
+            No stores found.
+          </div>
+          <div
+            v-for="store in filteredStores"
             :key="store.id"
             class="cursor-pointer rounded-xl border-2 p-4 transition-all"
             :class="[
