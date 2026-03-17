@@ -109,12 +109,6 @@ html,body{background:#fff;}
       scope: "/",
       icons: [
         {
-          src: "/pwa-icon.svg",
-          sizes: "512x512",
-          type: "image/svg+xml",
-          purpose: "any",
-        },
-        {
           src: "/pwa-64x64.png",
           sizes: "64x64",
           type: "image/png",
@@ -134,6 +128,19 @@ html,body{background:#fff;}
           sizes: "512x512",
           type: "image/png",
           purpose: "maskable",
+        },
+      ],
+      screenshots: [
+        {
+          src: "/landing-page.png",
+          sizes: "1280x720",
+          type: "image/png",
+          form_factor: "wide",
+        },
+        {
+          src: "/landing-page.png",
+          sizes: "720x1280",
+          type: "image/png",
         },
       ],
     },
