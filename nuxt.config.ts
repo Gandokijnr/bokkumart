@@ -9,6 +9,16 @@ export default defineNuxtConfig({
 
   app: {
     head: {
+      meta: [
+        {
+          name: "theme-color",
+          content: "#0052CC",
+        },
+        {
+          name: "apple-mobile-web-app-status-bar-style",
+          content: "default",
+        },
+      ],
       style: [
         {
           innerHTML: `:root{--bokku-blue:#0052CC;--bokku-yellow:#FFC107;}
@@ -98,6 +108,12 @@ html,body{background:#fff;}
       start_url: "/",
       scope: "/",
       icons: [
+        {
+          src: "/pwa-icon.svg",
+          sizes: "512x512",
+          type: "image/svg+xml",
+          purpose: "any",
+        },
         {
           src: "/pwa-64x64.png",
           sizes: "64x64",

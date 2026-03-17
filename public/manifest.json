@@ -10,6 +10,12 @@
   "scope": "/",
   "icons": [
     {
+      "src": "/pwa-icon.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
       "src": "/pwa-64x64.png",
       "sizes": "64x64",
       "type": "image/png"
