@@ -514,7 +514,7 @@
           <!-- Pickup Instructions Block -->
           <div
             v-if="selectedStore && selectedStore.pickupInstructions"
-            class="rounded-xl border-2 border-amber-200 bg-amber-50 p-4"
+            class="rounded-xl border-2 border-amber-200 p-4"
           >
             <div class="flex items-start gap-2">
               <svg
@@ -701,7 +701,7 @@
 
         <div
           v-if="fulfillmentMode === 'pickup'"
-          class="rounded-xl border-2 border-amber-200 bg-amber-50 p-4"
+          class="rounded-xl border-2 border-amber-200 p-4"
         >
           <p class="font-bold text-amber-900">
             Store Pickup requires upfront payment to secure your inventory and

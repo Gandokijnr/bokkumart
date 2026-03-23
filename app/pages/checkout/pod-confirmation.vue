@@ -97,7 +97,7 @@
       </div>
 
       <!-- Important Notes -->
-      <div class="mt-6 rounded-xl border-2 border-amber-200 bg-amber-50 p-4">
+      <div class="mt-6 rounded-xl border-2 border-amber-200 p-4">
         <div class="flex items-start gap-3">
           <svg
             class="h-5 w-5 text-amber-600 flex-shrink-0 mt-0.5"
