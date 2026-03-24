@@ -109,7 +109,7 @@ definePageMeta({
 });
 
 useHead({
-  title: "Branch Dashboard - BokkuMart",
+  title: "Branch Dashboard - BokkuXpress",
 });
 
 const managedStores = computed(() => userStore.managedStores);

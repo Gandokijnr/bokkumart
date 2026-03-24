@@ -4,7 +4,7 @@ import type { Database } from "~/types/database.types";
 import { useUserStore } from "~/stores/user";
 
 useHead({
-  title: "Staff Management - BokkuMart Admin",
+  title: "Staff Management - BokkuXpress Admin",
 });
 
 definePageMeta({
@@ -554,7 +554,7 @@ const formatDate = (date: string) => {
               type="email"
               required
               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              placeholder="user@bokkumart.com"
+              placeholder="user@bokkuxpress.com"
             />
           </div>
 

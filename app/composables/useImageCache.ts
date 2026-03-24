@@ -7,7 +7,7 @@ interface CacheEntry {
   size: number;
 }
 
-const CACHE_NAME = "bokkumart-image-cache-v1";
+const CACHE_NAME = "bokkuxpress-image-cache-v1";
 const MAX_CACHE_SIZE = 100 * 1024 * 1024; // 100MB
 const MAX_CACHE_ENTRIES = 300;
 

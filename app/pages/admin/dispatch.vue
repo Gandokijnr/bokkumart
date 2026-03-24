@@ -327,7 +327,7 @@
 import { computed, onMounted, onUnmounted, ref } from "vue";
 import type { Database } from "~/types/database.types";
 
-useHead({ title: "Dispatch - BokkuMart" });
+useHead({ title: "Dispatch - BokkuXpress" });
 
 definePageMeta({
   layout: "admin",

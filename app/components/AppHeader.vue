@@ -60,13 +60,15 @@
           <div
             class="flex h-11 w-11 items-center justify-center rounded-xl bg-white shadow-md md:h-12 md:w-12"
           >
-            <span class="text-base font-bold text-[#0052CC] md:text-lg"
-              >BM</span
+            <span
+              class="text-base font-bold text-[#0052CC] md:text-lg flex items-center gap-1"
             >
+              <Icon name="lucide:zap" size="30" />
+            </span>
           </div>
           <div class="leading-tight">
             <div class="text-base font-bold text-white md:text-lg">
-              BokkuMart
+              BokkuXpress
             </div>
             <div class="hidden text-xs text-white/80 sm:block">
               Fresh. Fast. Delivered.

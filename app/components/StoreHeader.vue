@@ -21,7 +21,7 @@
     </div>
     <div class="flex-1">
       <p class="text-sm font-bold text-gray-900 sm:text-base">
-        Shopping from: {{ storeName || "BokkuMart Store" }}
+        Shopping from: {{ storeName || "BokkuXpress Store" }}
       </p>
       <p class="text-xs text-gray-600 sm:text-sm">
         All items reserved for 10 minutes

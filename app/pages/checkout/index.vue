@@ -222,7 +222,7 @@
                   Store Pickup
                 </p>
                 <p class="text-sm text-gray-600 mt-1">
-                  Pick up from a BokkuMart location
+                  Pick up from a BokkuXpress location
                 </p>
                 <p class="text-sm font-medium text-green-600 mt-2">FREE</p>
               </div>
@@ -694,7 +694,7 @@
             Review & Pay
           </h1>
           <p class="mt-2 text-sm text-gray-600">
-            To ensure priority packing and safety, BokkuMart currently accepts
+            To ensure priority packing and safety, BokkuXpress currently accepts
             secure online payments only.
           </p>
         </div>
@@ -1301,7 +1301,7 @@ function getDefaultPickupInstructions(storeName: string): string {
     Lekki:
       "Enter through the main gate. Pickup is at the customer service counter on the ground floor.",
     Ikeja:
-      "Use the rear parking lot. Pickup window is marked with BokkuMart signage.",
+      "Use the rear parking lot. Pickup window is marked with BokkuXpress signage.",
     "Victoria Island": "Valet parking available. Pickup at the concierge desk.",
   };
   for (const [key, value] of Object.entries(instructions)) {

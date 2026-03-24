@@ -472,8 +472,8 @@ const headingStyle = computed(() => ({
 useHead({
   title: computed(() =>
     category.value
-      ? `${category.value.name} | BokkuMart`
-      : "Category | BokkuMart",
+      ? `${category.value.name} | BokkuXpress`
+      : "Category | BokkuXpress",
   ),
 });
 </script>

@@ -108,7 +108,7 @@
               :handling-fee="cartStore.handlingFee"
               :total="displayTotal"
               :delivery-details="cartStore.deliveryDetails"
-              :store-name="cartStore.currentStoreName || 'BokkuMart Store'"
+              :store-name="cartStore.currentStoreName || 'BokkuXpress Store'"
               v-model:order-note="orderNote"
               :has-out-of-stock-items="hasOutOfStockItems"
               @checkout="proceedToCheckout"
@@ -150,10 +150,10 @@ definePageMeta({
 });
 
 useSeoMeta({
-  title: "Shopping Cart - BokkuMart",
+  title: "Shopping Cart - BokkuXpress",
   description:
     "Review your cart items and proceed to checkout. Fresh groceries delivered to your doorstep in Lagos.",
-  ogTitle: "Shopping Cart - BokkuMart",
+  ogTitle: "Shopping Cart - BokkuXpress",
   ogDescription:
     "Review your cart items and proceed to checkout. Fresh groceries delivered to your doorstep in Lagos.",
 });

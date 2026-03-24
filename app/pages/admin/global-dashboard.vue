@@ -264,7 +264,7 @@ definePageMeta({
 });
 
 useHead({
-  title: "Global Dashboard - BokkuMart",
+  title: "Global Dashboard - BokkuXpress",
 });
 
 const supabase = useSupabaseClient<Database>();

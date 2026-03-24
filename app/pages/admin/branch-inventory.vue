@@ -698,8 +698,8 @@
                 />
               </svg>
               <p class="mt-1 text-sm text-gray-600">
-                <span class="text-blue-600 font-medium">Click to upload</span> or
-                drag and drop
+                <span class="text-blue-600 font-medium">Click to upload</span>
+                or drag and drop
               </p>
               <p class="text-xs text-gray-500 mt-1">PNG, JPG, GIF up to 5MB</p>
               <p
@@ -868,7 +868,7 @@ definePageMeta({
 });
 
 useHead({
-  title: "Branch Inventory - BokkuMart",
+  title: "Branch Inventory - BokkuXpress",
 });
 
 const supabase = useSupabaseClient();

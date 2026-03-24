@@ -105,7 +105,7 @@ onMounted(() => {
                 Add to Home Screen
               </div>
               <div class="text-sm text-gray-500 mt-0.5">
-                BokkuMart · bokkumart.app
+                BokkuXpress · bokkuxpress.app
               </div>
             </div>
             <button
@@ -288,7 +288,7 @@ onMounted(() => {
           <!-- Text -->
           <div class="flex-1 min-w-0">
             <div class="text-sm font-bold text-gray-900 leading-tight truncate">
-              Install BokkuMart
+              Install BokkuXpress
             </div>
             <div class="text-xs text-gray-500 leading-tight mt-0.5 truncate">
               Add to Home Screen for the best experience

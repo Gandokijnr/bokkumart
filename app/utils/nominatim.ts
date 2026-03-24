@@ -106,7 +106,7 @@ export async function geocodeWithNominatim(
     const response = await fetch(url, {
       headers: {
         // Required by Nominatim ToS - identifies your application
-        "User-Agent": "BokkuMart-Geocoder/1.0 (contact@bokkumart.ng)",
+        "User-Agent": "BokkuXpress-Geocoder/1.0 (contact@bokkuxpress.ng)",
         Accept: "application/json",
       },
     });
@@ -206,7 +206,7 @@ export async function reverseGeocodeWithNominatim(
   try {
     const response = await fetch(url, {
       headers: {
-        "User-Agent": "BokkuMart-Geocoder/1.0 (contact@bokkumart.ng)",
+        "User-Agent": "BokkuXpress-Geocoder/1.0 (contact@bokkuxpress.ng)",
         Accept: "application/json",
       },
     });

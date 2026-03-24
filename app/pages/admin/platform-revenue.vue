@@ -9,7 +9,7 @@ definePageMeta({
 });
 
 useHead({
-  title: "Platform Revenue - BokkuMart",
+  title: "Platform Revenue - BokkuXpress",
 });
 
 // Initialize Pinia store
@@ -269,8 +269,9 @@ onMounted(() => {
       <div class="mb-8">
         <h1 class="text-2xl font-bold text-gray-900">Platform Revenue</h1>
         <p class="mt-2 text-sm text-gray-600">
-          Monthly 8% service fee revenue from digital sales. BokkuMart receives
-          100% of payments; platform fees are calculated and invoiced monthly.
+          Monthly 8% service fee revenue from digital sales. BokkuXpress
+          receives 100% of payments; platform fees are calculated and invoiced
+          monthly.
         </p>
       </div>
 
