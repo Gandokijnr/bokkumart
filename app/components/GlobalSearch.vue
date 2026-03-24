@@ -55,6 +55,7 @@ const addToCart = (product: any) => {
 
 // Debounce search
 let searchTimeout: NodeJS.Timeout | null = null;
+let activeRequestId = 0;
 
 const handleSearch = async () => {
   if (!searchQuery.value.trim()) {
@@ -62,28 +63,40 @@ const handleSearch = async () => {
     return;
   }
 
+  const requestId = ++activeRequestId;
+
   isSearching.value = true;
 
   try {
     const results = await searchProductWithBranchFallback(
       searchQuery.value.trim(),
     );
-    searchResults.value = results;
+    if (requestId === activeRequestId) {
+      searchResults.value = results;
+    }
   } catch (err) {
     console.error("Search error:", err);
   } finally {
-    isSearching.value = false;
+    if (requestId === activeRequestId) {
+      isSearching.value = false;
+    }
   }
 };
 
 const onInput = () => {
   if (searchTimeout) clearTimeout(searchTimeout);
+  activeRequestId += 1;
   searchTimeout = setTimeout(handleSearch, 300);
 };
 
 // Close modal
 const close = () => {
   emit("update:modelValue", false);
+  activeRequestId += 1;
+  if (searchTimeout) {
+    clearTimeout(searchTimeout);
+    searchTimeout = null;
+  }
   searchQuery.value = "";
   searchResults.value = { localProducts: [], unavailableAtCurrentBranch: [] };
 };
@@ -305,7 +318,7 @@ watch(
                       class="flex items-center gap-3 p-3 rounded-xl bg-white border border-gray-100 shadow-sm"
                     >
                       <img
-                        :src="product.imageUrl || '/placeholder-product.png'"
+                        :src="product.imageUrl || '/placeholder-basket.svg'"
                         :alt="product.name"
                         class="w-16 h-16 rounded-lg object-cover bg-gray-100 flex-shrink-0"
                       />
@@ -422,8 +435,7 @@ watch(
                         <div class="flex items-start gap-3 mb-3">
                           <img
                             :src="
-                              item.product.imageUrl ||
-                              '/placeholder-product.png'
+                              item.product.imageUrl || '/placeholder-basket.svg'
                             "
                             :alt="item.product.name"
                             class="w-14 h-14 rounded-lg object-cover bg-gray-100 flex-shrink-0"

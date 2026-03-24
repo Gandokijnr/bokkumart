@@ -26,7 +26,7 @@
                 <div class="absolute inset-0 bg-black/10 sm:bg-black/30" />
 
                 <div class="relative z-10">
-                  <p
+                  <!-- <p
                     class="text-[10px] sm:text-xs font-bold uppercase tracking-[0.2em] text-white/80"
                   >
                     {{ activeSlide.kicker }}
@@ -40,7 +40,7 @@
                     class="mt-3 max-w-[400px] text-sm text-white/70 sm:text-lg sm:text-white/85"
                   >
                     {{ activeSlide.subtitle }}
-                  </p>
+                  </p> -->
 
                   <div class="mt-6 sm:mt-8">
                     <!-- <button
@@ -163,7 +163,7 @@ const badges = [
 const sideCardData = {
   valentine: {
     tag: "Seasonal",
-    // title: 'Valentine Hampers',
+    title: "Valentine Hampers",
     // desc: 'Curated gift bundles',
     bg: "bg-rose-600",
     image: "/milkbanner.gif",
@@ -171,7 +171,7 @@ const sideCardData = {
   },
   prepared: {
     tag: "New",
-    // title: 'Prepared Food',
+    title: "Prepared Food",
     // desc: 'Ready-to-eat meals',
     bg: "bg-slate-800",
     image: "/fruitjuice.gif",
@@ -182,8 +182,8 @@ const sideCardData = {
 const slides = [
   {
     id: "main-1",
+    title: "Shop Smarter. Live Better.",
     // kicker: 'Premium Groceries',
-    // title: 'Shop Smarter. Live Better.',
     // subtitle: 'Items too heavy to carry? Order next time and get FREE delivery on your first order of NGN 20,000',
     image: "/buycott.gif",
     backgroundClass: "bg-blue-700",
@@ -191,22 +191,22 @@ const slides = [
   },
   {
     id: "main-2",
+    title: "Flash Sales Every Day",
     // kicker: 'Daily Deals',
-    // title: 'Flash Sales Every Day',
     // subtitle: 'Save more on selected essentials. Limited-time offers—grab them while they last.',
     image: "/blackfriday.gif",
     backgroundClass: "bg-slate-900",
     ctaHref: "/#deals",
   },
-  {
-    id: "main-3",
-    // kicker: "Fast & Flexible",
-    // title: "Same-day Delivery in Lagos",
-    // subtitle: "Choose delivery or pickup whatever fits your schedule.",
-    image: "/deliverybike.gif",
-    backgroundClass: "bg-emerald-700",
-    ctaHref: "/#prepared",
-  },
+  // {
+  //   id: "main-3",
+  //   // kicker: "Fast & Flexible",
+  //   // title: "Same-day Delivery in Lagos",
+  //   // subtitle: "Choose delivery or pickup whatever fits your schedule.",
+  //   image: "/deliverybike.gif",
+  //   backgroundClass: "bg-emerald-700",
+  //   ctaHref: "/#prepared",
+  // },
 ];
 
 const activeIndex = ref(0);

@@ -28,7 +28,9 @@
 <template>
   <article
     class="group relative flex flex-col rounded-2xl border-2 border-gray-200 bg-white p-3 shadow-sm transition-all duration-300 hover:border-[#0052CC] hover:shadow-lg sm:p-4"
-    :class="{ 'opacity-60': !product.isAvailable || product.availableStock === 0 }"
+    :class="{
+      'opacity-60': !product.isAvailable || product.availableStock === 0,
+    }"
   >
     <!-- Out of Stock Overlay -->
     <div
@@ -43,10 +45,7 @@
     </div>
 
     <!-- Sale Badge (Yellow accent) -->
-    <div
-      v-else-if="product.badge"
-      class="absolute left-2 top-2 z-10"
-    >
+    <div v-else-if="product.badge" class="absolute left-2 top-2 z-10">
       <span class="badge-sale">
         {{ product.badge }}
       </span>
@@ -57,7 +56,9 @@
       v-else-if="product.availableStock <= 3 && product.availableStock > 0"
       class="absolute left-2 top-2 z-10"
     >
-      <span class="rounded-full bg-orange-500 px-2.5 py-1 text-xs font-bold text-white shadow-sm">
+      <span
+        class="rounded-full bg-orange-500 px-2.5 py-1 text-xs font-bold text-white shadow-sm"
+      >
         Only {{ product.availableStock }} left
       </span>
     </div>
@@ -65,7 +66,7 @@
     <!-- Product Image -->
     <div class="relative aspect-square overflow-hidden rounded-xl bg-gray-100">
       <img
-        :src="product.imageUrl || '/placeholder-product.png'"
+        :src="product.imageUrl || '/placeholder-basket.svg'"
         :alt="product.name"
         class="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
         loading="lazy"
@@ -78,7 +79,7 @@
       <h3 class="line-clamp-2 text-sm font-semibold text-gray-900 sm:text-base">
         {{ product.name }}
       </h3>
-      
+
       <p v-if="product.unit" class="mt-0.5 text-xs text-gray-500">
         {{ product.unit }}
       </p>
@@ -104,7 +105,7 @@
 
       <!-- Admin Price Transparency (only for admin users) -->
       <div v-if="showAdminPricing" class="mt-1 text-xs text-gray-500">
-        <span class="text-gray-400">Bokku:</span> {{ basePrice }} 
+        <span class="text-gray-400">Bokku:</span> {{ basePrice }}
         <span class="mx-1 text-gray-300">|</span>
         <span class="text-gray-400">Markup:</span> {{ markupAmount }}
       </div>
@@ -113,7 +114,9 @@
       <button
         class="mt-auto flex w-full items-center justify-center gap-2 rounded-lg bg-[#0052CC] px-4 py-2.5 text-sm font-bold text-white shadow-sm transition-all duration-200 hover:bg-[#003D8F] hover:shadow-md focus:outline-none focus:ring-2 focus:ring-[#0052CC] focus:ring-offset-2 disabled:cursor-not-allowed disabled:bg-gray-300 disabled:shadow-none sm:py-3"
         type="button"
-        :disabled="!product.isAvailable || product.availableStock === 0 || isAdding"
+        :disabled="
+          !product.isAvailable || product.availableStock === 0 || isAdding
+        "
         @click="handleAddToCart"
       >
         <!-- Loading Spinner -->
@@ -154,15 +157,15 @@
           />
         </svg>
 
-        <span>{{ isAdding ? 'Adding...' : 'Add to Cart' }}</span>
+        <span>{{ isAdding ? "Adding..." : "Add to Cart" }}</span>
       </button>
     </div>
   </article>
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue';
-import { getDisplayPrice, formatPrice, comparePrices } from '~/utils/pricing';
+import { computed, ref } from "vue";
+import { getDisplayPrice, formatPrice, comparePrices } from "~/utils/pricing";
 
 interface Product {
   id: string;
@@ -182,7 +185,7 @@ const props = defineProps<{
 }>();
 
 const emit = defineEmits<{
-  (e: 'add-to-cart', product: Product): void;
+  (e: "add-to-cart", product: Product): void;
 }>();
 
 const isAdding = ref(false);
@@ -193,7 +196,7 @@ const displayPrice = computed(() => {
 });
 
 const oldDisplayPrice = computed(() => {
-  if (!props.product.oldPrice) return '';
+  if (!props.product.oldPrice) return "";
   return formatPrice(getDisplayPrice(props.product.oldPrice));
 });
 
@@ -215,14 +218,14 @@ const savingsPercentage = computed(() => {
 
 async function handleAddToCart() {
   if (isAdding.value) return;
-  
+
   isAdding.value = true;
-  
+
   // Simulate API call
-  await new Promise(resolve => setTimeout(resolve, 500));
-  
-  emit('add-to-cart', props.product);
-  
+  await new Promise((resolve) => setTimeout(resolve, 500));
+
+  emit("add-to-cart", props.product);
+
   isAdding.value = false;
 }
 </script>

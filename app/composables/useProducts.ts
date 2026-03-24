@@ -84,7 +84,9 @@ export const useProducts = () => {
       // Fetch inventory for this branch - only items with stock_level > 0
       const { data: inventoryData, error: inventoryError } = (await supabase
         .from("store_inventory")
-        .select("*")
+        .select(
+          "id, store_id, product_id, stock_level, digital_buffer, store_price, is_visible, updated_at",
+        )
         .eq("store_id", branchId)
         .eq("is_visible", true)
         .gt("stock_level", 0)) as { data: any[] | null; error: any };
@@ -111,7 +113,9 @@ export const useProducts = () => {
         chunks.map((chunk) =>
           supabase
             .from("products")
-            .select("*")
+            .select(
+              "id, name, description, price, image_url, unit, sku, category_id, metadata, is_active",
+            )
             .in("id", chunk)
             .eq("is_active", true),
         ),
@@ -378,7 +382,9 @@ export const useProducts = () => {
       // Fetch products in this category
       const { data: productsData, error: productsError } = (await supabase
         .from("products")
-        .select("*")
+        .select(
+          "id, name, description, price, image_url, unit, sku, category_id, metadata, is_active",
+        )
         .eq("category_id", categoryData.id)
         .eq("is_active", true)) as { data: any[] | null; error: any };
 
@@ -403,7 +409,9 @@ export const useProducts = () => {
         chunks.map((chunk) =>
           supabase
             .from("store_inventory")
-            .select("*")
+            .select(
+              "id, store_id, product_id, stock_level, digital_buffer, store_price, is_visible, updated_at",
+            )
             .eq("store_id", branchId)
             .eq("is_visible", true)
             .gt("stock_level", 0)
@@ -522,7 +530,9 @@ export const useProducts = () => {
       // Search for products matching the query
       const { data: searchResults, error: searchError } = (await supabase
         .from("products")
-        .select("*")
+        .select(
+          "id, name, description, price, image_url, unit, sku, category_id, metadata, is_active",
+        )
         .ilike("name", `%${query}%`)
         .eq("is_active", true)
         .limit(20)) as { data: any[] | null; error: any };
@@ -556,7 +566,9 @@ export const useProducts = () => {
       // Check inventory at current branch
       const { data: currentBranchInventory } = (await supabase
         .from("store_inventory")
-        .select("*")
+        .select(
+          "id, store_id, product_id, stock_level, digital_buffer, store_price, is_visible, updated_at",
+        )
         .eq("store_id", branchId)
         .eq("is_visible", true)
         .in("product_id", productIds)) as { data: any[] | null };
@@ -577,7 +589,7 @@ export const useProducts = () => {
         // Fetch inventory at other branches for unavailable products
         const { data: otherBranchesInventory } = (await supabase
           .from("store_inventory")
-          .select("*, stores(id, name)")
+          .select("store_id, product_id, stock_level, stores(id, name)")
           .neq("store_id", branchId)
           .eq("is_visible", true)
           .in("product_id", unavailableProductIds)

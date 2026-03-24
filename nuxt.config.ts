@@ -7,6 +7,59 @@ export default defineNuxtConfig({
   ssr: true,
   css: ["~/assets/css/main.css"],
 
+  nitro: {
+    routeRules: {
+      "/": {
+        headers: {
+          "Cache-Control": "public, s-maxage=60, stale-while-revalidate=300",
+        },
+      },
+      "/category/**": {
+        headers: {
+          "Cache-Control": "public, s-maxage=60, stale-while-revalidate=300",
+        },
+      },
+
+      "/cart": {
+        headers: {
+          "Cache-Control": "private, no-store",
+        },
+      },
+      "/checkout/**": {
+        headers: {
+          "Cache-Control": "private, no-store",
+        },
+      },
+      "/profile": {
+        headers: {
+          "Cache-Control": "private, no-store",
+        },
+      },
+      "/order/**": {
+        headers: {
+          "Cache-Control": "private, no-store",
+        },
+      },
+
+      "/admin/**": {
+        headers: {
+          "Cache-Control": "private, no-store",
+        },
+      },
+      "/driver/**": {
+        headers: {
+          "Cache-Control": "private, no-store",
+        },
+      },
+
+      "/api/**": {
+        headers: {
+          "Cache-Control": "private, no-store",
+        },
+      },
+    },
+  },
+
   app: {
     head: {
       meta: [

@@ -24,7 +24,7 @@
         class="flex w-32 flex-shrink-0 flex-col rounded-lg border border-gray-200 bg-white p-2.5 transition-shadow hover:shadow-md sm:w-36 sm:p-3"
       >
         <img
-          :src="product.image_url || '/placeholder-product.png'"
+          :src="product.image_url || '/placeholder-basket.svg'"
           :alt="product.name"
           class="mb-2 h-20 w-full rounded-lg object-cover sm:h-24"
         />

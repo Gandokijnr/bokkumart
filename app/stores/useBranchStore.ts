@@ -39,6 +39,8 @@ export interface BranchState {
  * Storage key for localStorage persistence
  */
 const STORAGE_KEY = "ha_active_branch";
+const BRANCHES_CACHE_KEY = "ha_branches_cache";
+const BRANCHES_CACHE_TTL_MS = 12 * 60 * 60 * 1000;
 
 let branchesFetchPromise: Promise<boolean> | null = null;
 
@@ -145,6 +147,43 @@ export const useBranchStore = defineStore("branch", {
   },
 
   actions: {
+    hydrateBranchesFromCache(): boolean {
+      if (!import.meta.client) return false;
+      try {
+        const raw = localStorage.getItem(BRANCHES_CACHE_KEY);
+        if (!raw) return false;
+        const parsed = JSON.parse(raw);
+        if (!parsed || !Array.isArray(parsed.branches)) return false;
+        this.branches = parsed.branches;
+        this.lastUpdated =
+          typeof parsed.lastUpdated === "number" ? parsed.lastUpdated : null;
+        return true;
+      } catch {
+        return false;
+      }
+    },
+
+    persistBranchesToCache() {
+      if (!import.meta.client) return;
+      try {
+        localStorage.setItem(
+          BRANCHES_CACHE_KEY,
+          JSON.stringify({
+            branches: this.branches,
+            lastUpdated: this.lastUpdated || Date.now(),
+          }),
+        );
+      } catch {
+        // ignore
+      }
+    },
+
+    branchesCacheFresh(): boolean {
+      const last = this.lastUpdated;
+      if (!last) return false;
+      return Date.now() - last < BRANCHES_CACHE_TTL_MS;
+    },
+
     /**
      * Fetch all branches from Supabase
      */
@@ -158,7 +197,9 @@ export const useBranchStore = defineStore("branch", {
         try {
           const { data, error } = await supabase
             .from("stores")
-            .select("*")
+            .select(
+              "id, name, address, city, state, phone, email, latitude, longitude, is_active, operating_hours, created_at, updated_at",
+            )
             .eq("is_active", true)
             .order("name", { ascending: true });
 
@@ -166,6 +207,7 @@ export const useBranchStore = defineStore("branch", {
 
           this.branches = data || [];
           this.lastUpdated = Date.now();
+          this.persistBranchesToCache();
           return true;
         } catch (err: any) {
           const msg = String(err?.message || "");
@@ -404,9 +446,35 @@ export const useBranchStore = defineStore("branch", {
     async initialize(supabase?: any) {
       this.loadFromLocalStorage();
 
+      this.hydrateBranchesFromCache();
+
+      const cacheFresh = this.branchesCacheFresh();
+
+      if (supabase && cacheFresh) {
+        supabase
+          .from("stores")
+          .select(
+            "id, name, address, city, state, phone, email, latitude, longitude, is_active, operating_hours, created_at, updated_at",
+          )
+          .eq("is_active", true)
+          .order("name", { ascending: true })
+          .then(({ data, error }: any) => {
+            if (!error && data) {
+              this.branches = data;
+              this.lastUpdated = Date.now();
+              this.persistBranchesToCache();
+            }
+          })
+          .catch(() => {
+            // ignore
+          });
+      }
+
       // Fetch fresh branch list
       if (supabase) {
-        await this.fetchBranches(supabase);
+        if (!cacheFresh || this.branches.length === 0) {
+          await this.fetchBranches(supabase);
+        }
 
         // If we have a stored branch, verify it still exists and is active
         if (this.activeBranch) {

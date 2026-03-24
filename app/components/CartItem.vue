@@ -15,7 +15,7 @@
       <!-- Product Image -->
       <div class="relative flex-shrink-0">
         <img
-          :src="item.image_url || '/placeholder-product.png'"
+          :src="item.image_url || '/placeholder-basket.svg'"
           :alt="item.name"
           class="h-20 w-20 rounded-lg object-cover sm:h-24 sm:w-24"
         />

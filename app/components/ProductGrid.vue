@@ -18,7 +18,7 @@
       <!-- Branch Selection Notice -->
       <div
         v-if="!branchStore.hasActiveBranch"
-        class="mb-6 rounded-xl border-2 border-amber-200 bg-amber-50 p-4"
+        class="mb-6 rounded-xl border-2 border-amber-200 p-4"
       >
         <div class="flex items-center gap-3">
           <svg
@@ -244,7 +244,7 @@
             <div class="relative">
               <img
                 class="aspect-square w-full rounded-2xl object-cover"
-                :src="product.imageUrl || '/placeholder-product.png'"
+                :src="product.imageUrl || '/placeholder-basket.svg'"
                 :alt="product.name"
                 loading="lazy"
                 decoding="async"

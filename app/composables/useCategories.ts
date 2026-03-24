@@ -12,6 +12,9 @@ export type Category = {
   productCount?: number;
 };
 
+const CATEGORIES_CACHE_KEY = "ha_categories_cache";
+const CATEGORIES_CACHE_TTL_MS = 12 * 60 * 60 * 1000;
+
 export const useCategories = () => {
   const supabase = useSupabaseClient<Database>();
 
@@ -20,6 +23,39 @@ export const useCategories = () => {
   const error = ref<string | null>(null);
 
   let fetchPromise: Promise<Category[]> | null = null;
+
+  const hydrateFromCache = () => {
+    if (!import.meta.client) return false;
+    try {
+      const raw = localStorage.getItem(CATEGORIES_CACHE_KEY);
+      if (!raw) return false;
+      const parsed = JSON.parse(raw);
+      if (!parsed || !Array.isArray(parsed.categories)) return false;
+      const lastUpdated =
+        typeof parsed.lastUpdated === "number" ? parsed.lastUpdated : 0;
+      if (!lastUpdated || Date.now() - lastUpdated > CATEGORIES_CACHE_TTL_MS)
+        return false;
+      categories.value = parsed.categories;
+      return true;
+    } catch {
+      return false;
+    }
+  };
+
+  const persistToCache = () => {
+    if (!import.meta.client) return;
+    try {
+      localStorage.setItem(
+        CATEGORIES_CACHE_KEY,
+        JSON.stringify({
+          categories: categories.value,
+          lastUpdated: Date.now(),
+        }),
+      );
+    } catch {
+      // ignore
+    }
+  };
 
   /**
    * Fetch all active categories from the database
@@ -30,6 +66,70 @@ export const useCategories = () => {
 
     pending.value = true;
     error.value = null;
+
+    const hydrated = hydrateFromCache();
+    if (hydrated) {
+      pending.value = false;
+      fetchPromise = (async () => {
+        try {
+          const { data: categoriesData, error: categoriesError } =
+            await supabase
+              .from("categories")
+              .select("*")
+              .eq("is_active", true)
+              .order("sort_order", { ascending: true });
+
+          if (categoriesError) throw categoriesError;
+
+          let categoriesWithCount: Category[] = (categoriesData || []).map(
+            (cat: any) => ({
+              id: cat.id,
+              name: cat.name,
+              slug: cat.slug,
+              description: cat.description,
+              imageUrl: cat.image_url,
+              sortOrder: cat.sort_order,
+              isActive: cat.is_active,
+              parentId: cat.parent_id,
+              productCount: 0,
+            }),
+          );
+
+          if (includeProductCount && categoriesWithCount.length > 0) {
+            const categoryIds = categoriesWithCount.map((c) => c.id);
+
+            const { data: productsData, error: productsError } = await supabase
+              .from("products")
+              .select("category_id")
+              .in("category_id", categoryIds)
+              .eq("is_active", true);
+
+            if (!productsError && productsData) {
+              const countMap: Record<string, number> = {};
+              productsData.forEach((p: any) => {
+                if (p.category_id) {
+                  countMap[p.category_id] = (countMap[p.category_id] || 0) + 1;
+                }
+              });
+              categoriesWithCount = categoriesWithCount.map((cat) => ({
+                ...cat,
+                productCount: countMap[cat.id] || 0,
+              }));
+            }
+          }
+
+          categories.value = categoriesWithCount;
+          persistToCache();
+          return categories.value;
+        } catch {
+          return categories.value;
+        } finally {
+          fetchPromise = null;
+        }
+      })();
+
+      return categories.value;
+    }
 
     fetchPromise = (async () => {
       try {
@@ -84,6 +184,8 @@ export const useCategories = () => {
         }
 
         categories.value = categoriesWithCount;
+
+        persistToCache();
 
         return categories.value;
       } catch (err: any) {

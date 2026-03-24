@@ -211,7 +211,9 @@ export const useUserOrders = () => {
     try {
       const { data, error: fetchError } = await supabase
         .from("orders")
-        .select("*")
+        .select(
+          "id, user_id, store_id, items, subtotal, delivery_fee, total_amount, confirmation_code, status, delivery_method, delivery_details, paystack_reference, paystack_transaction_id, metadata, created_at, updated_at, paid_at, delivered_at",
+        )
         .eq("user_id", userId)
         .order("created_at", { ascending: false });
 
@@ -237,7 +239,9 @@ export const useUserOrders = () => {
     try {
       const { data, error: fetchError } = await supabase
         .from("orders")
-        .select("*")
+        .select(
+          "id, user_id, store_id, items, subtotal, delivery_fee, total_amount, confirmation_code, status, delivery_method, delivery_details, paystack_reference, paystack_transaction_id, metadata, created_at, updated_at, paid_at, delivered_at",
+        )
         .eq("id", orderId)
         .eq("user_id", user.value.id)
         .single();

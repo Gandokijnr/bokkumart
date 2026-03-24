@@ -142,7 +142,7 @@
           <div class="relative">
             <img
               class="aspect-square w-full rounded-2xl object-cover"
-              :src="product.imageUrl || '/placeholder-product.png'"
+              :src="product.imageUrl || '/placeholder-basket.svg'"
               :alt="product.name"
               loading="lazy"
               decoding="async"
