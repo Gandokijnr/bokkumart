@@ -32,7 +32,7 @@
         <div v-if="reason === 'insufficient_permissions'" class="text-left">
           <h3 class="font-medium text-gray-900 mb-2">Staff Access Required</h3>
           <p class="text-sm text-gray-600 mb-4">
-            This area is restricted to BokkuMart staff members. If you believe
+            This area is restricted to BokkuXpress staff members. If you believe
             you should have access, please contact your administrator.
           </p>
           <ul class="text-sm text-gray-500 space-y-1">

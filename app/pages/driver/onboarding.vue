@@ -4,7 +4,7 @@ import { getSafeErrorMessage } from "~/utils/errorHandler";
 
 definePageMeta({});
 
-useHead({ title: "Rider Onboarding - BokkuMart" });
+useHead({ title: "Rider Onboarding - BokkuXpress" });
 
 type StepKey = "personal" | "branches" | "vehicle" | "payout";
 

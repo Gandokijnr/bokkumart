@@ -198,7 +198,7 @@
 import { computed, onMounted, onUnmounted, ref } from "vue";
 import type { Database } from "~/types/database.types";
 
-useHead({ title: "Drivers - BokkuMart" });
+useHead({ title: "Drivers - BokkuXpress" });
 
 definePageMeta({
   layout: "admin",

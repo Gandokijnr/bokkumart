@@ -3,7 +3,7 @@ import type { Database } from "../types/database.types";
 
 /**
  * Branch Interface
- * Represents a BokkuMart store/branch location
+ * Represents a BokkuXpress store/branch location
  */
 export interface Branch {
   id: string;

@@ -412,399 +412,45 @@
           </div>
         </div>
 
-        <!-- Addresses Tab -->
         <div v-if="activeTab === 'addresses'" class="space-y-4">
           <div class="flex items-center justify-between">
-            <h3 class="text-lg font-bold text-gray-900">Saved Addresses</h3>
+            <h1 class="text-2xl font-bold text-gray-900">BokkuXpress</h1>
             <button
               @click="showAddressForm = true"
               class="flex items-center gap-2 rounded-xl px-4 py-2 font-medium text-white hover:bg-blue-700"
             >
               <span>+</span> Add New
             </button>
-          </div>
 
-          <div v-if="addressesPending" class="grid gap-4 sm:grid-cols-2">
-            <div
-              v-for="n in 2"
-              :key="n"
-              class="h-40 animate-pulse rounded-2xl bg-gray-200"
-            ></div>
-          </div>
-
-          <div
-            v-else-if="addresses.length === 0"
-            class="rounded-2xl border-2 border-gray-200 bg-white p-12 text-center"
-          >
-            <div class="mb-4 text-6xl">📍</div>
-            <h3 class="text-lg font-semibold text-gray-900">
-              No addresses saved
-            </h3>
-            <p class="mt-2 text-sm text-gray-500">
-              Add your home, work, or other addresses for quick checkout
-            </p>
-          </div>
-
-          <div v-else class="grid gap-4 sm:grid-cols-2">
-            <div
-              v-for="address in addresses"
-              :key="address.id"
-              class="relative rounded-2xl border-2 p-5 transition-all"
-              :class="
-                address.is_primary
-                  ? 'border-blue-400'
-                  : 'border-gray-200 bg-white hover:border-blue-300'
-              "
+            <!-- Toast Notification -->
+            <Transition
+              enter-active-class="transition duration-300 ease-out"
+              enter-from-class="translate-y-2 opacity-0"
+              enter-to-class="translate-y-0 opacity-100"
+              leave-active-class="transition duration-200 ease-in"
+              leave-from-class="translate-y-0 opacity-100"
+              leave-to-class="translate-y-2 opacity-0"
             >
-              <div class="flex items-start justify-between">
-                <div class="flex items-center gap-2">
-                  <span class="text-xl">{{
-                    address.label === "home"
-                      ? "🏠"
-                      : address.label === "work"
-                        ? "💼"
-                        : "📍"
-                  }}</span>
-                  <span class="font-semibold capitalize text-gray-900">{{
-                    address.label
-                  }}</span>
-                  <span
-                    v-if="address.is_primary"
-                    class="rounded-full bg-blue-400 px-2 py-0.5 text-xs font-medium text-white"
-                  >
-                    Primary
-                  </span>
-                </div>
-                <div class="flex gap-1">
-                  <button
-                    @click="editAddress(address)"
-                    class="rounded-lg p-2 text-gray-100 hover:bg-gray-100 hover:text-gray-600"
-                  >
-                    ✏️
-                  </button>
-                  <button
-                    @click="confirmDeleteAddress(address)"
-                    class="rounded-lg p-2 text-gray-100 hover:bg-blue-50 hover:text-blue-600"
-                  >
-                    🗑️
-                  </button>
-                </div>
-              </div>
-
-              <div class="mt-3 space-y-1 text-sm">
-                <p class="font-medium text-gray-900">
-                  {{ address.street_address }}
-                </p>
-                <p class="text-gray-500">
-                  {{ address.area }}, {{ address.city }}
-                </p>
-                <p class="text-xs text-gray-400">
-                  <span class="font-medium">Landmark:</span>
-                  {{ address.landmark }}
-                </p>
-              </div>
-
-              <button
-                v-if="!address.is_primary"
-                @click="setAsPrimary(address.id)"
-                class="mt-4 w-full rounded-lg border border-blue-200 py-2 text-sm font-medium text-blue-600 hover:bg-blue-50"
-              >
-                Set as Primary
-              </button>
-            </div>
-          </div>
-        </div>
-
-        <!-- Account Settings Tab -->
-        <div v-if="activeTab === 'settings'" class="mx-auto max-w-2xl">
-          <div
-            class="rounded-2xl border-2 border-gray-200 bg-white p-6 shadow-sm"
-          >
-            <h3 class="mb-6 text-lg font-bold text-gray-900">
-              Account Settings
-            </h3>
-
-            <div v-if="profilePending" class="space-y-4">
               <div
-                v-for="n in 3"
-                :key="n"
-                class="h-16 animate-pulse rounded-xl bg-gray-100"
-              ></div>
-            </div>
-
-            <form v-else @submit.prevent="saveProfile" class="space-y-6">
-              <!-- Full Name -->
-              <div>
-                <label class="mb-2 block text-sm font-medium text-gray-700"
-                  >Full Name</label
-                >
-                <input
-                  v-model="profileForm.full_name"
-                  type="text"
-                  class="w-full rounded-xl border-2 border-gray-200 px-4 py-3 focus:border-blue-500 focus:outline-none"
-                  placeholder="Enter your full name"
-                />
-              </div>
-
-              <!-- Phone Number -->
-              <div>
-                <label class="mb-2 block text-sm font-medium text-gray-700">
-                  Phone Number
-                </label>
-                <div class="flex gap-2">
-                  <input
-                    v-model="profileForm.phone_number"
-                    type="tel"
-                    class="flex-1 rounded-xl border-2 border-gray-200 px-4 py-3 focus:border-blue-500 focus:outline-none"
-                    placeholder="+234 80X XXX XXXX"
-                  />
+                v-if="toast.show"
+                class="fixed bottom-20 left-1/2 z-50 -translate-x-1/2 rounded-xl px-6 py-3 text-sm font-medium text-white shadow-lg sm:bottom-8"
+                :class="
+                  toast.type === 'success'
+                    ? 'bg-green-600'
+                    : toast.type === 'error'
+                      ? 'bg-blue-600'
+                      : 'bg-blue-700'
+                "
+              >
+                <div class="flex items-center gap-2">
+                  <span>{{ toast.message }}</span>
                 </div>
-                <p class="mt-1 text-xs text-gray-500">
-                  Required for delivery updates
-                </p>
               </div>
-
-              <!-- Email (read-only) -->
-              <div>
-                <label class="mb-2 block text-sm font-medium text-gray-700"
-                  >Email</label
-                >
-                <input
-                  :value="user?.email"
-                  type="email"
-                  disabled
-                  class="w-full rounded-xl border-2 border-gray-100 bg-gray-50 px-4 py-3 text-gray-500"
-                />
-                <p class="mt-1 text-xs text-gray-500">
-                  Contact support to change email
-                </p>
-              </div>
-
-              <!-- Save Button -->
-              <div class="flex items-center justify-between pt-4">
-                <button
-                  type="button"
-                  @click="logout"
-                  class="text-sm font-medium text-blue-600 hover:text-blue-700"
-                >
-                  Sign Out
-                </button>
-                <button
-                  type="submit"
-                  :disabled="savingProfile"
-                  class="flex items-center gap-2 rounded-xl bg-blue-700 px-6 py-3 font-medium text-white hover:bg-blue-800 disabled:opacity-50"
-                >
-                  <span
-                    v-if="savingProfile"
-                    class="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"
-                  ></span>
-                  {{ savingProfile ? "Saving..." : "Save Changes" }}
-                </button>
-              </div>
-            </form>
+            </Transition>
           </div>
         </div>
       </div>
     </main>
-
-    <!-- Address Form Modal -->
-    <Transition
-      enter-active-class="transition duration-300 ease-out"
-      enter-from-class="opacity-0 scale-95"
-      enter-to-class="opacity-100 scale-100"
-      leave-active-class="transition duration-200 ease-in"
-      leave-from-class="opacity-100 scale-100"
-      leave-to-class="opacity-0 scale-95"
-    >
-      <div
-        v-if="showAddressForm"
-        class="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6"
-      >
-        <div
-          class="absolute inset-0 bg-black/50"
-          @click="showAddressForm = false"
-        ></div>
-
-        <div
-          class="relative w-full max-w-md rounded-2xl bg-white p-6 shadow-xl"
-        >
-          <h3 class="mb-6 text-xl font-bold text-gray-900">
-            {{ editingAddress ? "Edit Address" : "Add New Address" }}
-          </h3>
-
-          <form @submit.prevent="saveAddress" class="space-y-4">
-            <!-- Label -->
-            <div>
-              <label class="mb-2 block text-sm font-medium text-gray-700"
-                >Address Type</label
-              >
-              <div class="flex gap-2">
-                <button
-                  v-for="label in ['home', 'work', 'other']"
-                  :key="label"
-                  type="button"
-                  @click="addressForm.label = label as AddressLabel"
-                  class="flex-1 rounded-xl border-2 py-3 text-sm font-medium capitalize transition-colors"
-                  :class="
-                    addressForm.label === label
-                      ? 'border-blue-700 bg-blue-50 text-gray-100'
-                      : 'border-gray-200 hover:border-gray-300'
-                  "
-                >
-                  {{ label }}
-                </button>
-              </div>
-            </div>
-
-            <!-- Area (Lagos-specific dropdown) -->
-            <div>
-              <label class="mb-2 block text-sm font-medium text-gray-700"
-                >Area / Neighborhood</label
-              >
-              <select
-                v-model="addressForm.area"
-                class="w-full rounded-xl border-2 border-gray-200 px-4 py-3 focus:border-blue-600 focus:outline-none"
-              >
-                <option value="">Select an area</option>
-                <option v-for="area in LAGOS_AREAS" :key="area" :value="area">
-                  {{ area }}
-                </option>
-              </select>
-            </div>
-
-            <!-- Street Address -->
-            <div>
-              <label class="mb-2 block text-sm font-medium text-gray-700"
-                >Street Address</label
-              >
-              <input
-                v-model="addressForm.street_address"
-                type="text"
-                placeholder="House number, street name"
-                class="w-full rounded-xl border-2 border-gray-200 px-4 py-3 focus:border-blue-600 focus:outline-none"
-              />
-            </div>
-
-            <!-- Landmark (Lagos-critical) -->
-            <div>
-              <label class="mb-2 block text-sm font-medium text-gray-700">
-                Landmark / Nearest Bus Stop
-                <span class="text-blue-500">*</span>
-              </label>
-              <input
-                v-model="addressForm.landmark"
-                type="text"
-                placeholder="e.g., Near Total Filling Station, Opposite Shoprite"
-                class="w-full rounded-xl border-2 border-gray-200 px-4 py-3 focus:border-blue-600 focus:outline-none"
-              />
-              <p class="mt-1 text-xs text-gray-500">
-                This helps our dispatch riders find you faster
-              </p>
-            </div>
-
-            <!-- Primary Checkbox -->
-            <label class="flex items-center gap-3">
-              <input
-                v-model="addressForm.is_primary"
-                type="checkbox"
-                class="h-5 w-5 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-              />
-              <span class="text-sm text-gray-700">Set as primary address</span>
-            </label>
-
-            <!-- Actions -->
-            <div class="flex gap-3 pt-4">
-              <button
-                type="button"
-                @click="showAddressForm = false"
-                class="flex-1 rounded-xl border-2 border-gray-200 py-3 font-medium text-gray-600 hover:bg-gray-50"
-              >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                :disabled="addressSaving"
-                class="flex-1 rounded-xl bg-blue-700 py-3 font-medium text-white hover:bg-blue-800 disabled:opacity-50"
-              >
-                {{ addressSaving ? "Saving..." : "Save Address" }}
-              </button>
-            </div>
-          </form>
-        </div>
-      </div>
-    </Transition>
-
-    <!-- Delete Confirmation Modal -->
-    <Transition
-      enter-active-class="transition duration-300 ease-out"
-      enter-from-class="opacity-0 scale-95"
-      enter-to-class="opacity-100 scale-100"
-      leave-active-class="transition duration-200 ease-in"
-      leave-from-class="opacity-100 scale-100"
-      leave-to-class="opacity-0 scale-95"
-    >
-      <div
-        v-if="showDeleteConfirm"
-        class="fixed inset-0 z-50 flex items-center justify-center p-4"
-      >
-        <div
-          class="absolute inset-0 bg-black/50"
-          @click="showDeleteConfirm = false"
-        ></div>
-
-        <div
-          class="relative w-full max-w-sm rounded-2xl bg-white p-6 shadow-xl"
-        >
-          <div class="mb-4 text-4xl">⚠️</div>
-          <h3 class="mb-2 text-lg font-bold text-gray-900">Delete Address?</h3>
-          <p class="mb-6 text-sm text-gray-500">
-            This action cannot be undone.
-          </p>
-
-          <div class="flex gap-3">
-            <button
-              @click="showDeleteConfirm = false"
-              class="flex-1 rounded-xl border-2 border-gray-200 py-3 font-medium text-gray-600 hover:bg-gray-50"
-            >
-              Cancel
-            </button>
-            <button
-              @click="deleteAddressConfirmed"
-              :disabled="addressDeleting"
-              class="flex-1 rounded-xl bg-blue-600 py-3 font-medium text-white hover:bg-blue-700 disabled:opacity-50"
-            >
-              {{ addressDeleting ? "Deleting..." : "Delete" }}
-            </button>
-          </div>
-        </div>
-      </div>
-    </Transition>
-
-    <!-- Toast Notification -->
-    <Transition
-      enter-active-class="transition duration-300 ease-out"
-      enter-from-class="translate-y-2 opacity-0"
-      enter-to-class="translate-y-0 opacity-100"
-      leave-active-class="transition duration-200 ease-in"
-      leave-from-class="translate-y-0 opacity-100"
-      leave-to-class="translate-y-2 opacity-0"
-    >
-      <div
-        v-if="toast.show"
-        class="fixed bottom-20 left-1/2 z-50 -translate-x-1/2 rounded-xl px-6 py-3 text-sm font-medium text-white shadow-lg sm:bottom-8"
-        :class="
-          toast.type === 'success'
-            ? 'bg-green-600'
-            : toast.type === 'error'
-              ? 'bg-blue-600'
-              : 'bg-blue-700'
-        "
-      >
-        <div class="flex items-center gap-2">
-          <span>{{ toast.message }}</span>
-        </div>
-      </div>
-    </Transition>
   </div>
 </template>
 
@@ -1404,11 +1050,11 @@ onUnmounted(() => {
 });
 
 useHead({
-  title: "My Profile | BokkuMart",
+  title: "My Profile | BokkuXpress",
   meta: [
     {
       name: "description",
-      content: "Manage your BokkuMart account, orders, and addresses",
+      content: "Manage your BokkuXpress account, orders, and addresses",
     },
   ],
 });

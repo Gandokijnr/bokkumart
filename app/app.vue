@@ -6,8 +6,8 @@ import { subscribeToPush } from "~/composables/usePushNotifications";
 useHead({
   titleTemplate: (title) =>
     title
-      ? `${title} | BokkuMart`
-      : "BokkuMart - Your Trusted Online Grocery Marketplace",
+      ? `${title} | BokkuXpress`
+      : "BokkuXpress - Your Trusted Online Grocery Marketplace",
   meta: [
     {
       name: "viewport",
@@ -16,7 +16,7 @@ useHead({
     { name: "theme-color", content: "#0052CC" },
     { name: "apple-mobile-web-app-capable", content: "yes" },
     { name: "apple-mobile-web-app-status-bar-style", content: "default" },
-    { name: "apple-mobile-web-app-title", content: "BokkuMart" },
+    { name: "apple-mobile-web-app-title", content: "BokkuXpress" },
   ],
   link: [
     { rel: "icon", type: "image/svg+xml", href: "/favicon.svg" },
@@ -74,8 +74,8 @@ onMounted(() => {
       class="fixed inset-0 z-[9998] flex items-center justify-center bg-white"
     >
       <div class="flex items-center gap-3 text-[#0052CC] animate-pulse">
-        <Icon name="lucide:shopping-basket" size="24" />
-        <div class="text-lg font-extrabold tracking-tight">BokkuMart</div>
+        <Icon name="lucide:zap" size="24" />
+        <div class="text-lg font-extrabold tracking-tight">BokkuXpress</div>
       </div>
     </div>
 

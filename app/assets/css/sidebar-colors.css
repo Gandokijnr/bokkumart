@@ -1,4 +1,4 @@
-/* BokkuMart Sidebar - Tailwind CSS Color Reference */
+/* BokkuXpress Sidebar - Tailwind CSS Color Reference */
 
 /* ============================================
    BOKKU BLUE BRAND COLORS (Primary)
@@ -44,7 +44,7 @@
    YELLOW COLORS (Secondary - Sale badges, CTAs)
    ============================================ */
 
-/* BokkuMart Brand Yellow */
+/* BokkuXpress Brand Yellow */
 .brand-yellow {
   @apply bg-[#FFC107];
   /* #FFC107 - Sale badges, Add to Cart highlights */

@@ -24,7 +24,7 @@ self.addEventListener("push", (event) => {
     const data = event.data.json();
     console.log("[SW] Push data:", data);
 
-    const title = data.title || "BokkuMart";
+    const title = data.title || "BokkuXpress";
     const options = {
       body: data.message || data.body || "",
       icon: data.icon || "/pwa-192x192.png",
@@ -45,7 +45,7 @@ self.addEventListener("push", (event) => {
     console.error("[SW] Error showing notification:", error);
     // Fallback notification
     event.waitUntil(
-      self.registration.showNotification("BokkuMart", {
+      self.registration.showNotification("BokkuXpress", {
         body: "You have a new notification",
         icon: "/pwa-192x192.png",
       }),

@@ -362,7 +362,7 @@ definePageMeta({
 });
 
 useHead({
-  title: "Picking Dashboard - BokkuMart",
+  title: "Picking Dashboard - BokkuXpress",
 });
 
 const supabase = useSupabaseClient<Database>();

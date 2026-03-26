@@ -6,7 +6,7 @@ definePageMeta({
   middleware: ["admin"],
 });
 
-useHead({ title: "Driver Payouts - BokkuMart" });
+useHead({ title: "Driver Payouts - BokkuXpress" });
 
 const loading = ref(false);
 const error = ref<string | null>(null);

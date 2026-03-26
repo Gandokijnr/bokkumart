@@ -6,7 +6,7 @@ import OrderVerificationModal from "~/components/OrderVerificationModal.vue";
 
 // Page meta
 useHead({
-  title: "Admin ERP Dashboard - BokkuMart",
+  title: "Admin ERP Dashboard - BokkuXpress",
 });
 
 definePageMeta({
@@ -1086,7 +1086,8 @@ async function saveNote(orderId: string) {
             @click="switchBranch(store.id)"
             class="w-full px-4 py-3 text-left rounded-lg hover:bg-gray-100 transition-colors"
             :class="{
-              'bg-blue-50 text-blue-700': adminStore.currentStoreId === store.id,
+              'bg-blue-50 text-blue-700':
+                adminStore.currentStoreId === store.id,
             }"
           >
             <span class="font-medium">{{ store.name }}</span>

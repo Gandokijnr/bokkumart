@@ -120,7 +120,7 @@ onMounted(() => {
         <div class="flex-1 min-w-0">
           <div class="text-sm font-bold leading-tight">Update Available</div>
           <div class="text-xs leading-tight mt-0.5 opacity-90">
-            A new version of BokkuMart is ready to install
+            A new version of BokkuXpress is ready to install
           </div>
         </div>
 

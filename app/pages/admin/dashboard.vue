@@ -12,7 +12,7 @@ import OrderVerificationModal from "~/components/OrderVerificationModal.vue";
 
 // Page meta
 useHead({
-  title: "Admin ERP Dashboard - BokkuMart",
+  title: "Drivers - BokkuXpress",
 });
 
 definePageMeta({
@@ -525,7 +525,7 @@ async function handleVerifyDeliveryPinCode(pin: string) {
               </svg>
             </div>
             <div>
-              <h1 class="text-xl font-bold text-gray-900">Admin ERP</h1>
+              <h1 class="text-xl font-bold text-gray-900">Drivers</h1>
               <p class="text-xs text-gray-500">Operations Dashboard</p>
             </div>
           </div>
@@ -1122,7 +1122,8 @@ async function handleVerifyDeliveryPinCode(pin: string) {
             @click="switchBranch(store.id)"
             class="w-full px-4 py-3 text-left rounded-lg hover:bg-gray-100 transition-colors"
             :class="{
-              'bg-blue-50 text-blue-700': adminStore.currentStoreId === store.id,
+              'bg-blue-50 text-blue-700':
+                adminStore.currentStoreId === store.id,
             }"
           >
             <span class="font-medium">{{ store.name }}</span>

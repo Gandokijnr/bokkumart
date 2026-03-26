@@ -82,22 +82,22 @@ onMounted(async () => {
 });
 
 useHead({
-  title: "BokkuMart — Your Trusted Online Grocery Marketplace",
+  title: "BokkuXpress — Your Trusted Online Grocery Marketplace",
   meta: [
     {
       name: "description",
       content:
-        "Shop fresh groceries online from BokkuMart. Fresh produce, dairy, beverages, bakery items, and household essentials with fast delivery or convenient pickup.",
+        "Shop fresh groceries online from BokkuXpress. Fresh produce, dairy, beverages, bakery items, and household essentials with fast delivery or convenient pickup.",
     },
     { name: "theme-color", content: "#0052CC" },
     {
       property: "og:title",
-      content: "BokkuMart — Shop Fresh, Live Better.",
+      content: "BokkuXpress — Shop Fresh, Delivered Fast.",
     },
     {
       property: "og:description",
       content:
-        "Your favorite grocery marketplace is now online. Fresh essentials, curated brands, and fast delivery.",
+        "Your favorite grocery marketplace is now online. Fresh essentials, curated brands, and lightning-fast delivery.",
     },
     { property: "og:type", content: "website" },
   ],

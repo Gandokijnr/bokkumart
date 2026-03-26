@@ -1,9 +1,9 @@
 /**
- * BokkuMart Pricing Utility
- * 
+ * BokkuXpress Pricing Utility
+ *
  * Implements the "Technology Markup" Engine that adds a configurable
  * percentage to base prices for partnership revenue model.
- * 
+ *
  * This allows the platform to earn maintenance fees via a small
  * tech-token added to online prices without charging upfront.
  */
@@ -23,7 +23,7 @@ export interface PricingBreakdown {
 
 /**
  * Calculate the display price with technology markup
- * 
+ *
  * @param basePrice - The original product price
  * @returns PricingBreakdown with full transparency
  */
@@ -31,10 +31,10 @@ export function calculateDisplayPrice(basePrice: number): PricingBreakdown {
   // Get markup percentage from runtime config (allows partner-specific configuration)
   const config = useRuntimeConfig();
   const markupPercentage = Number(config.public.markupPercentage || 2); // Default 2%
-  
+
   const markupAmount = basePrice * (markupPercentage / 100);
   const displayPrice = basePrice + markupAmount;
-  
+
   return {
     basePrice: Math.round(basePrice * 100) / 100,
     markupAmount: Math.round(markupAmount * 100) / 100,
@@ -45,7 +45,7 @@ export function calculateDisplayPrice(basePrice: number): PricingBreakdown {
 
 /**
  * Get just the display price (for simple use cases)
- * 
+ *
  * @param basePrice - The original product price
  * @returns Display price with markup
  */
@@ -55,7 +55,8 @@ export function getDisplayPrice(basePrice: number): number {
 
 /**
  * Format price for display in Naira
- * 
+ *
+ * Geospatial Delivery Fee Calculator for BokkuXpress
  * @param price - Price to format
  * @returns Formatted price string (e.g., "₦1,234.56")
  */
@@ -70,25 +71,25 @@ export function formatPrice(price: number): string {
 
 /**
  * Calculate cart total with markup
- * 
+ *
  * @param items - Array of items with price and quantity
  * @returns Cart total with markup applied
  */
 export function calculateCartTotal(
-  items: Array<{ price: number; quantity: number }>
+  items: Array<{ price: number; quantity: number }>,
 ): PricingBreakdown {
   const basePrice = items.reduce(
     (total, item) => total + item.price * item.quantity,
-    0
+    0,
   );
-  
+
   return calculateDisplayPrice(basePrice);
 }
 
 /**
- * For Admin Dashboard: Compare Bokku Price vs App Price
- * 
- * @param basePrice - The Bokku/partner store price
+ * For Admin Dashboard: Compare BokkuXpress Price vs App Price
+ *
+ * @param basePrice - The BokkuXpress/partner store price
  * @returns Object showing both prices for transparency
  */
 export function comparePrices(basePrice: number): {
@@ -98,7 +99,7 @@ export function comparePrices(basePrice: number): {
   markupPercentage: number;
 } {
   const pricing = calculateDisplayPrice(basePrice);
-  
+
   return {
     bokkuPrice: formatPrice(pricing.basePrice),
     appPrice: formatPrice(pricing.displayPrice),

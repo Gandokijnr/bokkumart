@@ -6,7 +6,7 @@ definePageMeta({
   middleware: ["admin"],
 });
 
-useHead({ title: "Pending Riders - BokkuMart" });
+useHead({ title: "Pending Riders - BokkuXpress" });
 
 const loading = ref(false);
 const error = ref<string | null>(null);

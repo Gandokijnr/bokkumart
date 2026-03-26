@@ -1,7 +1,7 @@
 {
-  "name": "BokkuMart",
-  "short_name": "BokkuMart",
-  "description": "Your trusted online grocery marketplace",
+  "name": "BokkuXpress",
+  "short_name": "BokkuXpress",
+  "description": "Your trusted online grocery marketplace - Delivered Fast",
   "theme_color": "#0052CC",
   "background_color": "#ffffff",
   "display": "standalone",

@@ -24,7 +24,9 @@
             <p class="font-medium text-amber-900">Authentication Required</p>
             <p class="text-sm text-amber-700">
               Please sign in to continue to
-              {{ redirectPath !== "/" ? "your requested page" : "BokkuMart" }}.
+              {{
+                redirectPath !== "/" ? "your requested page" : "BokkuXpress"
+              }}.
             </p>
           </div>
         </div>
@@ -58,7 +60,7 @@
             />
           </svg>
         </div>
-        <h1 class="text-2xl font-bold text-gray-900">BokkuMart</h1>
+        <h1 class="text-2xl font-bold text-gray-900">BokkuXpress</h1>
         <p class="text-gray-600 mt-1">
           {{ isSignUp ? "Create an account" : "Sign in to continue" }}
         </p>

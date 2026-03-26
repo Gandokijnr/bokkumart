@@ -8,7 +8,7 @@ definePageMeta({
 });
 
 useHead({
-  title: "Analytics Dashboard - BokkuMart",
+  title: "Analytics Dashboard - BokkuXpress",
 });
 
 // State

@@ -80,7 +80,7 @@
 
           <!-- Working Hours Message -->
           <p v-if="isWithinWorkingHours" class="mt-3 text-center text-gray-600">
-            A BokkuMart representative will call you at
+            A BokkuXpress representative will call you at
             <span class="font-bold text-gray-900">{{
               order.contact_phone
             }}</span>
@@ -631,7 +631,7 @@ function handleOrderUpdate(payload: any) {
   if (oldOrder?.status === "awaiting_call" && newOrder.status === "confirmed") {
     sendNotification(
       "Order Verified!",
-      "Your BokkuMart order has been confirmed and is being prepared.",
+      "Your BokkuXpress order has been confirmed and is being prepared.",
     );
   }
 }
