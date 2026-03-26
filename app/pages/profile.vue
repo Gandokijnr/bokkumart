@@ -411,40 +411,44 @@
             </div>
           </div>
         <div v-if="activeTab === 'addresses'" class="space-y-4">
-  <div class="flex items-center justify-between">
-    <h1 class="text-2xl font-bold text-gray-900">BokkuXpress</h1>
-    <button
-      @click="showAddressForm = true"
-      class="flex items-center gap-2 rounded-xl px-4 py-2 font-medium text-white hover:bg-blue-700"
-    >
-      <span>+</span> Add New
-    </button>
+          <div class="flex items-center justify-between">
+            <h1 class="text-2xl font-bold text-gray-900">BokkuXpress</h1>
+            <button
+              @click="showAddressForm = true"
+              class="flex items-center gap-2 rounded-xl px-4 py-2 font-medium text-white hover:bg-blue-700"
+            >
+              <span>+</span> Add New
+            </button>
 
-    <!-- Toast Notification -->
-    <Transition
-      enter-active-class="transition duration-300 ease-out"
-      enter-from-class="translate-y-2 opacity-0"
-      enter-to-class="translate-y-0 opacity-100"
-      leave-active-class="transition duration-200 ease-in"
-      leave-from-class="translate-y-0 opacity-100"
-      leave-to-class="translate-y-2 opacity-0"
-    >
-      <div
-        v-if="toast.show"
-        class="fixed bottom-20 left-1/2 z-50 -translate-x-1/2 rounded-xl px-6 py-3 text-sm font-medium text-white shadow-lg sm:bottom-8"
-        :class="
-          toast.type === 'success'
-            ? 'bg-green-600'
-            : toast.type === 'error'
-              ? 'bg-blue-600'
-              : 'bg-blue-700'
-        "
-      >
-        <div class="flex items-center gap-2">
-          <span>{{ toast.message }}</span>
+            <!-- Toast Notification -->
+            <Transition
+              enter-active-class="transition duration-300 ease-out"
+              enter-from-class="translate-y-2 opacity-0"
+              enter-to-class="translate-y-0 opacity-100"
+              leave-active-class="transition duration-200 ease-in"
+              leave-from-class="translate-y-0 opacity-100"
+              leave-to-class="translate-y-2 opacity-0"
+            >
+              <div
+                v-if="toast.show"
+                class="fixed bottom-20 left-1/2 z-50 -translate-x-1/2 rounded-xl px-6 py-3 text-sm font-medium text-white shadow-lg sm:bottom-8"
+                :class="
+                  toast.type === 'success'
+                    ? 'bg-green-600'
+                    : toast.type === 'error'
+                      ? 'bg-blue-600'
+                      : 'bg-blue-700'
+                "
+              >
+                <div class="flex items-center gap-2">
+                  <span>{{ toast.message }}</span>
+                </div>
+              </div>
+            </Transition>
+          </div>
         </div>
       </div>
-    </Transition>
+    </main>
   </div>
 </template>
 
