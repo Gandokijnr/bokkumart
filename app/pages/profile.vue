@@ -410,6 +410,8 @@
               </div>
             </div>
           </div>
+        </div>
+
         <div v-if="activeTab === 'addresses'" class="space-y-4">
           <div class="flex items-center justify-between">
             <h1 class="text-2xl font-bold text-gray-900">BokkuXpress</h1>
